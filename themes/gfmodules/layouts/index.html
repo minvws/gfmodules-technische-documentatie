@@ -1,0 +1,135 @@
+{{ define "title" }}{{ .Site.Title }} - {{ .Site.Params.subtitle }}{{ end }}
+
+{{ define "main" }}
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>{{ .Site.Params.subtitle }} - Landingspagina</h1>
+      <p class="hero-desc">
+        Overzicht van alle {{ .Site.Title }}-diensten, versie-informatie, verbindingsinstructies
+        en wijzigingshistorie voor de {{ .Site.Params.environment }}-omgeving.
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">{{ len .Site.Data.services }}</span>
+          <span class="stat-label">Actieve services</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">1</span>
+          <span class="stat-label">Omgeving</span>
+        </div>
+      </div>
+    </div>
+    <div class="env-badge">
+      <span class="env-badge-label">Actieve omgeving</span>
+      <span class="env-badge-name">{{ .Site.Params.environment }}</span>
+    </div>
+  </div>
+</section>
+
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>Services</h2>
+    <a class="section-link" href="{{ "/services/" | relURL }}">Alle services &rarr;</a>
+  </div>
+
+  <div class="cards-grid">
+    {{ range .Site.Data.services }}
+    <div class="service-card">
+      <div class="service-card-top">
+        <div class="service-icon {{ .icon_class }}">{{ .icon }}</div>
+        <div>
+          <div class="service-name">{{ .name }}</div>
+          <div class="service-fullname">{{ .fullname }}</div>
+        </div>
+      </div>
+      <div class="service-card-body">
+        <p class="service-desc">{{ .description }}</p>
+        <div class="endpoint-row">
+          <span class="endpoint-label">Base</span>
+          <code>{{ .base_url }}</code>
+          <button class="copy-btn" title="Kopieer URL">📋</button>
+        </div>
+        <div class="service-meta">
+          <span class="badge badge-version">{{ .version }}</span>
+          <span class="badge badge-{{ lower .environment }}">{{ .environment }}</span>
+        </div>
+      </div>
+      <div class="service-card-footer">
+        <a href="{{ "integration/" | relURL }}{{ .integration_anchor }}/">Integratie-gids</a>
+        <a href="{{ "/services/" | relURL }}">Endpoints</a>
+      </div>
+    </div>
+    {{ end }}
+  </div>
+
+  <hr class="section-sep">
+
+  <div class="section-header">
+    <h2>Snel van start</h2>
+    <a class="section-link" href="{{ "integration/" | relURL }}">Volledige documentatie &rarr;</a>
+  </div>
+
+  <div class="qs-grid">
+    <div class="qs-card">
+      <div class="qs-card-icon">📜</div>
+      <h4>Certificaat aanvragen</h4>
+      <p>Vraag een mTLS client-certificaat aan bij de beheerder van de {{ .Site.Params.environment }}.</p>
+      <a href="{{ "integration/mtls/" | relURL }}">Certificaat-gids &rarr;</a>
+    </div>
+    <div class="qs-card">
+      <div class="qs-card-icon">🔐</div>
+      <h4>OAuth-token ophalen</h4>
+      <p>Gebruik je certificaat om via de OAuth-dienst een access token op te halen.</p>
+      <a href="{{ "integration/oauth/" | relURL }}">OAuth-stap &rarr;</a>
+    </div>
+    <div class="qs-card">
+      <div class="qs-card-icon">👥</div>
+      <h4>PRS aanroepen</h4>
+      <p>Stuur een BSN of pseudoniem naar de Pseudoniemendienst met je token.</p>
+      <a href="{{ "integration/prs/" | relURL }}">PRS-gids &rarr;</a>
+    </div>
+    <div class="qs-card">
+      <div class="qs-card-icon">📱</div>
+      <h4>NVI bevragen</h4>
+      <p>Meld een signaal aan of raadpleeg de Nationale Verwijs Index.</p>
+      <a href="{{ "integration/nvi/" | relURL }}">NVI-gids &rarr;</a>
+    </div>
+  </div>
+
+  <hr class="section-sep">
+
+  <div class="section-header">
+    <h2>Recente wijzigingen</h2>
+    <a class="section-link" href="{{ "/changelog/" | relURL }}">Volledige changelog &rarr;</a>
+  </div>
+
+  <div class="card">
+    <ul class="changelog" style="padding:0">
+      {{ range $i, $entry := first 3 .Site.Data.changelog }}
+      <li class="cl-entry"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
+        <div class="cl-side">
+          <div class="cl-date">{{ $entry.date }}</div>
+          <div class="cl-envs">
+            {{ range $entry.environments }}<span class="badge badge-{{ lower . }}">{{ . }}</span>{{ end }}
+          </div>
+        </div>
+        <div class="cl-main">
+          <div class="cl-title">
+            {{ range $j, $svc := $entry.services }}{{ if $j }}&nbsp;&nbsp;{{ end }}{{ $svc.name }} <span class="cl-version">{{ $svc.version }}</span>{{ end }}
+          </div>
+          <div class="cl-summary">{{ $entry.summary | safeHTML }}</div>
+          <ul class="cl-changes">
+            {{ range $entry.changes }}
+            <li class="cl-change"><span class="change-tag tag-{{ .type }}">{{ .tag }}</span> {{ .text | safeHTML }}</li>
+            {{ end }}
+          </ul>
+        </div>
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+
+</main>
+{{ end }}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ block "title" . }}{{ .Title }} - {{ .Site.Title }}{{ end }}</title>
+  <link rel="stylesheet" href="{{ "assets/css/style.css" | relURL }}">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-inner">
+    <a class="nav-brand" href="{{ "/" | relURL }}">
+      <div class="nav-logo">GF</div>
+      <div class="nav-title">{{ .Site.Title }} <span class="nav-sub">{{ .Site.Params.subtitle }}</span></div>
+    </a>
+    <ul class="nav-links">
+      {{ $currentURL := .RelPermalink }}
+      {{ range .Site.Menus.main }}
+      {{ $href := .URL | relURL }}
+      {{ $isHome := eq $href ("/" | relURL) }}
+      {{ $isActive := cond $isHome (eq $currentURL $href) (strings.HasPrefix $currentURL $href) }}
+      <li><a href="{{ $href }}"{{ if $isActive }} class="active"{{ end }}>{{ .Name }}</a></li>
+      {{ end }}
+    </ul>
+  </nav>
+</header>
+
+{{ block "main" . }}{{ end }}
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>{{ .Site.Title }} &mdash; {{ .Site.Params.subtitle }} &mdash; {{ .Site.Params.environment }}</span>
+    <span>Vragen? <a href="mailto:{{ .Site.Params.contact_email }}">{{ .Site.Params.contact_email }}</a></span>
+  </div>
+</footer>
+
+<script src="{{ "assets/js/main.js" | relURL }}"></script>
+</body>
+</html>

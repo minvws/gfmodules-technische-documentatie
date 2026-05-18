@@ -1,0 +1,53 @@
+{{ define "main" }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>Changelog - {{ $.Site.Params.environment }}</h2>
+  </div>
+
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Overzicht van alle wijzigingen in de {{ $.Site.Params.environment }}-omgeving. Raadpleeg deze pagina
+    altijd na een aankondiging van een nieuwe release.
+  </p>
+
+  <div class="filters" data-filter-group="cl">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-btn active" data-filter="all">Alle</button>
+    {{ range $.Site.Data.services }}
+    <button class="filter-btn" data-filter="{{ .id }}">{{ .name }}</button>
+    {{ end }}
+  </div>
+
+  <div class="card">
+    <ul class="changelog" style="padding:0">
+      {{ range $i, $entry := $.Site.Data.changelog }}
+      <li class="cl-entry" data-filter-item="cl" data-filter-val="{{ delimit $entry.filters " " }}"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
+        <div class="cl-side">
+          <div class="cl-date">{{ $entry.date }}</div>
+          <div class="cl-envs">
+            {{ range $entry.environments }}<span class="badge badge-{{ lower . }}">{{ . }}</span>{{ end }}
+          </div>
+        </div>
+        <div class="cl-main">
+          <div class="cl-title">
+            {{ range $j, $svc := $entry.services }}{{ if $j }}&nbsp;&nbsp;{{ end }}{{ $svc.name }} <span class="cl-version">{{ $svc.version }}</span>{{ end }}
+          </div>
+          <div class="cl-summary">{{ $entry.summary | safeHTML }}</div>
+          <ul class="cl-changes">
+            {{ range $entry.changes }}
+            <li class="cl-change">
+              <span class="change-tag tag-{{ .type }}">{{ .tag }}</span>
+              {{ .text | safeHTML }}
+            </li>
+            {{ end }}
+          </ul>
+        </div>
+      </li>
+      {{ end }}
+    </ul>
+  </div>
+
+  <hr class="section-sep">
+
+</main>
+{{ end }}

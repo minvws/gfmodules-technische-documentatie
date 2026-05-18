@@ -1,0 +1,643 @@
+{{ define "main" }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>Integratie-documentatie</h2>
+  </div>
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:2rem;max-width:680px">
+    Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Title }}-diensten.
+    Elke verbinding vereist mutual TLS (mTLS) met een door GfModules uitgegeven certificaat.
+  </p>
+
+  <!-- ============================================================
+       MTLS
+  ============================================================ -->
+  <section id="mtls">
+    <div class="section-header">
+      <h2>mTLS - Mutual TLS</h2>
+    </div>
+
+    <div class="card" style="margin-bottom:1.25rem">
+      <h3>Wat is mTLS?</h3>
+      <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+        Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
+        verifieert ook de server de cliënt aan de hand van een client-certificaat. Alle {{ $.Site.Title }}-diensten
+        vereisen mTLS: zonder geldig certificaat wordt de verbinding al op transportniveau geweigerd.
+      </p>
+
+      <div class="two-col">
+        <div>
+          <h4>Wat heb je nodig?</h4>
+          <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
+            <li>Client-certificaat (<code>.crt</code> of <code>.pem</code>)</li>
+            <li>Bijbehorende private key (<code>.key</code>)</li>
+
+            <li>Optioneel: PKCS#12-bundle (<code>.p12</code>) voor Java / .NET</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Aanvraagproces</h4>
+          <ol style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
+            <li>Genereer een CSR (Certificate Signing Request)</li>
+            <li>Stuur de CSR naar <a href="mailto:{{ $.Site.Params.contact_email }}">GfModules Beheer</a></li>
+            <li>Ontvang het gesigneerde certificaat</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.25rem">
+      <h4>CSR genereren met OpenSSL</h4>
+      <div class="code-block">
+        <button class="copy-code">Kopieer</button>
+        <pre><span class="hl-comment"># Genereer een 4096-bits RSA-sleutelpaar en een CSR</span>
+openssl req -newkey rsa:4096 -nodes \
+  -keyout client.key \
+  -out    client.csr \
+  -subj "/C=NL/O=Mijn Organisatie/CN=mijn-app.proeftuin"
+
+<span class="hl-comment"># Verifieer de CSR</span>
+openssl req -text -noout -verify -in client.csr</pre>
+      </div>
+
+      <p style="margin-bottom:.75rem">Het is ook mogelijk om tools zoals <a href="https://ciphersmith.io#csr">CipherSmith</a> te gebruiken om via je browser een CSR te genereren.</p>
+
+      <p style="margin-bottom:.75rem">Na het opsturen van je CSR, krijg je vanuit GfModules certificaten die <strong>alleen</strong> geldig zijn op de betreffende omgeving (bijvoorbeeld de {{ $.Site.Params.environment }}). Deze certificaten kunnen <strong>niet</strong> gebruikt worden voor andere doeleinden en systemen.</p>
+
+      <p style="margin-bottom:.25rem">Je ontvangt op dit moment twee sets certificaten:</p>
+      <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
+        <li>LDN certificaten</li>
+        <li>UZI certificaten</li>
+      </ul>
+
+      <p style="margin-bottom:.75rem">Binnen je UZI certificaat zit een test URA nummer. Dit nummer wordt gebruikt om van en naar te communiceren binnen de verschillende systemen binnen GfModules. De LDN certificaten zijn op dit moment niet nodig voor gebruik en zullen in de toekomst niet meer worden uitgegeven voor de {{ $.Site.Params.environment }}.</p>
+
+      <p style="margin-bottom:.25rem">Je zult de volgende UZI certificaten ontvangen:</p>
+      <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
+        <li><code>[naam]-uzi-chain.crt</code> - Jouw certificaat plus de bijbehorende chain certificaten.</li>
+        <li><code>[naam]-uzi.crt</code> - Jouw certificaat zonder chain certificaten.</li>
+        <li><code>uzi-ca.crt</code> - Het root CA certificaat van de {{ $.Site.Params.environment }}.</li>
+      </ul>
+
+      <p style="margin-bottom:.5rem">Certificaten gebruiken de volgende chain:</p>
+      <div class="info-panel" style="margin-bottom:.5rem">
+        <div class="info-panel-title">Root CA</div>
+        <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
+          <dt style="font-weight:600">Subject</dt>
+          <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-ca</code></dd>
+          <dt style="font-weight:600">Serienummer</dt>
+          <dd><code>5ebc4973add6806aff244587300821b76abdf59d</code></dd>
+          <dt style="font-weight:600">Fingerprint</dt>
+          <dd><code style="word-break:break-all">82:a6:35:ae:53:0e:f9:ee:22:61:a3:9f:89:cb:c3:30:91:19:fd:17:d3:15:54:f7:ab:76:af:c2:0f:d9:2e:ba</code></dd>
+        </dl>
+        <a href="./proeftuin-uzi-ca.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download CA Certificaat &rarr;</a>
+      </div>
+      <div class="info-panel" style="margin-bottom:1rem">
+        <div class="info-panel-title">Intermediate CA</div>
+        <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
+          <dt style="font-weight:600">Subject</dt>
+          <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-dev-intermediate</code></dd>
+          <dt style="font-weight:600">Serienummer</dt>
+          <dd><code>2561750e384cc3037818cc064639fabe20119fd2</code></dd>
+          <dt style="font-weight:600">Fingerprint</dt>
+          <dd><code style="word-break:break-all">40:86:6a:93:86:bf:38:aa:8e:70:ff:4f:fb:fb:c9:92:8e:19:bd:ad:b6:4f:b4:5e:d6:a5:12:c8:39:ec:28:61</code></dd>
+        </dl>
+        <a href="./proeftuin-uzi-intermediate.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download Intermediate Certificaat &rarr;</a>
+      </div>
+
+      <h4>Verbinding testen met curl</h4>
+      <div class="code-block">
+        <button class="copy-code">Kopieer</button>
+        <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
+{{ range $.Site.Data.services }}{{ if eq .id "oauth" }}curl -v \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
+      </div>
+
+      <h4>PKCS#12-bundle aanmaken (voor Java / .NET)</h4>
+      <div class="code-block">
+        <button class="copy-code">Kopieer</button>
+        <pre>openssl pkcs12 -export \
+  -in    client-uzi-chain.crt \
+  -inkey client-uzi.key \
+  -out   client.p12 \
+  -name  "gfmodules-client" \
+  -passout pass:geheimwachtwoord</pre>
+      </div>
+    </div>
+
+    <div class="info-panel warn">
+      <div class="info-panel-title">Beveilig je private key</div>
+      <p>Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager
+         (Vault, AWS Secrets Manager, Azure Key Vault) of een OS-sleutelketen.</p>
+    </div>
+  </section>
+
+  <hr class="section-sep">
+
+  <!-- ============================================================
+       SERVICE TABS
+  ============================================================ -->
+  <div class="section-header">
+    <h2>Dienst-specifieke integratie</h2>
+  </div>
+
+  <div data-tabs>
+    <div class="tabs">
+      {{ range $i, $svc := $.Site.Data.services }}
+      <button class="tab-btn{{ if eq $i 0 }} active{{ end }}" id="{{ $svc.id }}">{{ $svc.icon }} {{ $svc.name }}</button>
+      {{ end }}
+    </div>
+
+    <!-- ===== OAUTH PANEL ===== -->
+    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "oauth" }}
+    <div class="tab-panel{{ if eq $i 0 }} active{{ end }}">
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>OAuth Service - Overzicht</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De OAuth-dienst is een op maat gemaakte <strong>OAuth 2.0 Authorization Service</strong>.
+          Voor machine-to-machine communicatie gebruik je de <em>client credentials</em>-flow
+          met mTLS-authenticatie (<code>tls_client_auth</code>). Het UZI-certificaat dient als
+          authenticatiemiddel - er is geen <code>client_id</code> of <code>client_secret</code> nodig.
+          Het URA-nummer wordt automatisch uit het certificaat gelezen.
+          De service geeft RS256-gesigneerde JWT access tokens terug.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Stap-voor-stap: token ophalen</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>UZI-certificaat gereedmaken</h4>
+              <p>Zorg dat je <code>client-uzi-chain.crt</code>, <code>client-uzi.key</code> en <code>uzi-ca.crt</code> beschikbaar zijn. Zie de <a href="#mtls">mTLS-sectie</a> hierboven.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Scope en target audience bepalen</h4>
+              <p>Je URA-nummer wordt automatisch uit het UZI-certificaat gelezen - er is geen <code>client_id</code> nodig. Geef met <code>scope</code> de gevraagde rechten op en met <code>target_audience</code> voor welke dienst het token bedoeld is (bijv. de NVI of PRS base URL). De exacte waarden ontvang je van GfModules Beheer.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Token ophalen</h4>
+              <p>Stuur een <code>POST</code>-verzoek naar <code>/oauth/token</code> met <code>grant_type=client_credentials</code> en de vereiste parameters. De mTLS-verbinding verzorgt de authenticatie - geen <code>client_secret</code> vereist.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Token gebruiken</h4>
+              <p>Voeg het token toe als <code>Authorization: Bearer &lt;token&gt;</code> header bij verzoeken aan PRS en NVI.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Parameters: scope &amp; target_audience</h3>
+        <table style="width:100%;font-size:.85rem;border-collapse:collapse;margin-bottom:.5rem">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Parameter</th>
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Waarde</th>
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Toelichting</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.4rem .6rem"><code>scope</code></td>
+              <td style="padding:.4rem .6rem"><code>epd:read</code></td>
+              <td style="padding:.4rem .6rem;color:var(--text-muted)">Enige geldige scope op dit moment</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.4rem .6rem"><code>target_audience</code></td>
+              <td style="padding:.4rem .6rem">
+                {{ range $.Site.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+              </td>
+              <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor NVI</td>
+            </tr>
+            <tr>
+              <td style="padding:.4rem .6rem"><code>target_audience</code></td>
+              <td style="padding:.4rem .6rem">
+                {{ range $.Site.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+              </td>
+              <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor PRS</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size:.8rem;color:var(--text-muted)">Vraag per dienst een apart token op - een token is gekoppeld aan één <code>target_audience</code>.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h4>curl - Token ophalen</h4>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert   client-uzi-chain.crt \
+  --key    client-uzi.key \
+
+  -d "grant_type=client_credentials" \
+  -d "scope=epd:read" \
+  -d "target_audience=&lt;audience&gt;" \
+  {{ $svc.base_url }}/oauth/token \
+  | python3 -m json.tool</pre>
+        </div>
+
+        <h4>Response</h4>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>{
+    <span class="hl-str">"token_type"</span>:     <span class="hl-str">"Bearer"</span>,
+    <span class="hl-str">"access_token"</span>:  <span class="hl-str">"eyJhbGciOiJSUzI1NiIsImtpZCI6Im9hdXRoLWlzc3Vlci0yMDI2LTAxIiwidHlwIjoiSldUIn0.eyJ..."</span>,
+    <span class="hl-str">"refresh_token"</span>: <span class="hl-str">"gfr_v1_olQUEkji9Be6Inp5AbkaijnarX07BaeoPlnUAd3m18ESq0bT"</span>,
+    <span class="hl-str">"scope"</span>:          <span class="hl-str">"epd:read"</span>
+}</pre>
+        </div>
+
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-top:.75rem">
+          Het <code>refresh_token</code> kan ingewisseld worden voor een nieuw access token via hetzelfde
+          <code>/oauth/token</code>-endpoint met <code>grant_type=refresh_token</code>. Het nieuwe token
+          krijgt automatisch dezelfde <code>scope</code> en <code>target_audience</code> als het originele token -
+          je hoeft deze niet opnieuw mee te sturen.
+        </p>
+
+        <h4>Python (requests)</h4>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> requests
+
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+
+resp = session.post(
+    <span class="hl-str">"{{ $svc.base_url }}/oauth/token"</span>,
+    data={
+        <span class="hl-str">"grant_type"</span>:      <span class="hl-str">"client_credentials"</span>,
+        <span class="hl-str">"scope"</span>:            <span class="hl-str">"epd:read"</span>,
+        <span class="hl-str">"target_audience"</span>: <span class="hl-str">"&lt;audience&gt;"</span>,
+    },
+)
+token = resp.json()[<span class="hl-str">"access_token"</span>]</pre>
+        </div>
+
+        <h4>Java (HttpClient + SSLContext)</h4>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-comment">// Laad PKCS#12-bundle (client-uzi-chain.crt + client-uzi.key)</span>
+KeyStore keyStore = KeyStore.getInstance(<span class="hl-str">"PKCS12"</span>);
+<span class="hl-kw">try</span> (InputStream is = <span class="hl-kw">new</span> FileInputStream(<span class="hl-str">"client.p12"</span>)) {
+    keyStore.load(is, <span class="hl-str">"geheimwachtwoord"</span>.toCharArray());
+}
+
+KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+kmf.init(keyStore, <span class="hl-str">"geheimwachtwoord"</span>.toCharArray());
+
+SSLContext sslCtx = SSLContext.getInstance(<span class="hl-str">"TLS"</span>);
+sslCtx.init(kmf.getKeyManagers(), <span class="hl-kw">null</span>, <span class="hl-kw">null</span>);
+
+HttpClient client = HttpClient.newBuilder()
+    .sslContext(sslCtx)
+    .build();
+
+<span class="hl-comment">// Token ophalen</span>
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create(<span class="hl-str">"{{ $svc.base_url }}/oauth/token"</span>))
+    .header(<span class="hl-str">"Content-Type"</span>, <span class="hl-str">"application/x-www-form-urlencoded"</span>)
+    .POST(HttpRequest.BodyPublishers.ofString(
+        <span class="hl-str">"grant_type=client_credentials&amp;scope=epd:read&amp;target_audience=&lt;audience&gt;"</span>))
+    .build();
+HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</pre>
+        </div>
+      </div>
+    </div>
+    {{ end }}{{ end }}
+
+    <!-- ===== PRS PANEL ===== -->
+    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "prs" }}
+    <div class="tab-panel">
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>PRS - {{ $svc.fullname }}</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De Pseudoniemendienst gebruikt een <strong>OPRF-protocol</strong> (Oblivious Pseudo-Random Function)
+          om BSN-nummers om te zetten naar deterministische, onomkeerbare pseudoniemen.
+          De server ziet nooit het plaintext BSN; de client ziet nooit de serversleutel.
+          Elke aanvraag vereist mTLS én een geldig OAuth-token.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Wat is OPRF en waarom drie partijen?</h3>
+
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+          OPRF staat voor <strong>Oblivious Pseudo-Random Function</strong>. Het woord "oblivious" is
+          hier essentieel: de server die de berekening uitvoert (de PRS) is zich niet bewust van de
+          invoer (het BSN) en ook niet van de uitvoer (het pseudoniem). Geen van de drie partijen
+          heeft op zichzelf genoeg informatie om de koppeling tussen BSN en pseudoniem te maken.
+        </p>
+
+        <h4 style="margin-bottom:.5rem">De drie partijen en wat ze weten</h4>
+        <table style="width:100%;font-size:.85rem;border-collapse:collapse;margin-bottom:1.25rem">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Partij</th>
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Weet wel</th>
+              <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Weet niet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.5rem .6rem;font-weight:600">Client</td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">Het BSN, de <code>blind_factor</code></td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">De serversleutel, het pseudoniem</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:.5rem .6rem;font-weight:600">PRS Server</td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">De serversleutel, het verblinde getal</td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">Het BSN, het pseudoniem</td>
+            </tr>
+            <tr>
+              <td style="padding:.5rem .6rem;font-weight:600">Receiver</td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">Het pseudoniem, zijn eigen private key</td>
+              <td style="padding:.5rem .6rem;color:var(--text-muted)">Het BSN, de serversleutel</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4 style="margin-bottom:.5rem">Hoe werkt blinding?</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+          Blinding is vergelijkbaar met het versturen van een slot zonder sleutel. De client past een
+          wiskundige vermomming toe op het BSN - de <strong>blind factor</strong> - voordat hij het
+          naar de PRS stuurt. De PRS voert zijn berekening uit op de verblinde waarde en stuurt het
+          resultaat terug. Doordat de PRS de blind factor nooit ziet, kan hij het resultaat niet
+          koppelen aan het originele BSN. De client kan het resultaat vervolgens "ontmaskeren"
+          (unblinden) - maar in dit protocol doet de <em>Receiver</em> dat, niet de client zelf.
+        </p>
+
+        <h4 style="margin-bottom:.5rem">Waarom kan de client het resultaat niet zien?</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+          De PRS versleutelt het evaluatieresultaat als een <strong>JWE</strong> (JSON Web Encryption)
+          met de publieke sleutel van de Receiver. Alleen de Receiver bezit de bijbehorende private key
+          en kan de JWE openen. De client ontvangt de JWE en stuurt die - samen met de
+          <code>blind_factor</code> - door naar de Receiver, maar kan de inhoud zelf niet lezen.
+          Zo weet de client het BSN maar niet het pseudoniem.
+        </p>
+
+        <h4 style="margin-bottom:.5rem">Waarom is het pseudoniem deterministisch?</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+          De OPRF-functie is deterministisch: dezelfde invoer geeft met dezelfde serversleutel altijd
+          hetzelfde resultaat. Dat maakt het pseudoniem stabiel over meerdere aanvragen. Bovendien
+          wordt het BSN eerst via <strong>HKDF</strong> afgeleid met de ontvanger en scope als context
+          (<code>org|scope|v1</code>). Daardoor levert hetzelfde BSN voor elke organisatie en scope
+          een <em>ander</em> verbind getal op, en dus een ander pseudoniem - twee organisaties kunnen
+          iemand niet via het pseudoniem koppelen.
+        </p>
+
+        <div class="info-panel" style="margin-top:.25rem">
+          <div class="info-panel-title">Samenvatting privacygaranties</div>
+          <ul style="font-size:.875rem;line-height:1.9;color:var(--text-muted);padding-left:1.1rem;margin:0">
+            <li>De PRS ziet nooit een plaintext BSN of het definitieve pseudoniem.</li>
+            <li>De client ziet nooit de serversleutel of het definitieve pseudoniem.</li>
+            <li>De Receiver ziet nooit het BSN.</li>
+            <li>Elke organisatie en scope krijgt een uniek, niet-koppelbaar pseudoniem.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>OPRF-flow - drie partijen, vier stappen</h3>
+        <div style="overflow-x:auto;margin-bottom:1.25rem">
+          <img src="/assets/img/oprf-flow.svg"
+               alt="OPRF swimlane"
+               style="display:block;max-width:100%;height:auto;min-width:600px">
+        </div>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>BSN afschermen - Client</h4>
+              <p>Maak een HKDF-afleiding van het BSN met de ontvanger als context, en blind het resultaat met <code>pyoprf.blind()</code>. Bewaar de <code>blind_factor</code> lokaal - die is later nodig voor de Receiver.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Evaluatie aanvragen - Client → PRS (<code>POST /oprf/eval</code>)</h4>
+              <p>Stuur het verblinde getal naar de PRS. De server evalueert het met zijn sleutel en retourneert het resultaat versleuteld als JWE - versleuteld met de <em>publieke sleutel van de Receiver</em>. De client kan de JWE niet ontsleutelen.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Doorsturen naar Receiver - Client → Receiver</h4>
+              <p>De client stuurt <code>blind_factor</code> en de JWE samen door naar de Receiver. De Receiver is de enige partij die de JWE kan ontsleutelen - hij beschikt over de bijbehorende private key.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Ontsleutelen + unblinden - Receiver</h4>
+              <p>De Receiver ontsleutelt de JWE met zijn private key (<code>jwcrypto</code>) en combineert de geëvalueerde waarde met de <code>blind_factor</code> via <code>pyoprf.unblind()</code>. Het resultaat is het definitieve, deterministische pseudoniem.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Vereiste: publieke sleutel registreren</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
+          Voordat je <code>/oprf/eval</code> kunt aanroepen, moet de PRS jouw publieke sleutel kennen.
+          Registreer deze eenmalig via <code>/register/certificate</code> - de PRS leest de publieke sleutel
+          automatisch uit je mTLS-certificaat.
+        </p>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert   client-uzi-chain.crt \
+  --key    client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"scope": ["nvi"]}' \
+  {{ $svc.base_url }}/register/certificate</pre>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Python - Client (stap 1–3)</h3>
+        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem">Vereiste packages: <code>pyoprf</code>, <code>cryptography</code>, <code>requests</code></p>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> base64, json
+<span class="hl-kw">import</span> pyoprf
+<span class="hl-kw">import</span> requests
+<span class="hl-kw">from</span> cryptography.hazmat.primitives <span class="hl-kw">import</span> hashes
+<span class="hl-kw">from</span> cryptography.hazmat.primitives.kdf.hkdf <span class="hl-kw">import</span> HKDF
+
+BSN        = <span class="hl-str">"&lt;bsn-nummer&gt;"</span>
+RECV_ORG   = <span class="hl-str">"ura:&lt;ura-nummer&gt;"</span>   <span class="hl-comment"># URA-nummer van de ontvangende organisatie</span>
+RECV_SCOPE = <span class="hl-str">"nvi"</span>
+PRS_URL    = <span class="hl-str">"{{ $svc.base_url }}"</span>
+
+<span class="hl-comment"># Stap 1 - HKDF-afleiding + blinding</span>
+pid  = json.dumps({<span class="hl-str">"landCode"</span>: <span class="hl-str">"NL"</span>, <span class="hl-str">"type"</span>: <span class="hl-str">"BSN"</span>, <span class="hl-str">"value"</span>: BSN})
+info = f<span class="hl-str">"{RECV_ORG}|{RECV_SCOPE}|v1"</span>.encode()
+hkdf = HKDF(algorithm=hashes.SHA256(), length=32, salt=<span class="hl-kw">None</span>, info=info)
+derived = hkdf.derive(pid.encode())
+
+blind_factor, blinded_input = pyoprf.blind(derived)
+bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()
+
+<span class="hl-comment"># Stap 2 - POST /oprf/eval (mTLS + bearer token)</span>
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+
+resp = session.post(
+    f<span class="hl-str">"{PRS_URL}/oprf/eval"</span>,
+    headers={<span class="hl-str">"Authorization"</span>: <span class="hl-str">"Bearer &lt;token&gt;"</span>},
+    json={
+        <span class="hl-str">"encryptedPersonalId"</span>:   bi_b64,
+        <span class="hl-str">"recipientOrganization"</span>: RECV_ORG,
+        <span class="hl-str">"recipientScope"</span>:        RECV_SCOPE,
+    },
+)
+resp.raise_for_status()
+jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comment"># versleuteld voor de Receiver - client kan dit NIET lezen</span>
+
+<span class="hl-comment"># Stap 3 - Doorsturen naar Receiver</span>
+requests.post(
+    <span class="hl-str">"https://&lt;receiver-url&gt;/receive"</span>,
+    json={<span class="hl-str">"blind_factor"</span>: base64.urlsafe_b64encode(blind_factor).decode(), <span class="hl-str">"jwe"</span>: jwe_token},
+)</pre>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Python - Receiver (stap 4)</h3>
+        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem">Vereiste packages: <code>pyoprf</code>, <code>jwcrypto</code></p>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> base64, json
+<span class="hl-kw">import</span> pyoprf
+<span class="hl-kw">from</span> jwcrypto <span class="hl-kw">import</span> jwe, jwk
+
+RECEIVER_PRIVATE_KEY_PEM = <span class="hl-str">"-----BEGIN PRIVATE KEY-----\n..."</span>
+
+<span class="hl-comment"># Ontvangen van de Client</span>
+blind_factor = base64.urlsafe_b64decode(<span class="hl-str">"&lt;blind_factor_b64&gt;"</span>)
+jwe_token    = <span class="hl-str">"&lt;jwe-string&gt;"</span>
+
+<span class="hl-comment"># Stap 4a - JWE ontsleutelen met de private key van de Receiver</span>
+priv_key = jwk.JWK.from_pem(RECEIVER_PRIVATE_KEY_PEM.encode())
+token = jwe.JWE()
+token.deserialize(jwe_token)
+token.decrypt(priv_key)
+payload = json.loads(token.payload)
+
+<span class="hl-comment"># Stap 4b - Unblinden → definitief pseudoniem</span>
+eval_b64   = payload[<span class="hl-str">"subject"</span>].split(<span class="hl-str">":"</span>)[-1]
+eval_bytes = base64.urlsafe_b64decode(eval_b64)
+pseudonym  = base64.urlsafe_b64encode(
+    pyoprf.unblind(blind_factor, eval_bytes)
+).decode()
+
+print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <div class="info-panel-title">Deterministisch &amp; organisatie-specifiek</div>
+        <p>Hetzelfde BSN levert voor elke combinatie van <code>recipientOrganization</code> en <code>recipientScope</code>
+           een <em>ander</em> pseudoniem op. Twee organisaties kunnen een persoon dus niet op basis van pseudoniem
+           koppelen.</p>
+      </div>
+    </div>
+    {{ end }}{{ end }}
+
+    <!-- ===== NVI PANEL ===== -->
+    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "nvi" }}
+    <div class="tab-panel">
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>NVI - {{ $svc.fullname }}</h3>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De Nationale Verwijs Index gebruikt een FHIR-gebaseerde API voor het opslaan en opvragen
+          van lokalisaties. Een lokalisatie is een FHIR <code>List</code>-resource die verwijst naar
+          de betrokkenheid van een persoon (via pseudoniem) bij een organisatie.
+          Elke aanvraag vereist mTLS én een geldig OAuth-token.
+        </p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Lokalisatie aanmaken</h3>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert   client-uzi-chain.crt \
+  --key    client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/fhir+json" \
+  -d '{
+    "resourceType": "List",
+    "status": "current",
+    "mode": "working",
+    "subject": {
+      "identifier": {
+        "system": "urn:oid:2.16.840.1.113883.2.4.3.11.58.2",
+        "value": "&lt;pseudoniem&gt;"
+      }
+    },
+    "extension": [{
+      "url": "http://hl7.org/fhir/StructureDefinition/list-managingOrganization",
+      "valueReference": {
+        "identifier": {
+          "system": "urn:oid:2.16.840.1.113883.2.4.3.11.58.5",
+          "value": "ura:&lt;ura-nummer&gt;"
+        }
+      }
+    }]
+  }' \
+  {{ $svc.base_url }}/v1-poc/fhir/List</pre>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Lokalisaties opvragen</h3>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s \
+  --cert   client-uzi-chain.crt \
+  --key    client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/fhir+json" \
+  "{{ $svc.base_url }}/v1-poc/fhir/List?subject=&lt;pseudoniem&gt;"</pre>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem">
+        <h3>Lokalisatie verwijderen</h3>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X DELETE \
+  --cert   client-uzi-chain.crt \
+  --key    client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{ $svc.base_url }}/v1-poc/fhir/List/&lt;id&gt;"</pre>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <div class="info-panel-title">FHIR CapabilityStatement</div>
+        <p>De volledige API-beschrijving is beschikbaar via:
+          <code>curl {{ $svc.base_url }}/fhir/metadata</code>
+        </p>
+      </div>
+    </div>
+    {{ end }}{{ end }}
+  </div>
+
+</main>
+{{ end }}

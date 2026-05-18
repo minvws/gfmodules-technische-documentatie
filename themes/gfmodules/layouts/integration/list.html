@@ -1,0 +1,101 @@
+{{ define "main" }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>Integratie-documentatie</h2>
+  </div>
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Title }}-diensten.
+    Doorloop de stappen in volgorde — elke volgende stap bouwt voort op de vorige.
+  </p>
+
+  {{ partial "integration-nav.html" . }}
+
+  <!-- Flow -->
+  <div class="card" style="margin-bottom:1.5rem">
+    <h3>Hoe begin ik?</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.25rem">
+      Alle {{ $.Site.Title }}-diensten vereisen mutual TLS én een OAuth-token. Volg de stappen hieronder om te verbinden.
+    </p>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
+      <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS certificaat</a>
+      <span style="color:var(--text-muted)">→</span>
+      <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn active" style="text-decoration:none">② OAuth token</a>
+      <span style="color:var(--text-muted)">→</span>
+      <a href="{{ "integration/prs/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ PRS aanroepen</a>
+      <span style="color:var(--text-muted)">/</span>
+      <a href="{{ "integration/nvi/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ NVI aanroepen</a>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+
+    <div class="service-card">
+      <div class="service-card-top">
+        <div class="service-icon">📜</div>
+        <div>
+          <div class="service-name">mTLS</div>
+          <div class="service-fullname">Mutual TLS — vereist voor alles</div>
+        </div>
+      </div>
+      <div class="service-card-body">
+        <p class="service-desc">Genereer een CSR, vraag een UZI-certificaat aan en test de mTLS-verbinding. Dit is de basis voor alle andere stappen.</p>
+      </div>
+      <div class="service-card-footer">
+        <a href="{{ "integration/mtls/" | relURL }}">Naar mTLS-gids &rarr;</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-card-top">
+        <div class="service-icon icon-oauth">🔑</div>
+        <div>
+          <div class="service-name">OAuth</div>
+          <div class="service-fullname">Access token ophalen</div>
+        </div>
+      </div>
+      <div class="service-card-body">
+        <p class="service-desc">Haal een RS256-gesigneerd bearer token op via de OAuth-dienst. Vereist: mTLS-certificaat, scope en target_audience.</p>
+      </div>
+      <div class="service-card-footer">
+        <a href="{{ "integration/oauth/" | relURL }}">Naar OAuth-gids &rarr;</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-card-top">
+        <div class="service-icon icon-prs">👤</div>
+        <div>
+          <div class="service-name">PRS</div>
+          <div class="service-fullname">Pseudoniemendienst — OPRF</div>
+        </div>
+      </div>
+      <div class="service-card-body">
+        <p class="service-desc">Zet een BSN om naar een deterministisch pseudoniem via het OPRF-protocol. Drie partijen: Client, PRS, Receiver.</p>
+      </div>
+      <div class="service-card-footer">
+        <a href="{{ "integration/prs/" | relURL }}">Naar PRS-gids &rarr;</a>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-card-top">
+        <div class="service-icon icon-nvi">📑</div>
+        <div>
+          <div class="service-name">NVI</div>
+          <div class="service-fullname">Nationale Verwijs Index</div>
+        </div>
+      </div>
+      <div class="service-card-body">
+        <p class="service-desc">Sla FHIR List-resources op en bevraag de NVI om te achterhalen bij welke organisaties een persoon bekend is.</p>
+      </div>
+      <div class="service-card-footer">
+        <a href="{{ "integration/nvi/" | relURL }}">Naar NVI-gids &rarr;</a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+{{ end }}

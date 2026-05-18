@@ -1,0 +1,216 @@
+{{ define "main" }}
+{{ range $.Site.Data.services }}{{ if eq .id "oauth" }}{{ $svc := . }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>🔑 OAuth — Token ophalen</h2>
+  </div>
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Haal een RS256-gesigneerd bearer token op. Vereist: een geldig <a href="{{ "integration/mtls/" | relURL }}">mTLS-certificaat</a>.
+  </p>
+
+  {{ partial "integration-nav.html" $ }}
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>OAuth Service — Overzicht</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      De OAuth-dienst is een op maat gemaakte <strong>OAuth 2.0 Authorization Service</strong>.
+      Voor machine-to-machine communicatie gebruik je de <em>client credentials</em>-flow
+      met mTLS-authenticatie (<code>tls_client_auth</code>). Het UZI-certificaat dient als
+      authenticatiemiddel — er is geen <code>client_id</code> of <code>client_secret</code> nodig.
+      Het URA-nummer wordt automatisch uit het certificaat gelezen.
+      De service geeft RS256-gesigneerde JWT access tokens terug.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Stap-voor-stap: token ophalen</h3>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>UZI-certificaat gereedmaken</h4>
+          <p>Zorg dat je <code>client-uzi-chain.crt</code> en <code>client-uzi.key</code> beschikbaar zijn. Zie de <a href="{{ "integration/mtls/" | relURL }}">mTLS-gids</a>.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Scope en target audience bepalen</h4>
+          <p>Je URA-nummer wordt automatisch uit het UZI-certificaat gelezen — er is geen <code>client_id</code> nodig. Geef met <code>scope</code> de gevraagde rechten op en met <code>target_audience</code> voor welke dienst het token bedoeld is.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>Token ophalen</h4>
+          <p>Stuur een <code>POST</code>-verzoek naar <code>/oauth/token</code> met <code>grant_type=client_credentials</code>. De mTLS-verbinding verzorgt de authenticatie — geen <code>client_secret</code> vereist.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>Token gebruiken</h4>
+          <p>Voeg het token toe als <code>Authorization: Bearer &lt;token&gt;</code> header bij verzoeken aan <a href="{{ "integration/prs/" | relURL }}">PRS</a> en <a href="{{ "integration/nvi/" | relURL }}">NVI</a>.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Parameters: scope &amp; target_audience</h3>
+    <table style="width:100%;font-size:.85rem;border-collapse:collapse;margin-bottom:.5rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Parameter</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Waarde</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Toelichting</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>scope</code></td>
+          <td style="padding:.4rem .6rem"><code>epd:read</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">Enige geldige scope op dit moment</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>target_audience</code></td>
+          <td style="padding:.4rem .6rem">
+            {{ range $.Site.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+          </td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor NVI</td>
+        </tr>
+        <tr>
+          <td style="padding:.4rem .6rem"><code>target_audience</code></td>
+          <td style="padding:.4rem .6rem">
+            {{ range $.Site.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+          </td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor PRS</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:.8rem;color:var(--text-muted)">Vraag per dienst een apart token op — een token is gekoppeld aan één <code>target_audience</code>.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Token ophalen</h3>
+
+    <div data-tabs>
+      <div class="tabs">
+        <button class="tab-btn active">cURL</button>
+        <button class="tab-btn">PHP</button>
+        <button class="tab-btn">Python</button>
+        <button class="tab-btn">Java</button>
+      </div>
+
+      <div class="tab-panel active">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  -d "grant_type=client_credentials" \
+  -d "scope=epd:read" \
+  -d "target_audience=&lt;audience&gt;" \
+  {{ $svc.base_url }}/oauth/token \
+  | python3 -m json.tool</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>[$status, $body] = curlRequest($certFile, $keyFile, <span class="hl-str">'{{ $svc.base_url }}/oauth/token'</span>, [
+    CURLOPT_POST       => <span class="hl-kw">true</span>,
+    CURLOPT_POSTFIELDS => http_build_query([
+        <span class="hl-str">'grant_type'</span>      => <span class="hl-str">'client_credentials'</span>,
+        <span class="hl-str">'scope'</span>           => <span class="hl-str">'epd:read'</span>,
+        <span class="hl-str">'target_audience'</span> => <span class="hl-str">'&lt;audience&gt;'</span>,
+    ]),
+    CURLOPT_HTTPHEADER => [<span class="hl-str">'Content-Type: application/x-www-form-urlencoded'</span>],
+]);
+
+$data  = json_decode($body, <span class="hl-kw">true</span>);
+$token = $data[<span class="hl-str">'access_token'</span>];</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> requests
+
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+
+resp = session.post(
+    <span class="hl-str">"{{ $svc.base_url }}/oauth/token"</span>,
+    data={
+        <span class="hl-str">"grant_type"</span>:      <span class="hl-str">"client_credentials"</span>,
+        <span class="hl-str">"scope"</span>:           <span class="hl-str">"epd:read"</span>,
+        <span class="hl-str">"target_audience"</span>: <span class="hl-str">"&lt;audience&gt;"</span>,
+    },
+)
+token = resp.json()[<span class="hl-str">"access_token"</span>]</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-comment">// Laad PKCS#12-bundle (client-uzi-chain.crt + client-uzi.key)</span>
+KeyStore keyStore = KeyStore.getInstance(<span class="hl-str">"PKCS12"</span>);
+<span class="hl-kw">try</span> (InputStream is = <span class="hl-kw">new</span> FileInputStream(<span class="hl-str">"client.p12"</span>)) {
+    keyStore.load(is, <span class="hl-str">"geheimwachtwoord"</span>.toCharArray());
+}
+
+KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+kmf.init(keyStore, <span class="hl-str">"geheimwachtwoord"</span>.toCharArray());
+
+SSLContext sslCtx = SSLContext.getInstance(<span class="hl-str">"TLS"</span>);
+sslCtx.init(kmf.getKeyManagers(), <span class="hl-kw">null</span>, <span class="hl-kw">null</span>);
+
+HttpClient client = HttpClient.newBuilder()
+    .sslContext(sslCtx)
+    .build();
+
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create(<span class="hl-str">"{{ $svc.base_url }}/oauth/token"</span>))
+    .header(<span class="hl-str">"Content-Type"</span>, <span class="hl-str">"application/x-www-form-urlencoded"</span>)
+    .POST(HttpRequest.BodyPublishers.ofString(
+        <span class="hl-str">"grant_type=client_credentials&amp;scope=epd:read&amp;target_audience=&lt;audience&gt;"</span>))
+    .build();
+HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHandlers.ofString());</pre>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:.4rem">Response</h4>
+    <div class="code-block" style="margin-bottom:.75rem">
+      <button class="copy-code">Kopieer</button>
+      <pre>{
+    <span class="hl-str">"token_type"</span>:     <span class="hl-str">"Bearer"</span>,
+    <span class="hl-str">"access_token"</span>:  <span class="hl-str">"eyJhbGciOiJSUzI1NiIsImtpZCI6Im9hdXRoLWlzc3Vlci0yMDI2LTAxIiwidHlwIjoiSldUIn0.eyJ..."</span>,
+    <span class="hl-str">"refresh_token"</span>: <span class="hl-str">"gfr_v1_olQUEkji9Be6Inp5AbkaijnarX07BaeoPlnUAd3m18ESq0bT"</span>,
+    <span class="hl-str">"scope"</span>:          <span class="hl-str">"epd:read"</span>
+}</pre>
+    </div>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      Het <code>refresh_token</code> kan ingewisseld worden voor een nieuw access token via hetzelfde
+      <code>/oauth/token</code>-endpoint met <code>grant_type=refresh_token</code>. Het nieuwe token
+      krijgt automatisch dezelfde <code>scope</code> en <code>target_audience</code> als het originele token —
+      je hoeft deze niet opnieuw mee te sturen.
+    </p>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn" style="text-decoration:none">&larr; mTLS</a>
+    <div style="display:flex;gap:.5rem">
+      <a href="{{ "integration/prs/" | relURL }}" class="filter-btn active" style="text-decoration:none">Volgende: PRS &rarr;</a>
+      <a href="{{ "integration/nvi/" | relURL }}" class="filter-btn active" style="text-decoration:none">Volgende: NVI &rarr;</a>
+    </div>
+  </div>
+
+</main>
+{{ end }}{{ end }}
+{{ end }}

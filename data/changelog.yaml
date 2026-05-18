@@ -1,0 +1,25 @@
+- date: "2026-05-11"
+  filters:
+    - oauth
+    - prs
+    - nvi
+  environments:
+    - Proeftuin
+  services:
+    - name: OAuth Service
+      version: v0.0.8
+    - name: PRS
+      version: v0.0.18
+    - name: NVI
+      version: v0.1.4
+  summary: "Initiële release van de Proeftuin-omgeving."
+  changes:
+    - tag: Nieuw
+      type: new
+      text: "OAuth Service: initiële release"
+    - tag: Nieuw
+      type: new
+      text: "PRS: initiële release"
+    - tag: Nieuw
+      type: new
+      text: "NVI: initiële release"

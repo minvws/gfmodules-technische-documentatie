@@ -1,0 +1,8 @@
+{{ $cur := .RelPermalink }}
+<div class="tabs" style="margin-bottom:1.5rem">
+  <a class="tab-btn{{ if strings.HasSuffix $cur "integration/" }} active{{ end }}" href="{{ "integration/" | relURL }}">Overzicht</a>
+  <a class="tab-btn{{ if strings.HasSuffix $cur "integration/mtls/" }} active{{ end }}" href="{{ "integration/mtls/" | relURL }}">📜 mTLS</a>
+  <a class="tab-btn{{ if strings.HasSuffix $cur "integration/oauth/" }} active{{ end }}" href="{{ "integration/oauth/" | relURL }}">🔑 OAuth</a>
+  <a class="tab-btn{{ if strings.HasSuffix $cur "integration/prs/" }} active{{ end }}" href="{{ "integration/prs/" | relURL }}">👤 PRS</a>
+  <a class="tab-btn{{ if strings.HasSuffix $cur "integration/nvi/" }} active{{ end }}" href="{{ "integration/nvi/" | relURL }}">📑 NVI</a>
+</div>

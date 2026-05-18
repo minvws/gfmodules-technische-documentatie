@@ -1,0 +1,81 @@
+{{ define "main" }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>Services &amp; Endpoints</h2>
+  </div>
+
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Overzicht van alle beschikbare {{ $.Site.Title }}-diensten met hun huidige versie, status en
+    bereikbare endpoints. Alle verbindingen vereisen een geldig mTLS-certificaat.
+  </p>
+
+  <div class="filters" data-filter-group="services">
+    <span class="filter-label">Omgeving:</span>
+    <button class="filter-btn active" data-filter="all">Alle</button>
+    <button class="filter-btn" data-filter="proeftuin">Proeftuin</button>
+    <button class="filter-btn" data-filter="productie">Productie</button>
+  </div>
+
+  {{ range $.Site.Data.services }}
+  <div data-filter-item="services" data-filter-val="{{ .env_filter }}" style="margin-bottom:2rem">
+    <div class="section-header" style="margin-bottom:.75rem">
+      <h2 style="font-size:1.05rem;display:flex;align-items:center;gap:.5rem">
+        <span>{{ .icon }}</span> {{ .name }}{{ if ne .name .fullname }} - {{ .fullname }}{{ end }}
+        <span class="badge badge-version">{{ .version }}</span>
+        <span class="badge badge-{{ lower .environment }}">{{ .environment }}</span>
+      </h2>
+      <a class="section-link" href="{{ "integration/" | relURL }}{{ .integration_anchor }}/">Integratie-gids</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Methode</th>
+            <th>Pad</th>
+            <th>Omschrijving</th>
+            <th>Auth</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .endpoints }}
+          <tr{{ if .deprecated }} style="opacity:.55"{{ end }}>
+            <td><span class="method method-{{ .method | lower }}">{{ .method }}</span></td>
+            <td><code>{{ .path }}</code></td>
+            <td>{{ if .deprecated }}<em>{{ .description }}</em>{{ else }}{{ .description }}{{ end }}</td>
+            <td>{{ .auth }}</td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+
+    {{ if .deprecation_warning }}
+    <div class="info-panel warn" style="margin-top:.75rem">
+      <div class="info-panel-title">{{ .deprecation_warning.title }}</div>
+      <p>{{ .deprecation_warning.text | safeHTML }}</p>
+    </div>
+    {{ end }}
+
+    <div class="info-panel" style="margin-top:.75rem">
+      <div class="info-panel-title">Base URL {{ .environment }}</div>
+      <p>
+        <code style="font-family:var(--font-mono)">{{ .base_url }}</code>
+        {{ if .base_url_note }}&nbsp;&mdash;&nbsp; {{ .base_url_note }}{{ end }}
+      </p>
+    </div>
+  </div>
+  {{ end }}
+
+  <hr class="section-sep">
+
+  <div data-filter-item="services" data-filter-val="productie" style="display:none">
+    <div class="info-panel">
+      <div class="info-panel-title">Productie-omgeving</div>
+      <p>Productie-endpoints worden hier opgenomen zodra de omgeving beschikbaar is.
+         Neem contact op met de beheerder voor toegang.</p>
+    </div>
+  </div>
+
+</main>
+{{ end }}
