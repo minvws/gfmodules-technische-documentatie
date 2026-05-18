@@ -1,0 +1,133 @@
+{{ define "main" }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>mTLS — Mutual TLS</h2>
+  </div>
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Vereist voor alle {{ $.Site.Title }}-diensten. Zonder geldig UZI-certificaat wordt de verbinding op transportniveau geweigerd.
+  </p>
+
+  {{ partial "integration-nav.html" . }}
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Wat is mTLS?</h3>
+    <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+      Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
+      verifieert ook de server de cliënt aan de hand van een client-certificaat. Alle {{ $.Site.Title }}-diensten
+      vereisen mTLS: zonder geldig certificaat wordt de verbinding al op transportniveau geweigerd.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <h4>Wat heb je nodig?</h4>
+        <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
+          <li>Client-certificaat (<code>.crt</code> of <code>.pem</code>)</li>
+          <li>Bijbehorende private key (<code>.key</code>)</li>
+          <li>Optioneel: PKCS#12-bundle (<code>.p12</code>) voor Java / .NET</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Aanvraagproces</h4>
+        <ol style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
+          <li>Genereer een CSR (Certificate Signing Request)</li>
+          <li>Stuur de CSR naar <a href="mailto:{{ $.Site.Params.contact_email }}">GfModules Beheer</a></li>
+          <li>Ontvang het gesigneerde certificaat</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h4>CSR genereren met OpenSSL</h4>
+    <div class="code-block">
+      <button class="copy-code">Kopieer</button>
+      <pre><span class="hl-comment"># Genereer een 4096-bits RSA-sleutelpaar en een CSR</span>
+openssl req -newkey rsa:4096 -nodes \
+  -keyout client.key \
+  -out    client.csr \
+  -subj "/C=NL/O=Mijn Organisatie/CN=mijn-app.proeftuin"
+
+<span class="hl-comment"># Verifieer de CSR</span>
+openssl req -text -noout -verify -in client.csr</pre>
+    </div>
+
+    <p style="margin-bottom:.75rem">Het is ook mogelijk om tools zoals <a href="https://ciphersmith.io#csr">CipherSmith</a> te gebruiken om via je browser een CSR te genereren.</p>
+
+    <p style="margin-bottom:.75rem">Na het opsturen van je CSR, krijg je vanuit GfModules certificaten die <strong>alleen</strong> geldig zijn op de betreffende omgeving (bijvoorbeeld de {{ $.Site.Params.environment }}). Deze certificaten kunnen <strong>niet</strong> gebruikt worden voor andere doeleinden en systemen.</p>
+
+    <p style="margin-bottom:.25rem">Je ontvangt op dit moment twee sets certificaten:</p>
+    <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
+      <li>LDN certificaten</li>
+      <li>UZI certificaten</li>
+    </ul>
+
+    <p style="margin-bottom:.75rem">Binnen je UZI certificaat zit een test URA nummer. Dit nummer wordt gebruikt om van en naar te communiceren binnen de verschillende systemen binnen GfModules. De LDN certificaten zijn op dit moment niet nodig voor gebruik en zullen in de toekomst niet meer worden uitgegeven voor de {{ $.Site.Params.environment }}.</p>
+
+    <p style="margin-bottom:.25rem">Je zult de volgende UZI certificaten ontvangen:</p>
+    <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
+      <li><code>[naam]-uzi-chain.crt</code> — Jouw certificaat plus de bijbehorende chain certificaten.</li>
+      <li><code>[naam]-uzi.crt</code> — Jouw certificaat zonder chain certificaten.</li>
+      <li><code>uzi-ca.crt</code> — Het root CA certificaat van de {{ $.Site.Params.environment }}.</li>
+    </ul>
+
+    <p style="margin-bottom:.5rem">Certificaten gebruiken de volgende chain:</p>
+    <div class="info-panel" style="margin-bottom:.5rem">
+      <div class="info-panel-title">Root CA</div>
+      <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
+        <dt style="font-weight:600">Subject</dt>
+        <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-ca</code></dd>
+        <dt style="font-weight:600">Serienummer</dt>
+        <dd><code>5ebc4973add6806aff244587300821b76abdf59d</code></dd>
+        <dt style="font-weight:600">Fingerprint</dt>
+        <dd><code style="word-break:break-all">82:a6:35:ae:53:0e:f9:ee:22:61:a3:9f:89:cb:c3:30:91:19:fd:17:d3:15:54:f7:ab:76:af:c2:0f:d9:2e:ba</code></dd>
+      </dl>
+      <a href="./proeftuin-uzi-ca.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download CA Certificaat &rarr;</a>
+    </div>
+    <div class="info-panel" style="margin-bottom:1rem">
+      <div class="info-panel-title">Intermediate CA</div>
+      <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
+        <dt style="font-weight:600">Subject</dt>
+        <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-dev-intermediate</code></dd>
+        <dt style="font-weight:600">Serienummer</dt>
+        <dd><code>2561750e384cc3037818cc064639fabe20119fd2</code></dd>
+        <dt style="font-weight:600">Fingerprint</dt>
+        <dd><code style="word-break:break-all">40:86:6a:93:86:bf:38:aa:8e:70:ff:4f:fb:fb:c9:92:8e:19:bd:ad:b6:4f:b4:5e:d6:a5:12:c8:39:ec:28:61</code></dd>
+      </dl>
+      <a href="./proeftuin-uzi-intermediate.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download Intermediate Certificaat &rarr;</a>
+    </div>
+
+    <h4>Verbinding testen met curl</h4>
+    <div class="code-block">
+      <button class="copy-code">Kopieer</button>
+      <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
+{{ range $.Site.Data.services }}{{ if eq .id "oauth" }}curl -v \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
+    </div>
+
+    <h4>PKCS#12-bundle aanmaken (voor Java / .NET)</h4>
+    <div class="code-block">
+      <button class="copy-code">Kopieer</button>
+      <pre>openssl pkcs12 -export \
+  -in    client-uzi-chain.crt \
+  -inkey client-uzi.key \
+  -out   client.p12 \
+  -name  "gfmodules-client" \
+  -passout pass:geheimwachtwoord</pre>
+    </div>
+  </div>
+
+  <div class="info-panel warn" style="margin-bottom:1.5rem">
+    <div class="info-panel-title">Beveilig je private key</div>
+    <p>Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager
+       (Vault, AWS Secrets Manager, Azure Key Vault) of een OS-sleutelketen.</p>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end">
+    <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn active" style="text-decoration:none">Volgende: OAuth &rarr;</a>
+  </div>
+
+</main>
+{{ end }}

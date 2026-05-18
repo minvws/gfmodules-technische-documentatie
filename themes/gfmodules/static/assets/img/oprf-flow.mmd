@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant C as Client
+    participant P as PRS Server
+    participant R as Receiver
+
+    Note over C: 1. BSN afschermen<br/>PersonalId JSON · HKDF(org|scope|v1)<br/>pyoprf.blind() → blind_factor + blinded_input
+
+    C->>P: POST /oprf/eval<br/>{encryptedPersonalId, recipientOrganization…}
+
+    Note over P: 2. Evalueren + versleutelen<br/>pyoprf.evaluate(server_key, blinded_input)<br/>JWE aanmaken - pub key van Receiver<br/>(client ziet nooit de serversleutel)
+
+    P-->>C: { jwe: "eyJ…" }
+
+    Note over C: 3. Doorsturen naar Receiver<br/>client kan JWE niet lezen
+
+    C->>R: { blind_factor, jwe }
+
+    Note over R: 4. Ontsleutelen + unblinden<br/>JWE ontsleutelen met private key<br/>pyoprf.unblind(blind_factor, eval)<br/>→ definitief pseudoniem

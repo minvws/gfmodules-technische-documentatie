@@ -1,0 +1,128 @@
+- id: oauth
+  icon: "🔑"
+  icon_class: icon-oauth
+  name: OAuth Service
+  fullname: "OAuth 2.0 Authorization Service"
+  version: v0.0.8
+  environment: Proeftuin
+  env_filter: proeftuin
+
+  base_url: "https://oauth.proeftuin.gf.irealisatie.nl"
+  base_url_note: "Alle paden hierboven zijn relatief aan deze base URL."
+  description: "Centrale authenticatie- en autorisatiedienst. Geeft RS256-gesigneerde access tokens uit na mTLS-authenticatie met een UZI-certificaat. Geen client secret vereist."
+  integration_anchor: oauth
+  endpoints:
+    - method: GET
+      path: "/.well-known/oauth-authorization-server"
+      description: "OAuth 2.0 server metadata"
+      auth: "-"
+    - method: POST
+      path: "/oauth/token"
+      description: "Token ophalen (client_credentials / refresh_token)"
+      auth: "mTLS (tls_client_auth)"
+    - method: GET
+      path: "/oauth/jwks.json"
+      description: "JWKS voor lokale tokenverificatie"
+      auth: "-"
+    - method: GET
+      path: "/health"
+      description: "Service health check"
+      auth: "-"
+    - method: GET
+      path: "/version.json"
+      description: "Versie-informatie"
+      auth: "-"
+
+- id: prs
+  icon: "👤"
+  icon_class: icon-prs
+  name: PRS
+  fullname: Pseudoniemendienst
+  version: v0.0.18
+  environment: Proeftuin
+  env_filter: proeftuin
+
+  base_url: "https://pseudoniemendienst.proeftuin.gf.irealisatie.nl"
+  base_url_note: ""
+  description: "OPRF-gebaseerde pseudoniemendienst. Zet een persoonlijk identificatienummer om naar een versleuteld pseudoniem via een RID/JWE-uitwisselingsprotocol. Vereist mTLS én een geldig OAuth-token."
+  integration_anchor: prs
+  endpoints:
+    - method: POST
+      path: "/oprf/eval"
+      description: "Evalueer een OPRF-blind en retourneer een versleutelde JWE"
+      auth: "mTLS + bearer token"
+    - method: POST
+      path: "/exchange/rid"
+      description: "Wissel persoonlijk ID in voor een RID (versleuteld voor ontvanger)"
+      auth: "mTLS + bearer token"
+    - method: POST
+      path: "/exchange/pseudonym"
+      description: "Wissel persoonlijk ID in voor een pseudoniem (JWE)"
+      auth: "mTLS + bearer token"
+    - method: POST
+      path: "/receive"
+      description: "Ontvang en ontsleutel een RID, retourneer pseudoniem"
+      auth: "mTLS + bearer token"
+    - method: POST
+      path: "/register/certificate"
+      description: "Registreer publieke sleutel voor een organisatie"
+      auth: "mTLS + bearer token"
+    - method: GET
+      path: "/keys/{ura}"
+      description: "Publieke sleutels van een organisatie opvragen"
+      auth: "mTLS + bearer token"
+    - method: GET
+      path: "/health"
+      description: "Service health check"
+      auth: "-"
+    - method: GET
+      path: "/version.json"
+      description: "Versie-informatie"
+      auth: "-"
+
+- id: nvi
+  icon: "📑"
+  icon_class: icon-nvi
+  name: NVI
+  fullname: "Nationale Verwijs Index"
+  version: v0.1.4
+  environment: Proeftuin
+  env_filter: proeftuin
+
+  base_url: "https://nvi.proeftuin.gf.irealisatie.nl"
+  base_url_note: ""
+  description: "FHIR-gebaseerde lokalisatiedienst. Slaat List-resources op die verwijzen naar betrokkenheid van een persoon bij een organisatie. Vereist mTLS én een geldig OAuth-token."
+  integration_anchor: nvi
+  endpoints:
+    - method: POST
+      path: "/v1-poc/fhir/List"
+      description: "Lokalisatie aanmaken (FHIR List resource)"
+      auth: "mTLS + bearer token"
+    - method: GET
+      path: "/v1-poc/fhir/List"
+      description: "Lokalisaties zoeken (query parameters)"
+      auth: "mTLS + bearer token"
+    - method: GET
+      path: "/v1-poc/fhir/List/{id}"
+      description: "Specifieke lokalisatie opvragen"
+      auth: "mTLS + bearer token"
+    - method: DELETE
+      path: "/v1-poc/fhir/List/{id}"
+      description: "Lokalisatie verwijderen"
+      auth: "mTLS + bearer token"
+    - method: POST
+      path: "/v1-poc/fhir"
+      description: "Batch-registratie via FHIR Bundle"
+      auth: "mTLS + bearer token"
+    - method: GET
+      path: "/fhir/metadata"
+      description: "FHIR CapabilityStatement"
+      auth: "-"
+    - method: GET
+      path: "/health"
+      description: "Service health check"
+      auth: "-"
+    - method: GET
+      path: "/version.json"
+      description: "Versie-informatie"
+      auth: "-"

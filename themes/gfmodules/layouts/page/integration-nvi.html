@@ -1,0 +1,327 @@
+{{ define "main" }}
+{{ range $.Site.Data.services }}{{ if eq .id "nvi" }}{{ $svc := . }}
+<main class="page-content">
+
+  <div class="section-header">
+    <h2>📑 NVI — Nationale Verwijs Index</h2>
+  </div>
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
+    Lokalisatiedienst op basis van pseudoniemen. Vereist: <a href="{{ "integration/mtls/" | relURL }}">mTLS</a> én een <a href="{{ "integration/oauth/" | relURL }}">OAuth-token</a> voor <code>{{ $svc.base_url }}</code>.
+  </p>
+
+  {{ partial "integration-nav.html" $ }}
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>NVI — {{ $svc.fullname }}</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      De Nationale Verwijs Index slaat op welke zorgaanbieder betrokken is bij een persoon, zonder dat
+      het BSN of het definitieve pseudoniem ooit in de NVI terechtkomt. In plaats daarvan stuurt de
+      client de ruwe uitvoer van de PRS (<code>jwe</code> + <code>blind_factor</code>) rechtstreeks naar
+      de NVI — de NVI berekent het pseudoniem intern via de OPRF-unblindingstap.
+      Elke aanvraag vereist mTLS én een geldig OAuth-token.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Lokalisatie registreren (<code>POST /NVIDataReference</code>)</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
+      Registreer een lokalisatie door een <code>NVIDataReference</code>-resource te sturen.
+      De <code>subject.value</code> bevat de JWE die je van de PRS hebt ontvangen;
+      <code>oprfKey</code> is de base64-gecodeerde <code>blind_factor</code> uit stap 1 van het OPRF-protocol.
+      De NVI gebruikt beide waarden intern om het pseudoniem te berekenen.
+      Vereist OAuth-scope: <code>epd:write</code>.
+    </p>
+
+    <div class="info-panel" style="margin-bottom:.85rem">
+      <div class="info-panel-title">Geldige careContext-codes</div>
+      <p>
+        <code>MedicationAgreement</code> &nbsp;·&nbsp;
+        <code>LaboratoryTestResult</code> &nbsp;·&nbsp;
+        <code>Encounter</code> &nbsp;·&nbsp;
+        <code>Procedure</code> &nbsp;·&nbsp;
+        <code>Condition</code> &nbsp;·&nbsp;
+        <code>AllergyIntolerance</code> &nbsp;·&nbsp;
+        <code>ImagingStudy</code>
+      </p>
+    </div>
+
+    <div data-tabs>
+      <div class="tabs">
+        <button class="tab-btn active">cURL</button>
+        <button class="tab-btn">PHP</button>
+        <button class="tab-btn">Python</button>
+      </div>
+
+      <div class="tab-panel active">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/fhir+json" \
+  -d '{
+    "resourceType": "NVIDataReference",
+    "source": {
+      "system": "urn:oid:2.16.528.1.1007.3.3",
+      "value": "&lt;custodian-ura&gt;"
+    },
+    "careContext": {
+      "coding": [{
+        "system": "{{ $svc.base_url }}/fhir/CodeSystem/care-context-type",
+        "code":   "&lt;code&gt;"
+      }]
+    },
+    "subject": {
+      "system": "{{ $svc.base_url }}/fhir/NamingSystem/nvi-pseudonym",
+      "value":  "&lt;jwe&gt;"
+    },
+    "oprfKey": "&lt;base64-blind-factor&gt;"
+  }' \
+  {{ $svc.base_url }}/NVIDataReference</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-comment">// $jwe en $rawBlind komen uit pseudonymiseBsn() — zie PRS-integratie</span>
+$resource = json_encode([
+    <span class="hl-str">'resourceType'</span> => <span class="hl-str">'NVIDataReference'</span>,
+    <span class="hl-str">'source'</span>       => [
+        <span class="hl-str">'system'</span> => <span class="hl-str">'urn:oid:2.16.528.1.1007.3.3'</span>,
+        <span class="hl-str">'value'</span>  => $custodianUra,
+    ],
+    <span class="hl-str">'careContext'</span>  => [
+        <span class="hl-str">'coding'</span> => [[
+            <span class="hl-str">'system'</span> => <span class="hl-str">'{{ $svc.base_url }}/fhir/CodeSystem/care-context-type'</span>,
+            <span class="hl-str">'code'</span>   => $code,
+        ]],
+    ],
+    <span class="hl-str">'subject'</span>      => [
+        <span class="hl-str">'system'</span> => <span class="hl-str">'{{ $svc.base_url }}/fhir/NamingSystem/nvi-pseudonym'</span>,
+        <span class="hl-str">'value'</span>  => $jwe,
+    ],
+    <span class="hl-str">'oprfKey'</span>      => base64_encode($rawBlind),
+]);
+
+[$status, $body] = curlRequest($certFile, $keyFile, <span class="hl-str">'{{ $svc.base_url }}/NVIDataReference'</span>, [
+    CURLOPT_POST       => <span class="hl-kw">true</span>,
+    CURLOPT_POSTFIELDS => $resource,
+    CURLOPT_HTTPHEADER => [
+        <span class="hl-str">'Authorization: Bearer '</span> . $jwtNvi,
+        <span class="hl-str">'Content-Type: application/json'</span>,
+        <span class="hl-str">'Accept: application/fhir+json'</span>,
+    ],
+]);</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> base64, json, requests
+
+<span class="hl-comment"># jwe en raw_blind komen uit de PRS OPRF-flow — zie PRS-integratie</span>
+NVI_URL      = <span class="hl-str">"{{ $svc.base_url }}"</span>
+CUSTODIAN_URA = <span class="hl-str">"&lt;custodian-ura&gt;"</span>
+code         = <span class="hl-str">"&lt;code&gt;"</span>
+
+resource = {
+    <span class="hl-str">"resourceType"</span>: <span class="hl-str">"NVIDataReference"</span>,
+    <span class="hl-str">"source"</span>: {
+        <span class="hl-str">"system"</span>: <span class="hl-str">"urn:oid:2.16.528.1.1007.3.3"</span>,
+        <span class="hl-str">"value"</span>:  CUSTODIAN_URA,
+    },
+    <span class="hl-str">"careContext"</span>: {
+        <span class="hl-str">"coding"</span>: [{
+            <span class="hl-str">"system"</span>: f<span class="hl-str">"{NVI_URL}/fhir/CodeSystem/care-context-type"</span>,
+            <span class="hl-str">"code"</span>:   code,
+        }]
+    },
+    <span class="hl-str">"subject"</span>: {
+        <span class="hl-str">"system"</span>: f<span class="hl-str">"{NVI_URL}/fhir/NamingSystem/nvi-pseudonym"</span>,
+        <span class="hl-str">"value"</span>:  jwe,
+    },
+    <span class="hl-str">"oprfKey"</span>: base64.b64encode(raw_blind).decode(),
+}
+
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+resp = session.post(
+    f<span class="hl-str">"{NVI_URL}/NVIDataReference"</span>,
+    headers={
+        <span class="hl-str">"Authorization"</span>: f<span class="hl-str">"Bearer {token}"</span>,
+        <span class="hl-str">"Content-Type"</span>:  <span class="hl-str">"application/json"</span>,
+        <span class="hl-str">"Accept"</span>:         <span class="hl-str">"application/fhir+json"</span>,
+    },
+    json=resource,
+)
+resp.raise_for_status()</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-panel tip" style="margin-bottom:1.25rem">
+    <div class="info-panel-title">Testdata — bekende BSN met resultaten</div>
+    <p>BSN <strong>900184590</strong> met code <strong>MedicationRequest</strong> levert meerdere registraties op in de proeftuin en is geschikt om het opvragen te testen.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Lokalisaties opvragen (<code>GET /v1-poc/fhir/List</code>)</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
+      Zoek op persoon via de <code>subject:identifier</code> query-parameter. De waarde is een
+      base64url-gecodeerde JSON-string die zowel de <code>evaluated_output</code> (JWE) als de
+      <code>blind_factor</code> bevat — de NVI gebruikt die twee waarden om intern het pseudoniem
+      te berekenen en de juiste records te vinden.
+      Vereist OAuth-scope: <code>epd:read</code>.
+    </p>
+
+    <h4 style="margin-bottom:.4rem">Identifier opbouwen</h4>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
+      De identifier-waarde is: <code>base64url( json({"evaluated_output": &lt;jwe&gt;, "blind_factor": base64(&lt;rawBlind&gt;)}) )</code><br>
+      Let op: <code>blind_factor</code> gebruikt standaard Base64 (niet Base64url), <code>evaluated_output</code> is de JWE-string ongewijzigd.
+    </p>
+
+    <div data-tabs>
+      <div class="tabs">
+        <button class="tab-btn active">cURL</button>
+        <button class="tab-btn">PHP</button>
+        <button class="tab-btn">Python</button>
+      </div>
+
+      <div class="tab-panel active">
+        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem">Bouw de identifier op met PHP of Python en gebruik de waarde als query-parameter.</p>
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/fhir+json" \
+  "{{ $svc.base_url }}/v1-poc/fhir/List?subject:identifier=http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier|&lt;identifier-value&gt;"</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-comment">// $jwe en $rawBlind komen uit pseudonymiseBsn() — zie PRS-integratie</span>
+$json = json_encode([
+    <span class="hl-str">'evaluated_output'</span> => $jwe,
+    <span class="hl-str">'blind_factor'</span>     => base64_encode($rawBlind),
+], JSON_UNESCAPED_SLASHES);
+
+<span class="hl-comment">// base64url: geen padding, - en _ i.p.v. + en /</span>
+$identifierValue = rtrim(strtr(base64_encode($json), <span class="hl-str">'+/'</span>, <span class="hl-str">'-_'</span>), <span class="hl-str">'='</span>);
+
+$system = <span class="hl-str">'http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier'</span>;
+$query  = <span class="hl-str">'subject:identifier='</span> . $system . <span class="hl-str">'|'</span> . $identifierValue;
+
+[$status, $body] = curlRequest($certFile, $keyFile,
+    <span class="hl-str">'{{ $svc.base_url }}/v1-poc/fhir/List?'</span> . $query,
+    [
+        CURLOPT_HTTPGET    => <span class="hl-kw">true</span>,
+        CURLOPT_HTTPHEADER => [
+            <span class="hl-str">'Authorization: Bearer '</span> . $jwtNvi,
+            <span class="hl-str">'Accept: application/fhir+json'</span>,
+        ],
+    ]
+);
+
+$bundle = json_decode($body, <span class="hl-kw">true</span>);
+<span class="hl-kw">foreach</span> ($bundle[<span class="hl-str">'entry'</span>] ?? [] <span class="hl-kw">as</span> $entry) {
+    $r = $entry[<span class="hl-str">'resource'</span>];
+    echo $r[<span class="hl-str">'id'</span>] . <span class="hl-str">' — code: '</span> . ($r[<span class="hl-str">'careContext'</span>][<span class="hl-str">'coding'</span>][0][<span class="hl-str">'code'</span>] ?? <span class="hl-str">'?'</span>) . <span class="hl-str">"\n"</span>;
+}</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> base64, json, requests
+
+<span class="hl-comment"># jwe en raw_blind komen uit de PRS OPRF-flow — zie PRS-integratie</span>
+NVI_URL = <span class="hl-str">"{{ $svc.base_url }}"</span>
+
+identifier_json = json.dumps(
+    {<span class="hl-str">"evaluated_output"</span>: jwe, <span class="hl-str">"blind_factor"</span>: base64.b64encode(raw_blind).decode()},
+    separators=(<span class="hl-str">","</span>, <span class="hl-str">":"</span>),
+)
+identifier_value = base64.urlsafe_b64encode(identifier_json.encode()).rstrip(<span class="hl-str">b"="</span>).decode()
+
+system = <span class="hl-str">"http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier"</span>
+query  = f<span class="hl-str">"subject:identifier={system}|{identifier_value}"</span>
+
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+resp = session.get(
+    f<span class="hl-str">"{NVI_URL}/v1-poc/fhir/List?{query}"</span>,
+    headers={
+        <span class="hl-str">"Authorization"</span>: f<span class="hl-str">"Bearer {token}"</span>,
+        <span class="hl-str">"Accept"</span>:         <span class="hl-str">"application/fhir+json"</span>,
+    },
+)
+resp.raise_for_status()
+bundle = resp.json()
+<span class="hl-kw">for</span> entry <span class="hl-kw">in</span> bundle.get(<span class="hl-str">"entry"</span>, []):
+    r = entry[<span class="hl-str">"resource"</span>]
+    print(r[<span class="hl-str">"id"</span>], <span class="hl-str">"—"</span>, r.get(<span class="hl-str">"careContext"</span>, {}).get(<span class="hl-str">"coding"</span>, [{}])[0].get(<span class="hl-str">"code"</span>, <span class="hl-str">"?"</span>))</pre>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:.4rem">Optionele filters</h4>
+    <table style="width:100%;font-size:.85rem;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border)">
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Parameter</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Voorbeeld</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted)">Omschrijving</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.45rem .6rem"><code>code</code></td>
+          <td style="padding:.45rem .6rem"><code>MedicationAgreement</code></td>
+          <td style="padding:.45rem .6rem;color:var(--text-muted)">Filter op zorgcontext-type</td>
+        </tr>
+        <tr>
+          <td style="padding:.45rem .6rem"><code>source:identifier</code></td>
+          <td style="padding:.45rem .6rem"><code>urn:ietf:rfc:3986|EHR-SYS-001</code></td>
+          <td style="padding:.45rem .6rem;color:var(--text-muted)">Filter op bronidentificatie</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Lokalisatie verwijderen (<code>DELETE /NVIDataReference/&lt;id&gt;</code>)</h3>
+    <div class="code-block">
+      <button class="copy-code">Kopieer</button>
+      <pre>curl -s -X DELETE \
+  --cert client-uzi-chain.crt \
+  --key  client-uzi.key \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{ $svc.base_url }}/NVIDataReference/&lt;id&gt;"</pre>
+    </div>
+  </div>
+
+  <div class="info-panel" style="margin-bottom:1.5rem">
+    <div class="info-panel-title">FHIR CapabilityStatement</div>
+    <p>De volledige API-beschrijving is beschikbaar via:
+      <code>curl {{ $svc.base_url }}/fhir/metadata</code>
+    </p>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <a href="{{ "integration/prs/" | relURL }}" class="filter-btn" style="text-decoration:none">&larr; PRS</a>
+    <a href="{{ "integration/" | relURL }}" class="filter-btn" style="text-decoration:none">&larr; Terug naar overzicht</a>
+  </div>
+
+</main>
+{{ end }}{{ end }}
+{{ end }}
