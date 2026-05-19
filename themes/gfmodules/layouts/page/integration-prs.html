@@ -163,13 +163,32 @@
     <h4 style="margin-bottom:.4rem">1a. BSN opmaken als JSON</h4>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
       De PRS verwacht geen kale BSN-string als invoer, maar een gestructureerd JSON-object.
-      Dit formaat maakt het protocol uitbreidbaar naar andere identifikatietypen en zorgt voor
-      een eenduidige, canonieke representatie — spaties en volgorde zijn daarmee uitgesloten.
+      Gebruik hiervoor een canonieke JSON-representatie conform
+      <a href="https://datatracker.ietf.org/doc/html/rfc8785">RFC 8785 (JSON Canonicalization Scheme)</a>.
+      Als referentie-implementatie kun je bijvoorbeeld
+      <a href="https://github.com/trailofbits/rfc8785.py">trailofbits/rfc8785.py</a> gebruiken.
     </p>
     <div class="code-block" style="margin-bottom:1.25rem">
       <button class="copy-code">Kopieer</button>
-      <pre>pid = json.dumps({<span class="hl-str">"landCode"</span>: <span class="hl-str">"NL"</span>, <span class="hl-str">"type"</span>: <span class="hl-str">"BSN"</span>, <span class="hl-str">"value"</span>: BSN})</pre>
+      <pre><span class="hl-kw">import</span> json
+<span class="hl-kw">import</span> rfc8785
+
+BSN = <span class="hl-str">"999993653"</span>
+
+pid = rfc8785.dumps({
+  <span class="hl-str">"landCode"</span>: <span class="hl-str">"NL"</span>,
+  <span class="hl-str">"type"</span>: <span class="hl-str">"BSN"</span>,
+  <span class="hl-str">"value"</span>: BSN
+}).decode()
+
+# Example using json.dumps(...)
+example_json_dumps = json.dumps({<span class="hl-str">"type"</span>: <span class="hl-str">"BSN"</span>, <span class="hl-str">"value"</span>: BSN, <span class="hl-str">"landCode"</span>: <span class="hl-str">"NL"</span>}, separators=(<span class="hl-str">","</span>, <span class="hl-str">":"</span>), sort_keys=<span class="hl-kw">True</span>)
+</pre>
     </div>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.25rem">
+      Verwachte canonieke JSON-uitvoer voor bovenstaande invoer:
+      <code>{"landCode":"NL","type":"BSN","value":"999993653"}</code>
+    </p>
 
     <h4 style="margin-bottom:.4rem">1b. HKDF-afleiding — scope-specifieke input genereren</h4>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
