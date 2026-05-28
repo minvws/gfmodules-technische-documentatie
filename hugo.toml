@@ -1,7 +1,8 @@
 baseURL = "https://minvws.github.io/gfmodules-technische-documentatie"
-languageCode = "nl"
+locale = "nl"
 title = "Generieke Functies Technische Documentatie"
 theme = "gfmodules"
+disableKinds = ["taxonomy", "term"]
 
 [params]
   subtitle = "Generieke Functies"
