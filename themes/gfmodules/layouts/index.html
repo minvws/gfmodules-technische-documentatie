@@ -4,7 +4,7 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <h1>{{ .Site.Params.subtitle }} - Landingspagina</h1>
+      <h1>{{ .Site.Params.subtitle }}</h1>
       <p class="hero-desc">
         Overzicht van alle {{ .Site.Title }}-diensten, versie-informatie, verbindingsinstructies
         en wijzigingshistorie voor de {{ .Site.Params.environment }}-omgeving.
@@ -20,10 +20,6 @@
         </div>
       </div>
     </div>
-    <div class="env-badge">
-      <span class="env-badge-label">Actieve omgeving</span>
-      <span class="env-badge-name">{{ .Site.Params.environment }}</span>
-    </div>
   </div>
 </section>
 
@@ -31,7 +27,6 @@
 
   <div class="section-header">
     <h2>Services</h2>
-    <a class="section-link" href="{{ "/services/" | relURL }}">Alle services &rarr;</a>
   </div>
 
   <div class="cards-grid">

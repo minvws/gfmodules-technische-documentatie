@@ -10,7 +10,7 @@
 
 <header class="site-header">
   <nav class="nav-inner">
-    <a class="nav-brand" href="{{ "/" | relURL }}">
+    <a class="nav-brand" href="{{ absURL "" }}">
       <div class="nav-logo">GF</div>
       <div class="nav-title">{{ .Site.Title }} <span class="nav-sub">{{ .Site.Params.subtitle }}</span></div>
     </a>
@@ -30,7 +30,7 @@
 
 <footer class="site-footer">
   <div class="footer-inner">
-    <span>{{ .Site.Title }} &mdash; {{ .Site.Params.subtitle }} &mdash; {{ .Site.Params.environment }}</span>
+    <span>{{ .Site.Title }}</span>
     <span>Vragen? <a href="mailto:{{ .Site.Params.contact_email }}">{{ .Site.Params.contact_email }}</a></span>
   </div>
 </footer>

@@ -221,15 +221,6 @@ bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()</pre>
     </div>
   </div>
 
-  <div class="info-panel tip" style="margin-bottom:1.25rem">
-    <div class="info-panel-title">Tip — Alternatief: ciphersmith.io OPRF</div>
-    <p>Je kunt ook gebruik maken van de OPRF-functionaliteit op <a href="https://ciphersmith.io/#oprf">ciphersmith.io/#oprf</a> om het blindingproces te testen of te debuggen.</p>
-    <ul style="font-size:.875rem;line-height:1.9;color:var(--text-muted);padding-left:1.1rem;margin:.5rem 0 0">
-      <li>Kies als suite <strong>ristretto255</strong> en als mode <strong>OPRF</strong>.</li>
-      <li>Het gegenereerde blinded element is geëncodeerd in <strong>HEX</strong> — converteer dit naar <strong>BASE64</strong> voor gebruik in de API.</li>
-    </ul>
-  </div>
-
   <div class="info-panel warn" style="margin-bottom:1.25rem">
     <div class="info-panel-title">Beschikbare OPRF-bibliotheken</div>
     <p>Niet alle programmeertalen hebben een volwaardige OPRF-implementatie beschikbaar. Bekende bibliotheken:</p>
