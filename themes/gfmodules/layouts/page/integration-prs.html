@@ -1,5 +1,5 @@
 {{ define "main" }}
-{{ range $.Site.Data.services }}{{ if eq .id "prs" }}{{ $svc := . }}
+{{ range hugo.Data.services }}{{ if eq .id "prs" }}{{ $svc := . }}
 <main class="page-content">
 
   <div class="section-header">
