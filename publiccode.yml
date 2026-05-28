@@ -1,0 +1,65 @@
+publiccodeYmlVersion: "0.5"
+name: Generieke Functies Technische Documentatie
+url: https://github.com/minvws/gfmodules-technische-documentatie
+platforms:
+  - web
+categories:
+  - application-development
+developmentStatus: development
+softwareType: standalone/web
+intendedAudience:
+  countries:
+    - NL
+  scope:
+    - government
+    - healthcare
+
+description:
+  nl:
+    shortDescription: >-
+      Technische documentatie voor het GFModules-platform van het Ministerie
+      van Volksgezondheid, Welzijn en Sport.
+    longDescription: |
+      Deze repository bevat de technische documentatie voor het GFModules-platform,
+      onderdeel van het 'Generieke Functies, lokalisatie en addressering'-project
+      van het Ministerie van Volksgezondheid, Welzijn en Sport.
+
+      De documentatie beschrijft de services en integratiepatronen van het
+      platform en wordt gepubliceerd als statische website via Hugo en GitHub Pages.
+    features:
+      - Documentatie van services en integratiepatronen
+      - Gepubliceerd als statische Hugo-website via GitHub Pages
+  en:
+    shortDescription: >-
+      Technical documentation for the GFModules platform, published by the
+      Dutch Ministry of Health, Welfare and Sport.
+    longDescription: |
+      This repository contains the technical documentation for the GFModules
+      platform, part of the 'Generieke Functies, lokalisatie en addressering'
+      project of the Ministry of Health, Welfare and Sport of the Dutch government.
+
+      The documentation covers services and integration patterns for the platform
+      and is published as a static site using Hugo and GitHub Pages.
+    features:
+      - Documentation of services and integration patterns
+      - Published as a static Hugo site via GitHub Pages
+
+legal:
+  license: EUPL-1.2
+  mainCopyrightOwner: Ministerie van Volksgezondheid, Welzijn en Sport
+
+maintenance:
+  type: internal
+  contacts:
+    - name: iRealisatie - Team Generieke Functies
+      email: maintainer@irealisatie.nl
+      affiliation: Ministerie van Volksgezondheid, Welzijn en Sport
+
+organisation:
+  uri: https://www.rijksoverheid.nl/ministeries/ministerie-van-volksgezondheid-welzijn-en-sport
+  name: Ministerie van Volksgezondheid, Welzijn en Sport
+
+localisation:
+  localisationReady: false
+  availableLanguages:
+    - nl
