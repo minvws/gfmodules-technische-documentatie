@@ -4,14 +4,14 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <h1>{{ .Site.Params.subtitle }} - Landingspagina</h1>
+      <h1>{{ .Site.Params.subtitle }}</h1>
       <p class="hero-desc">
         Overzicht van alle {{ .Site.Title }}-diensten, versie-informatie, verbindingsinstructies
         en wijzigingshistorie voor de {{ .Site.Params.environment }}-omgeving.
       </p>
       <div class="hero-stats">
         <div class="stat">
-          <span class="stat-num">{{ len .Site.Data.services }}</span>
+          <span class="stat-num">{{ len hugo.Data.services }}</span>
           <span class="stat-label">Actieve services</span>
         </div>
         <div class="stat">
@@ -20,10 +20,6 @@
         </div>
       </div>
     </div>
-    <div class="env-badge">
-      <span class="env-badge-label">Actieve omgeving</span>
-      <span class="env-badge-name">{{ .Site.Params.environment }}</span>
-    </div>
   </div>
 </section>
 
@@ -31,11 +27,10 @@
 
   <div class="section-header">
     <h2>Services</h2>
-    <a class="section-link" href="{{ "/services/" | relURL }}">Alle services &rarr;</a>
   </div>
 
   <div class="cards-grid">
-    {{ range .Site.Data.services }}
+    {{ range hugo.Data.services }}
     <div class="service-card">
       <div class="service-card-top">
         <div class="service-icon {{ .icon_class }}">{{ .icon }}</div>
@@ -102,12 +97,12 @@
 
   <div class="section-header">
     <h2>Recente wijzigingen</h2>
-    <a class="section-link" href="{{ "/changelog/" | relURL }}">Volledige changelog &rarr;</a>
+    <!-- <a class="section-link" href="{{ "/changelog/" | relURL }}">Volledige changelog &rarr;</a> -->
   </div>
 
   <div class="card">
     <ul class="changelog" style="padding:0">
-      {{ range $i, $entry := first 3 .Site.Data.changelog }}
+      {{ range $i, $entry := first 3 hugo.Data.changelog }}
       <li class="cl-entry"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
         <div class="cl-side">
           <div class="cl-date">{{ $entry.date }}</div>

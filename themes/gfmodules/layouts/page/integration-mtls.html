@@ -52,8 +52,6 @@ openssl req -newkey rsa:4096 -nodes \
 openssl req -text -noout -verify -in client.csr</pre>
     </div>
 
-    <p style="margin-bottom:.75rem">Het is ook mogelijk om tools zoals <a href="https://ciphersmith.io#csr">CipherSmith</a> te gebruiken om via je browser een CSR te genereren.</p>
-
     <p style="margin-bottom:.75rem">Na het opsturen van je CSR, krijg je vanuit GfModules certificaten die <strong>alleen</strong> geldig zijn op de betreffende omgeving (bijvoorbeeld de {{ $.Site.Params.environment }}). Deze certificaten kunnen <strong>niet</strong> gebruikt worden voor andere doeleinden en systemen.</p>
 
     <p style="margin-bottom:.25rem">Je ontvangt op dit moment twee sets certificaten:</p>
@@ -101,7 +99,7 @@ openssl req -text -noout -verify -in client.csr</pre>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
-{{ range $.Site.Data.services }}{{ if eq .id "oauth" }}curl -v \
+{{ range hugo.Data.services }}{{ if eq .id "oauth" }}curl -v \
   --cert client-uzi-chain.crt \
   --key  client-uzi.key \
   {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>

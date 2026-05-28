@@ -60,8 +60,6 @@ openssl req -newkey rsa:4096 -nodes \
 openssl req -text -noout -verify -in client.csr</pre>
       </div>
 
-      <p style="margin-bottom:.75rem">Het is ook mogelijk om tools zoals <a href="https://ciphersmith.io#csr">CipherSmith</a> te gebruiken om via je browser een CSR te genereren.</p>
-
       <p style="margin-bottom:.75rem">Na het opsturen van je CSR, krijg je vanuit GfModules certificaten die <strong>alleen</strong> geldig zijn op de betreffende omgeving (bijvoorbeeld de {{ $.Site.Params.environment }}). Deze certificaten kunnen <strong>niet</strong> gebruikt worden voor andere doeleinden en systemen.</p>
 
       <p style="margin-bottom:.25rem">Je ontvangt op dit moment twee sets certificaten:</p>
@@ -109,7 +107,7 @@ openssl req -text -noout -verify -in client.csr</pre>
       <div class="code-block">
         <button class="copy-code">Kopieer</button>
         <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
-{{ range $.Site.Data.services }}{{ if eq .id "oauth" }}curl -v \
+{{ range hugo.Data.services }}{{ if eq .id "oauth" }}curl -v \
   --cert client-uzi-chain.crt \
   --key  client-uzi.key \
   {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
@@ -145,13 +143,13 @@ openssl req -text -noout -verify -in client.csr</pre>
 
   <div data-tabs>
     <div class="tabs">
-      {{ range $i, $svc := $.Site.Data.services }}
+      {{ range $i, $svc := hugo.Data.services }}
       <button class="tab-btn{{ if eq $i 0 }} active{{ end }}" id="{{ $svc.id }}">{{ $svc.icon }} {{ $svc.name }}</button>
       {{ end }}
     </div>
 
     <!-- ===== OAUTH PANEL ===== -->
-    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "oauth" }}
+    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "oauth" }}
     <div class="tab-panel{{ if eq $i 0 }} active{{ end }}">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>OAuth Service - Overzicht</h3>
@@ -218,14 +216,14 @@ openssl req -text -noout -verify -in client.csr</pre>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:.4rem .6rem"><code>target_audience</code></td>
               <td style="padding:.4rem .6rem">
-                {{ range $.Site.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+                {{ range hugo.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
               </td>
               <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor NVI</td>
             </tr>
             <tr>
               <td style="padding:.4rem .6rem"><code>target_audience</code></td>
               <td style="padding:.4rem .6rem">
-                {{ range $.Site.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+                {{ range hugo.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
               </td>
               <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor PRS</td>
             </tr>
@@ -319,7 +317,7 @@ HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHand
     {{ end }}{{ end }}
 
     <!-- ===== PRS PANEL ===== -->
-    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "prs" }}
+    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "prs" }}
     <div class="tab-panel">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>PRS - {{ $svc.fullname }}</h3>
@@ -559,7 +557,7 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
     {{ end }}{{ end }}
 
     <!-- ===== NVI PANEL ===== -->
-    {{ range $i, $svc := $.Site.Data.services }}{{ if eq $svc.id "nvi" }}
+    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "nvi" }}
     <div class="tab-panel">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>NVI - {{ $svc.fullname }}</h3>

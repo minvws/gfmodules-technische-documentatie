@@ -1,7 +1,8 @@
 baseURL = "https://minvws.github.io/gfmodules-technische-documentatie"
-languageCode = "nl"
-title = "GfModules"
+locale = "nl"
+title = "Generieke Functies Technische Documentatie"
 theme = "gfmodules"
+disableKinds = ["taxonomy", "term"]
 
 [params]
   subtitle = "Generieke Functies"
@@ -20,7 +21,3 @@ theme = "gfmodules"
   name = "Integratie"
   url = "/integration/"
   weight = 3
-[[menus.main]]
-  name = "Changelog"
-  url = "/changelog/"
-  weight = 4
