@@ -31,8 +31,7 @@ description:
     shortDescription: >-
       Technical documentation for the Generic Functions of the Ministry of Health, Welfare and Sport.
     longDescription: |
-      This repository contains the technical documentation for the GFModules
-      platform, part of the 'Generieke Functies, lokalisatie en addressering'
+      This repository contains the technical documentation for the 'Generieke Functies, lokalisatie en addressering'
       project of the Ministry of Health, Welfare and Sport of the Dutch government.
 
       The documentation covers services and integration patterns for the platform
