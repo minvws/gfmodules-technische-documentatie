@@ -1,7 +1,6 @@
 # Generieke Functies Technische Documentatie
 
-This repository contains the technical documentation for the Generieke Functies
-platform, part of the 'Generieke Functies, lokalisatie en addressering' project
+This repository contains the technical documentation for the 'Generieke Functies, lokalisatie en addressering' project
 of the Ministry of Health, Welfare and Sport of the Dutch government.
 
 The documentation covers services and integration patterns for
