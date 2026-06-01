@@ -20,8 +20,7 @@ description:
       Technische documentatie voor de Generieke Functies van het Ministerie
       van Volksgezondheid, Welzijn en Sport.
     longDescription: |
-      Deze repository bevat de technische documentatie voor het GFModules-platform,
-      onderdeel van het 'Generieke Functies, lokalisatie en addressering'-project
+      Deze repository bevat de technische documentatie voor het 'Generieke Functies, lokalisatie en addressering'-project
       van het Ministerie van Volksgezondheid, Welzijn en Sport.
 
       De documentatie beschrijft de services en integraties en wordt gepubliceerd als statische website via Hugo en GitHub Pages.
