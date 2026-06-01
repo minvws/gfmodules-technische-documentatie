@@ -24,8 +24,7 @@ description:
       onderdeel van het 'Generieke Functies, lokalisatie en addressering'-project
       van het Ministerie van Volksgezondheid, Welzijn en Sport.
 
-      De documentatie beschrijft de services en integratiepatronen van het
-      platform en wordt gepubliceerd als statische website via Hugo en GitHub Pages.
+      De documentatie beschrijft de services en integraties en wordt gepubliceerd als statische website via Hugo en GitHub Pages.
     features:
       - Documentatie van services en integratiepatronen
       - Gepubliceerd als statische Hugo-website via GitHub Pages
