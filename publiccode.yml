@@ -29,8 +29,7 @@ description:
       - Gepubliceerd als statische Hugo-website via GitHub Pages
   en:
     shortDescription: >-
-      Technical documentation for the GFModules platform, published by the
-      Dutch Ministry of Health, Welfare and Sport.
+      Technical documentation for the Generic Functions of the Ministry of Health, Welfare and Sport.
     longDescription: |
       This repository contains the technical documentation for the GFModules
       platform, part of the 'Generieke Functies, lokalisatie en addressering'
