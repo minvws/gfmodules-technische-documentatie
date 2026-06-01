@@ -26,7 +26,7 @@ description:
 
       De documentatie beschrijft de services en integraties en wordt gepubliceerd als statische website via Hugo en GitHub Pages.
     features:
-      - Documentatie van services en integratiepatronen
+      - Documentatie van services en integraties
       - Gepubliceerd als statische Hugo-website via GitHub Pages
   en:
     shortDescription: >-
