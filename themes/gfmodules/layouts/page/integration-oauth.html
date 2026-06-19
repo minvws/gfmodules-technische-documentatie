@@ -1,5 +1,5 @@
 {{ define "main" }}
-{{ range hugo.Data.services }}{{ if eq .id "oauth" }}{{ $svc := . }}
+{{ range site.Data.services }}{{ if eq .id "oauth" }}{{ $svc := . }}
 <main class="page-content">
 
   <div class="section-header">
@@ -76,14 +76,14 @@
         <tr style="border-bottom:1px solid var(--border)">
           <td style="padding:.4rem .6rem"><code>target_audience</code></td>
           <td style="padding:.4rem .6rem">
-            {{ range hugo.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+            {{ range site.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
           </td>
           <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor NVI</td>
         </tr>
         <tr>
           <td style="padding:.4rem .6rem"><code>target_audience</code></td>
           <td style="padding:.4rem .6rem">
-            {{ range hugo.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+            {{ range site.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
           </td>
           <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor PRS</td>
         </tr>

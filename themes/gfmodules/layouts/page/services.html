@@ -17,7 +17,7 @@
     <button class="filter-btn" data-filter="productie">Productie</button>
   </div>
 
-  {{ range hugo.Data.services }}
+  {{ range site.Data.services }}
   <div data-filter-item="services" data-filter-val="{{ .env_filter }}" style="margin-bottom:2rem">
     <div class="section-header" style="margin-bottom:.75rem">
       <h2 style="font-size:1.05rem;display:flex;align-items:center;gap:.5rem">

@@ -99,7 +99,7 @@ openssl req -text -noout -verify -in client.csr</pre>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
-{{ range hugo.Data.services }}{{ if eq .id "oauth" }}curl -v \
+{{ range site.Data.services }}{{ if eq .id "oauth" }}curl -v \
   --cert client-uzi-chain.crt \
   --key  client-uzi.key \
   {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>

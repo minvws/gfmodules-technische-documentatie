@@ -13,14 +13,14 @@
   <div class="filters" data-filter-group="cl">
     <span class="filter-label">Filter:</span>
     <button class="filter-btn active" data-filter="all">Alle</button>
-    {{ range hugo.Data.services }}
+    {{ range site.Data.services }}
     <button class="filter-btn" data-filter="{{ .id }}">{{ .name }}</button>
     {{ end }}
   </div>
 
   <div class="card">
     <ul class="changelog" style="padding:0">
-      {{ range $i, $entry := hugo.Data.changelog }}
+      {{ range $i, $entry := site.Data.changelog }}
       <li class="cl-entry" data-filter-item="cl" data-filter-val="{{ delimit $entry.filters " " }}"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
         <div class="cl-side">
           <div class="cl-date">{{ $entry.date }}</div>
