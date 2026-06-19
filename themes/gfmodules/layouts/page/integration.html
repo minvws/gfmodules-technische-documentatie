@@ -107,7 +107,7 @@ openssl req -text -noout -verify -in client.csr</pre>
       <div class="code-block">
         <button class="copy-code">Kopieer</button>
         <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
-{{ range hugo.Data.services }}{{ if eq .id "oauth" }}curl -v \
+{{ range site.Data.services }}{{ if eq .id "oauth" }}curl -v \
   --cert client-uzi-chain.crt \
   --key  client-uzi.key \
   {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
@@ -143,13 +143,13 @@ openssl req -text -noout -verify -in client.csr</pre>
 
   <div data-tabs>
     <div class="tabs">
-      {{ range $i, $svc := hugo.Data.services }}
+      {{ range $i, $svc := site.Data.services }}
       <button class="tab-btn{{ if eq $i 0 }} active{{ end }}" id="{{ $svc.id }}">{{ $svc.icon }} {{ $svc.name }}</button>
       {{ end }}
     </div>
 
     <!-- ===== OAUTH PANEL ===== -->
-    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "oauth" }}
+    {{ range $i, $svc := site.Data.services }}{{ if eq $svc.id "oauth" }}
     <div class="tab-panel{{ if eq $i 0 }} active{{ end }}">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>OAuth Service - Overzicht</h3>
@@ -216,14 +216,14 @@ openssl req -text -noout -verify -in client.csr</pre>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:.4rem .6rem"><code>target_audience</code></td>
               <td style="padding:.4rem .6rem">
-                {{ range hugo.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+                {{ range site.Data.services }}{{ if eq .id "nvi" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
               </td>
               <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor NVI</td>
             </tr>
             <tr>
               <td style="padding:.4rem .6rem"><code>target_audience</code></td>
               <td style="padding:.4rem .6rem">
-                {{ range hugo.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
+                {{ range site.Data.services }}{{ if eq .id "prs" }}<code>{{ .base_url }}</code>{{ end }}{{ end }}
               </td>
               <td style="padding:.4rem .6rem;color:var(--text-muted)">Token voor PRS</td>
             </tr>
@@ -317,7 +317,7 @@ HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHand
     {{ end }}{{ end }}
 
     <!-- ===== PRS PANEL ===== -->
-    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "prs" }}
+    {{ range $i, $svc := site.Data.services }}{{ if eq $svc.id "prs" }}
     <div class="tab-panel">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>PRS - {{ $svc.fullname }}</h3>
@@ -557,7 +557,7 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
     {{ end }}{{ end }}
 
     <!-- ===== NVI PANEL ===== -->
-    {{ range $i, $svc := hugo.Data.services }}{{ if eq $svc.id "nvi" }}
+    {{ range $i, $svc := site.Data.services }}{{ if eq $svc.id "nvi" }}
     <div class="tab-panel">
       <div class="card" style="margin-bottom:1.25rem">
         <h3>NVI - {{ $svc.fullname }}</h3>
