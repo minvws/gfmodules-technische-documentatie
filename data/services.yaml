@@ -9,7 +9,7 @@
 
   base_url: "https://oauth.proeftuin.gf.irealisatie.nl"
   base_url_note: "Alle paden hierboven zijn relatief aan deze base URL."
-  description: "Centrale authenticatie- en autorisatiedienst. Geeft RS256-gesigneerde access tokens uit na mTLS-authenticatie met een UZI-certificaat. Geen client secret vereist."
+  description: "Centrale authenticatie- en autorisatiedienst. Geeft RS256-gesigneerde access tokens uit na mTLS-authenticatie met een PKIoverheid-certificaat. Geen client secret vereist."
   integration_anchor: oauth
   endpoints:
     - method: GET

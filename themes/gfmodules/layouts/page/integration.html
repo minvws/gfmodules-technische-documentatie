@@ -6,7 +6,7 @@
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:2rem;max-width:680px">
     Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Title }}-diensten.
-    Elke verbinding vereist mutual TLS (mTLS) met een door GfModules uitgegeven certificaat.
+    Elke verbinding vereist mutual TLS (mTLS) met een geldig PKIoverheid-certificaat.
   </p>
 
   <!-- ============================================================
@@ -21,104 +21,71 @@
       <h3>Wat is mTLS?</h3>
       <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
         Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
-        verifieert ook de server de cliënt aan de hand van een client-certificaat. Alle {{ $.Site.Title }}-diensten
-        vereisen mTLS: zonder geldig certificaat wordt de verbinding al op transportniveau geweigerd.
+        verifieert ook de server de cliënt aan de hand van een PKIoverheid-clientcertificaat. Alle {{ $.Site.Title }}-diensten
+        vereisen mTLS: zonder geldig PKIoverheid-certificaat wordt de verbinding al op transportniveau geweigerd.
       </p>
 
       <div class="two-col">
         <div>
           <h4>Wat heb je nodig?</h4>
           <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
-            <li>Client-certificaat (<code>.crt</code> of <code>.pem</code>)</li>
+            <li>PKIoverheid-clientcertificaat (<code>.crt</code> of <code>.pem</code>)</li>
             <li>Bijbehorende private key (<code>.key</code>)</li>
 
-            <li>Optioneel: PKCS#12-bundle (<code>.p12</code>) voor Java / .NET</li>
+            <li>Optioneel: PKCS#12-bundle (<code>.pfx</code> of <code>.p12</code>)</li>
           </ul>
         </div>
         <div>
-          <h4>Aanvraagproces</h4>
-          <ol style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
-            <li>Genereer een CSR (Certificate Signing Request)</li>
-            <li>Stuur de CSR naar <a href="mailto:{{ $.Site.Params.contact_email }}">GfModules Beheer</a></li>
-            <li>Ontvang het gesigneerde certificaat</li>
-          </ol>
+          <h4>Meer informatie</h4>
+          <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
+            <li><a href="https://www.logius.nl/onze-dienstverlening/toegang/pkioverheid">Meer informatie over PKIoverheid</a></li>
+            <li><a href="https://github.com/pkioverheid/g4-trial#overview">Organisaties die (gratis) testcertificaten aanbieden</a></li>
+          </ul>
         </div>
+      </div>
+
+      <div class="info-panel" style="margin-top:1rem">
+        <div class="info-panel-title">Vereist PKIoverheid-certificaatprofiel</div>
+        <p>Type: <code>G4 Private TLS Generic Devices Organization Validated Server</code> voor serverauthenticatie (<code>OID 2.16.528.1.1003.1.2.44.15.35.11</code>).</p>
+        <p>Organisatie-identificatie: <strong>Organisatie-identificatienummer (OIN)</strong>.</p>
       </div>
     </div>
 
     <div class="card" style="margin-bottom:1.25rem">
-      <h4>CSR genereren met OpenSSL</h4>
-      <div class="code-block">
-        <button class="copy-code">Kopieer</button>
-        <pre><span class="hl-comment"># Genereer een 4096-bits RSA-sleutelpaar en een CSR</span>
-openssl req -newkey rsa:4096 -nodes \
-  -keyout client.key \
-  -out    client.csr \
-  -subj "/C=NL/O=Mijn Organisatie/CN=mijn-app.proeftuin"
+      <h4>PKIoverheid-certificaat gebruiken</h4>
+      <p style="margin-bottom:.75rem">Gebruik een <strong>PKIoverheid-certificaat</strong> voor de GfModules-diensten waarvoor je bent geautoriseerd.</p>
 
-<span class="hl-comment"># Verifieer de CSR</span>
-openssl req -text -noout -verify -in client.csr</pre>
-      </div>
-
-      <p style="margin-bottom:.75rem">Na het opsturen van je CSR, krijg je vanuit GfModules certificaten die <strong>alleen</strong> geldig zijn op de betreffende omgeving (bijvoorbeeld de {{ $.Site.Params.environment }}). Deze certificaten kunnen <strong>niet</strong> gebruikt worden voor andere doeleinden en systemen.</p>
-
-      <p style="margin-bottom:.25rem">Je ontvangt op dit moment twee sets certificaten:</p>
+      <p style="margin-bottom:.25rem">Gebruik voor de integratie je PKIoverheid-clientcertificaat en de bijbehorende private key:</p>
       <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
-        <li>LDN certificaten</li>
-        <li>UZI certificaten</li>
+        <li><code>client-cert.pem</code> - Je PKIoverheid-clientcertificaat; gebruik hierbij graag de volledige certificaatketen.</li>
+        <li><code>client-key.pem</code> - De bijbehorende private key.</li>
       </ul>
 
-      <p style="margin-bottom:.75rem">Binnen je UZI certificaat zit een test URA nummer. Dit nummer wordt gebruikt om van en naar te communiceren binnen de verschillende systemen binnen GfModules. De LDN certificaten zijn op dit moment niet nodig voor gebruik en zullen in de toekomst niet meer worden uitgegeven voor de {{ $.Site.Params.environment }}.</p>
-
-      <p style="margin-bottom:.25rem">Je zult de volgende UZI certificaten ontvangen:</p>
-      <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
-        <li><code>[naam]-uzi-chain.crt</code> - Jouw certificaat plus de bijbehorende chain certificaten.</li>
-        <li><code>[naam]-uzi.crt</code> - Jouw certificaat zonder chain certificaten.</li>
-        <li><code>uzi-ca.crt</code> - Het root CA certificaat van de {{ $.Site.Params.environment }}.</li>
-      </ul>
-
-      <p style="margin-bottom:.5rem">Certificaten gebruiken de volgende chain:</p>
-      <div class="info-panel" style="margin-bottom:.5rem">
-        <div class="info-panel-title">Root CA</div>
-        <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
-          <dt style="font-weight:600">Subject</dt>
-          <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-ca</code></dd>
-          <dt style="font-weight:600">Serienummer</dt>
-          <dd><code>5ebc4973add6806aff244587300821b76abdf59d</code></dd>
-          <dt style="font-weight:600">Fingerprint</dt>
-          <dd><code style="word-break:break-all">82:a6:35:ae:53:0e:f9:ee:22:61:a3:9f:89:cb:c3:30:91:19:fd:17:d3:15:54:f7:ab:76:af:c2:0f:d9:2e:ba</code></dd>
-        </dl>
-        <a href="./proeftuin-uzi-ca.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download CA Certificaat &rarr;</a>
-      </div>
-      <div class="info-panel" style="margin-bottom:1rem">
-        <div class="info-panel-title">Intermediate CA</div>
-        <dl style="font-size:.8rem;line-height:1.9;color:var(--text-muted);margin:0">
-          <dt style="font-weight:600">Subject</dt>
-          <dd><code>C=NL, L=Den Haag, O=MinVWS, OU=iRealisatie, CN=gfmodules-proeftuin-uzi-dev-intermediate</code></dd>
-          <dt style="font-weight:600">Serienummer</dt>
-          <dd><code>2561750e384cc3037818cc064639fabe20119fd2</code></dd>
-          <dt style="font-weight:600">Fingerprint</dt>
-          <dd><code style="word-break:break-all">40:86:6a:93:86:bf:38:aa:8e:70:ff:4f:fb:fb:c9:92:8e:19:bd:ad:b6:4f:b4:5e:d6:a5:12:c8:39:ec:28:61</code></dd>
-        </dl>
-        <a href="./proeftuin-uzi-intermediate.crt" style="font-size:.85rem;display:inline-block;margin-top:.5rem">Download Intermediate Certificaat &rarr;</a>
-      </div>
+      <p style="margin-bottom:1rem">Gebruik uitsluitend de actuele certificaatketen en trust-instructies die je van de beheerder of certificaatleverancier ontvangt.</p>
 
       <h4>Verbinding testen met curl</h4>
       <div class="code-block">
         <button class="copy-code">Kopieer</button>
         <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
 {{ range site.Data.services }}{{ if eq .id "oauth" }}curl -v \
-  --cert client-uzi-chain.crt \
-  --key  client-uzi.key \
+  --cert client-cert.pem \
+  --key  client-key.pem \
   {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
       </div>
 
-      <h4>PKCS#12-bundle aanmaken (voor Java / .NET)</h4>
+      <h4>Verbinding testen met een PKCS#12-bundle (<code>.pfx</code> / <code>.p12</code>)</h4>
+      <div class="code-block">
+        <button class="copy-code">Kopieer</button>
+        <pre><span class="hl-comment"># Controleer de mTLS-verbinding met een PKIoverheid G4-testcertificaat</span>
+curl 'https://nvi.test.gf.irealisatie.nl/v0.2/api/health' --cert-type P12 --cert pkio_g4_test_cert.pfx:&lt;wachtwoord&gt;</pre>
+      </div>
+
+      <h4>PKCS#12-bundle aanmaken</h4>
       <div class="code-block">
         <button class="copy-code">Kopieer</button>
         <pre>openssl pkcs12 -export \
-  -in    client-uzi-chain.crt \
-  -inkey client-uzi.key \
+  -in    client-cert.pem \
+  -inkey client-key.pem \
   -out   client.p12 \
   -name  "gfmodules-client" \
   -passout pass:geheimwachtwoord</pre>
@@ -156,9 +123,9 @@ openssl req -text -noout -verify -in client.csr</pre>
         <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
           De OAuth-dienst is een op maat gemaakte <strong>OAuth 2.0 Authorization Service</strong>.
           Voor machine-to-machine communicatie gebruik je de <em>client credentials</em>-flow
-          met mTLS-authenticatie (<code>tls_client_auth</code>). Het UZI-certificaat dient als
+          met mTLS-authenticatie (<code>tls_client_auth</code>). Het PKIoverheid-certificaat dient als
           authenticatiemiddel - er is geen <code>client_id</code> of <code>client_secret</code> nodig.
-          Het URA-nummer wordt automatisch uit het certificaat gelezen.
+          Het URA-nummer wordt automatisch uit het PKIoverheid-certificaat gelezen.
           De service geeft RS256-gesigneerde JWT access tokens terug.
         </p>
       </div>
@@ -169,15 +136,15 @@ openssl req -text -noout -verify -in client.csr</pre>
           <li class="step">
             <div class="step-num">1</div>
             <div class="step-body">
-              <h4>UZI-certificaat gereedmaken</h4>
-              <p>Zorg dat je <code>client-uzi-chain.crt</code>, <code>client-uzi.key</code> en <code>uzi-ca.crt</code> beschikbaar zijn. Zie de <a href="#mtls">mTLS-sectie</a> hierboven.</p>
+              <h4>PKIoverheid-certificaat gereedmaken</h4>
+              <p>Zorg dat je <code>client-cert.pem</code> en <code>client-key.pem</code> beschikbaar zijn. Zie de <a href="#mtls">gids voor PKIoverheid-certificaten</a> hierboven.</p>
             </div>
           </li>
           <li class="step">
             <div class="step-num">2</div>
             <div class="step-body">
               <h4>Scope en target audience bepalen</h4>
-              <p>Je URA-nummer wordt automatisch uit het UZI-certificaat gelezen - er is geen <code>client_id</code> nodig. Geef met <code>scope</code> de gevraagde rechten op en met <code>target_audience</code> voor welke dienst het token bedoeld is (bijv. de NVI of PRS base URL). De exacte waarden ontvang je van GfModules Beheer.</p>
+              <p>Je URA-nummer wordt automatisch uit het PKIoverheid-certificaat gelezen - er is geen <code>client_id</code> nodig. Geef met <code>scope</code> de gevraagde rechten op en met <code>target_audience</code> voor welke dienst het token bedoeld is (bijv. de NVI of PRS base URL). De exacte waarden ontvang je van GfModules Beheer.</p>
             </div>
           </li>
           <li class="step">
@@ -237,8 +204,8 @@ openssl req -text -noout -verify -in client.csr</pre>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s -X POST \
-  --cert   client-uzi-chain.crt \
-  --key    client-uzi.key \
+  --cert   client-cert.pem \
+  --key    client-key.pem \
 
   -d "grant_type=client_credentials" \
   -d "scope=epd:read" \
@@ -271,7 +238,7 @@ openssl req -text -noout -verify -in client.csr</pre>
           <pre><span class="hl-kw">import</span> requests
 
 session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 
 resp = session.post(
     <span class="hl-str">"{{ $svc.base_url }}/oauth/token"</span>,
@@ -287,7 +254,7 @@ token = resp.json()[<span class="hl-str">"access_token"</span>]</pre>
         <h4>Java (HttpClient + SSLContext)</h4>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
-          <pre><span class="hl-comment">// Laad PKCS#12-bundle (client-uzi-chain.crt + client-uzi.key)</span>
+          <pre><span class="hl-comment">// Laad PKCS#12-bundle (client-cert.pem + client-key.pem)</span>
 KeyStore keyStore = KeyStore.getInstance(<span class="hl-str">"PKCS12"</span>);
 <span class="hl-kw">try</span> (InputStream is = <span class="hl-kw">new</span> FileInputStream(<span class="hl-str">"client.p12"</span>)) {
     keyStore.load(is, <span class="hl-str">"geheimwachtwoord"</span>.toCharArray());
@@ -451,13 +418,13 @@ HttpResponse&lt;String&gt; response = client.send(request, HttpResponse.BodyHand
         <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
           Voordat je <code>/oprf/eval</code> kunt aanroepen, moet de PRS jouw publieke sleutel kennen.
           Registreer deze eenmalig via <code>/register/certificate</code> - de PRS leest de publieke sleutel
-          automatisch uit je mTLS-certificaat.
+          automatisch uit je PKIoverheid-certificaat.
         </p>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s -X POST \
-  --cert   client-uzi-chain.crt \
-  --key    client-uzi.key \
+  --cert   client-cert.pem \
+  --key    client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"scope": ["nvi"]}' \
@@ -492,7 +459,7 @@ bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()
 
 <span class="hl-comment"># Stap 2 - POST /oprf/eval (mTLS + bearer token)</span>
 session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 
 resp = session.post(
     f<span class="hl-str">"{PRS_URL}/oprf/eval"</span>,
@@ -574,8 +541,8 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s -X POST \
-  --cert   client-uzi-chain.crt \
-  --key    client-uzi.key \
+  --cert   client-cert.pem \
+  --key    client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/fhir+json" \
   -d '{
@@ -607,8 +574,8 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s \
-  --cert   client-uzi-chain.crt \
-  --key    client-uzi.key \
+  --cert   client-cert.pem \
+  --key    client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/fhir+json" \
   "{{ $svc.base_url }}/v1-poc/fhir/List?subject=&lt;pseudoniem&gt;"</pre>
@@ -620,8 +587,8 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s -X DELETE \
-  --cert   client-uzi-chain.crt \
-  --key    client-uzi.key \
+  --cert   client-cert.pem \
+  --key    client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   "{{ $svc.base_url }}/v1-poc/fhir/List/&lt;id&gt;"</pre>
         </div>
