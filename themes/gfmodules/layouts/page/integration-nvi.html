@@ -56,8 +56,8 @@
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s -X POST \
-  --cert client-uzi-chain.crt \
-  --key  client-uzi.key \
+  --cert client-cert.pem \
+  --key  client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -H "Accept: application/fhir+json" \
@@ -148,7 +148,7 @@ resource = {
 }
 
 session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 resp = session.post(
     f<span class="hl-str">"{NVI_URL}/NVIDataReference"</span>,
     headers={
@@ -197,8 +197,8 @@ resp.raise_for_status()</pre>
         <div class="code-block">
           <button class="copy-code">Kopieer</button>
           <pre>curl -s \
-  --cert client-uzi-chain.crt \
-  --key  client-uzi.key \
+  --cert client-cert.pem \
+  --key  client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/fhir+json" \
   "{{ $svc.base_url }}/v1-poc/fhir/List?subject:identifier=http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier|&lt;identifier-value&gt;"</pre>
@@ -257,7 +257,7 @@ system = <span class="hl-str">"http://minvws.github.io/generiekefuncties-docs/Na
 query  = f<span class="hl-str">"subject:identifier={system}|{identifier_value}"</span>
 
 session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 resp = session.get(
     f<span class="hl-str">"{NVI_URL}/v1-poc/fhir/List?{query}"</span>,
     headers={
@@ -303,8 +303,8 @@ bundle = resp.json()
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>curl -s -X DELETE \
-  --cert client-uzi-chain.crt \
-  --key  client-uzi.key \
+  --cert client-cert.pem \
+  --key  client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   "{{ $svc.base_url }}/NVIDataReference/&lt;id&gt;"</pre>
     </div>

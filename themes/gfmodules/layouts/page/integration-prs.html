@@ -236,7 +236,7 @@ bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()</pre>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 
 resp = session.post(
     f<span class="hl-str">"{PRS_URL}/oprf/eval"</span>,
@@ -294,7 +294,7 @@ requests.post(
       </li>
       <li>
         <strong>Publieke sleutel registreren</strong> — nadat je organisatie is geregistreerd, voeg je jouw publieke sleutel
-        eenmalig toe via <code>POST /register/certificate</code>. De PRS leest de sleutel automatisch uit je mTLS-certificaat.
+        eenmalig toe via <code>POST /register/certificate</code>. De PRS leest de sleutel automatisch uit je PKIoverheid-certificaat.
       </li>
     </ol>
 
@@ -306,8 +306,8 @@ requests.post(
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>curl -s -X POST \
-  --cert client-uzi-chain.crt \
-  --key client-uzi.key \
+  --cert client-cert.pem \
+  --key client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"scope": ["&lt;scope&gt;"]}' \
