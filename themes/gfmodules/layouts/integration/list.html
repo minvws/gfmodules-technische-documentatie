@@ -18,7 +18,7 @@
       Alle {{ $.Site.Title }}-diensten vereisen mutual TLS én een OAuth-token. Volg de stappen hieronder om te verbinden.
     </p>
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
-      <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS certificaat</a>
+      <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① PKIoverheid-certificaat</a>
       <span style="color:var(--text-muted)">→</span>
       <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn active" style="text-decoration:none">② OAuth token</a>
       <span style="color:var(--text-muted)">→</span>
@@ -40,7 +40,7 @@
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">Genereer een CSR, vraag een UZI-certificaat aan en test de mTLS-verbinding. Dit is de basis voor alle andere stappen.</p>
+        <p class="service-desc">Gebruik een PKIoverheid-certificaat en test de mTLS-verbinding. Dit is de basis voor alle andere stappen.</p>
       </div>
       <div class="service-card-footer">
         <a href="{{ "integration/mtls/" | relURL }}">Naar mTLS-gids &rarr;</a>
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">Haal een RS256-gesigneerd bearer token op via de OAuth-dienst. Vereist: mTLS-certificaat, scope en target_audience.</p>
+        <p class="service-desc">Haal een RS256-gesigneerd bearer token op via de OAuth-dienst. Vereist: PKIoverheid-certificaat, scope en target_audience.</p>
       </div>
       <div class="service-card-footer">
         <a href="{{ "integration/oauth/" | relURL }}">Naar OAuth-gids &rarr;</a>
