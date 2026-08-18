@@ -4,4 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns:
+          - actions/*
     open-pull-requests-limit: 5
