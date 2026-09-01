@@ -5,7 +5,7 @@
     <h2>Integratie-documentatie</h2>
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
-    Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Title }}-diensten.
+    Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Params.subtitle }}.
     Doorloop de stappen in volgorde — elke volgende stap bouwt voort op de vorige.
   </p>
 
@@ -15,7 +15,7 @@
   <div class="card" style="margin-bottom:1.5rem">
     <h3>Hoe begin ik?</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.25rem">
-      Alle {{ $.Site.Title }}-diensten vereisen mutual TLS én een OAuth-token. Volg de stappen hieronder om te verbinden.
+      Alle {{ $.Site.Params.subtitle }} vereisen mutual TLS én een OAuth-token. Volg de stappen hieronder om te verbinden.
     </p>
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
       <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS certificaat</a>

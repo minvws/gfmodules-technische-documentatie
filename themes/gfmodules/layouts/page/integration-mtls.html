@@ -5,7 +5,7 @@
     <h2>mTLS — Mutual TLS</h2>
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
-    Vereist voor alle {{ $.Site.Title }}-diensten. Zonder geldig UZI-certificaat wordt de verbinding op transportniveau geweigerd.
+    Vereist voor alle {{ $.Site.Params.subtitle }}. Zonder geldig UZI-certificaat wordt de verbinding op transportniveau geweigerd.
   </p>
 
   {{ partial "integration-nav.html" . }}
@@ -14,7 +14,7 @@
     <h3>Wat is mTLS?</h3>
     <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
       Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
-      verifieert ook de server de cliënt aan de hand van een client-certificaat. Alle {{ $.Site.Title }}-diensten
+      verifieert ook de server de cliënt aan de hand van een client-certificaat. Alle {{ $.Site.Params.subtitle }}
       vereisen mTLS: zonder geldig certificaat wordt de verbinding al op transportniveau geweigerd.
     </p>
 
