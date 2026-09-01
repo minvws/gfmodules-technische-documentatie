@@ -6,29 +6,42 @@
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
     Stap-voor-stap instructies voor het verbinden met de {{ $.Site.Params.subtitle }}.
-    Doorloop de stappen in volgorde — elke volgende stap bouwt voort op de vorige.
   </p>
 
   {{ partial "integration-nav.html" . }}
 
-  <!-- Flow -->
   <div class="card" style="margin-bottom:1.5rem">
     <h3>Hoe begin ik?</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.25rem">
-      Alle {{ $.Site.Params.subtitle }} vereisen mutual TLS én een OAuth-token. Volg de stappen hieronder om te verbinden.
+      Voor beide diensten heb je voor <a href="{{ "integration/mtls/" | relURL }}">mTLS</a> een
+      PKIoverheid-clientcertificaat nodig. Zorg dat je organisatie vooraf bij ons is geregistreerd met dit
+      certificaat. Met het certificaat haal je bij de OAuth-endpoint van de gekozen dienst een token op;
+      met dat token en het certificaat roep je vervolgens die dienst aan.
     </p>
-    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
-      <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① PKIoverheid-certificaat</a>
-      <span style="color:var(--text-muted)">→</span>
-      <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn active" style="text-decoration:none">② OAuth token</a>
-      <span style="color:var(--text-muted)">→</span>
-      <a href="{{ "integration/prs/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ PRS aanroepen</a>
-      <span style="color:var(--text-muted)">/</span>
-      <a href="{{ "integration/nvi/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ NVI aanroepen</a>
+    <div class="two-col" style="gap:1rem">
+      <div>
+        <h4 style="margin-bottom:.65rem">PRS</h4>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
+          <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS</a>
+          <span style="color:var(--text-muted)">→</span>
+          <a href="{{ "integration/prs/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">② Token via PRS OAuth</a>
+          <span style="color:var(--text-muted)">→</span>
+          <a href="{{ "integration/prs/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ PRS</a>
+        </div>
+      </div>
+      <div>
+        <h4 style="margin-bottom:.65rem">NVI</h4>
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
+          <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS</a>
+          <span style="color:var(--text-muted)">→</span>
+          <a href="{{ "integration/nvi/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">② Token via NVI OAuth</a>
+          <span style="color:var(--text-muted)">→</span>
+          <a href="{{ "integration/nvi/" | relURL }}" class="filter-btn active" style="text-decoration:none">③ NVI</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Cards -->
   <div class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
 
     <div class="service-card">
@@ -49,30 +62,14 @@
 
     <div class="service-card">
       <div class="service-card-top">
-        <div class="service-icon icon-oauth">🔑</div>
-        <div>
-          <div class="service-name">OAuth</div>
-          <div class="service-fullname">Access token ophalen</div>
-        </div>
-      </div>
-      <div class="service-card-body">
-        <p class="service-desc">Haal een RS256-gesigneerd bearer token op via de OAuth-dienst. Vereist: PKIoverheid-certificaat, scope en target_audience.</p>
-      </div>
-      <div class="service-card-footer">
-        <a href="{{ "integration/oauth/" | relURL }}">Naar OAuth-gids &rarr;</a>
-      </div>
-    </div>
-
-    <div class="service-card">
-      <div class="service-card-top">
         <div class="service-icon icon-prs">👤</div>
         <div>
           <div class="service-name">PRS</div>
-          <div class="service-fullname">Pseudoniemendienst — OPRF</div>
+          <div class="service-fullname">Pseudoniemendienst</div>
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">Zet een BSN om naar een deterministisch pseudoniem via het OPRF-protocol. Drie partijen: Client, PRS, Receiver.</p>
+        <p class="service-desc">De Proeftuin documenteert een OPRF-uitwisseling. De gids bevat ook het conceptontwerp voor omkeerbare en niet-omkeerbare pseudoniemen en DigiD SAML-exchange.</p>
       </div>
       <div class="service-card-footer">
         <a href="{{ "integration/prs/" | relURL }}">Naar PRS-gids &rarr;</a>
@@ -88,7 +85,7 @@
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">Sla FHIR List-resources op en bevraag de NVI om te achterhalen bij welke organisaties een persoon bekend is.</p>
+        <p class="service-desc">Registreer of lokaliseer gegevensbeschikbaarheid via de huidige Proeftuin-integratie. De gids bevat ook het conceptontwerp voor privacybeschermde matching.</p>
       </div>
       <div class="service-card-footer">
         <a href="{{ "integration/nvi/" | relURL }}">Naar NVI-gids &rarr;</a>

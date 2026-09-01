@@ -14,15 +14,15 @@
     <h3>Wat is mTLS?</h3>
     <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
       Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
-      verifieert ook de server de cliënt aan de hand van een PKIoverheid-clientcertificaat. Alle {{ $.Site.Params.subtitle }}
-      vereisen mTLS: zonder geldig PKIoverheid-certificaat wordt de verbinding al op transportniveau geweigerd.
+      verifieert ook de server de cliënt aan de hand van een clientcertificaat. Alle {{ $.Site.Params.subtitle }}
+      vereisen daarbij een geldig PKIoverheid-clientcertificaat; zonder geldig certificaat wordt de verbinding al op transportniveau geweigerd.
     </p>
 
     <div class="two-col">
       <div>
         <h4>Wat heb je nodig?</h4>
         <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted)">
-          <li>PKIoverheid-clientcertificaat (<code>.crt</code> of <code>.pem</code>)</li>
+          <li>PKIoverheid-clientcertificaat met volledige certificaatketen (<code>.crt</code> of <code>.pem</code>)</li>
           <li>Bijbehorende private key (<code>.key</code>)</li>
           <li>Optioneel: PKCS#12-bundle (<code>.pfx</code> of <code>.p12</code>)</li>
         </ul>
@@ -41,35 +41,61 @@
       <p>Type: <code>G4 Private TLS Generic Devices Organization Validated Server</code> voor serverauthenticatie (<code>OID 2.16.528.1.1003.1.2.44.15.35.11</code>).</p>
       <p>Organisatie-identificatie: <strong>Organisatie-identificatienummer (OIN)</strong>.</p>
     </div>
+
+    <div class="info-panel" style="margin-top:1rem">
+      <div class="info-panel-title">Organisatie vooraf registreren</div>
+      <p>
+        Voordat je een OAuth-token ophaalt of PRS/NVI aanroept, moet je organisatie vooraf bij ons zijn
+        geregistreerd met het PKIoverheid-clientcertificaat dat je gebruikt. Neem hiervoor contact op met
+        <a href="mailto:{{ $.Site.Params.contact_email }}">{{ $.Site.Params.contact_email }}</a>.
+      </p>
+    </div>
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
     <h4>PKIoverheid-certificaat gebruiken</h4>
-    <p style="margin-bottom:.75rem">Gebruik een <strong>PKIoverheid-certificaat</strong> voor de GfModules-diensten waarvoor je bent geautoriseerd.</p>
-
-    <p style="margin-bottom:.25rem">Gebruik voor de integratie je PKIoverheid-clientcertificaat en de bijbehorende private key:</p>
+    <p style="margin-bottom:.25rem">Gebruik voor de mTLS-verbinding je PKIoverheid-clientcertificaat met volledige certificaatketen en de bijbehorende private key. De bestandsnamen hieronder zijn voorbeelden; vervang ze door de paden naar je eigen bestanden:</p>
     <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
-      <li><code>client-cert.pem</code> — Je PKIoverheid-clientcertificaat; gebruik hierbij graag de volledige certificaatketen.</li>
-      <li><code>client-key.pem</code> — De bijbehorende private key.</li>
+      <li><code>client-cert.pem</code> — je PKIoverheid-clientcertificaat inclusief de volledige certificaatketen.</li>
+      <li><code>client-key.pem</code> — de bijbehorende private key.</li>
     </ul>
 
-    <p style="margin-bottom:1rem">Gebruik uitsluitend de actuele certificaatketen en trust-instructies die je van de beheerder of certificaatleverancier ontvangt.</p>
-
     <h4>Verbinding testen met curl</h4>
+    <p style="margin-bottom:.75rem">Test de OAuth-endpoint van de dienst waarmee je wilt verbinden.</p>
+    {{ range site.Data.services }}
+    {{ $svc := . }}
+    {{ with .oauth }}
+    <h5 style="margin:.9rem 0 .4rem">{{ $svc.name }}</h5>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre><span class="hl-comment"># Controleer of mTLS-handshake slaagt</span>
-{{ range site.Data.services }}{{ if eq .id "oauth" }}curl -v \
+curl -v \
   --cert client-cert.pem \
   --key  client-key.pem \
-  {{ .base_url }}/.well-known/oauth-authorization-server{{ end }}{{ end }}</pre>
+  {{ .base_url }}/.well-known/oauth-authorization-server</pre>
     </div>
+    {{ end }}
+    {{ end }}
+
+    <h4>Beschikbare endpoints zonder OAuth-token</h4>
+    <p style="margin-bottom:.75rem">Voor de endpoints hieronder is geen OAuth-token nodig. Gebruik wel je PKIoverheid-clientcertificaat en private key om de mTLS-verbinding te testen.</p>
+    {{ range site.Data.services }}
+    {{ $svc := . }}
+    {{ with .oauth }}
+    <h5 style="margin:.9rem 0 .4rem">{{ $svc.name }}</h5>
+    <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
+      <li><code>{{ .base_url }}/.well-known/oauth-authorization-server</code> — OAuth-servermetadata</li>
+      <li><code>{{ .base_url }}/health</code> — health check van de OAuth-service</li>
+      <li><code>{{ .target_audience }}/health</code> — health check van de API</li>
+    </ul>
+    {{ end }}
+    {{ end }}
 
     <h4>Verbinding testen met een PKCS#12-bundle (<code>.pfx</code> / <code>.p12</code>)</h4>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
-      <pre><span class="hl-comment"># Controleer de mTLS-verbinding met een PKIoverheid G4-testcertificaat</span>
-curl 'https://nvi.test.gf.irealisatie.nl/v0.2/api/health' --cert-type P12 --cert pkio_g4_test_cert.pfx:&lt;wachtwoord&gt;</pre>
+      <pre><span class="hl-comment"># Controleer de mTLS-verbinding met een PKCS#12-bundle</span>
+curl https://nvi.proeftuin.gf.irealisatie.nl/v0.2/api/health --cert-type P12 --cert client.p12:&lt;wachtwoord&gt;</pre>
     </div>
 
     <h4>PKCS#12-bundle aanmaken</h4>
@@ -90,8 +116,9 @@ curl 'https://nvi.test.gf.irealisatie.nl/v0.2/api/health' --cert-type P12 --cert
        (Vault, AWS Secrets Manager, Azure Key Vault) of een OS-sleutelketen.</p>
   </div>
 
-  <div style="display:flex;justify-content:flex-end">
-    <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn active" style="text-decoration:none">Volgende: OAuth &rarr;</a>
+  <div style="display:flex;justify-content:flex-end;gap:.5rem;flex-wrap:wrap">
+    <a href="{{ "integration/prs/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">Volgende: PRS &rarr;</a>
+    <a href="{{ "integration/nvi/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">Volgende: NVI &rarr;</a>
   </div>
 
 </main>

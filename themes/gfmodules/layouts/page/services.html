@@ -7,7 +7,9 @@
 
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
     Overzicht van alle beschikbare {{ $.Site.Params.subtitle }} met hun huidige versie, status en
-    bereikbare endpoints. Alle verbindingen vereisen een geldig PKIoverheid-certificaat.
+    bereikbare endpoints. De endpointsets en versies hieronder volgen de aangeleverde OpenAPI-specificaties.
+    De kolom <em>Auth</em> vermeldt uitsluitend wat daarin expliciet is vastgelegd; raadpleeg de
+    <a href="{{ "integration/" | relURL }}">integratie-instructies</a> voor aansluitafspraken zoals mTLS.
   </p>
 
   <div class="filters" data-filter-group="services">
@@ -18,6 +20,7 @@
   </div>
 
   {{ range site.Data.services }}
+  {{ $svc := . }}
   <div data-filter-item="services" data-filter-val="{{ .env_filter }}" style="margin-bottom:2rem">
     <div class="section-header" style="margin-bottom:.75rem">
       <h2 style="font-size:1.05rem;display:flex;align-items:center;gap:.5rem">
@@ -25,7 +28,10 @@
         <span class="badge badge-version">{{ .version }}</span>
         <span class="badge badge-{{ lower .environment }}">{{ .environment }}</span>
       </h2>
-      <a class="section-link" href="{{ "integration/" | relURL }}{{ .integration_anchor }}/">Integratie-gids</a>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+        <a class="section-link" href="{{ "integration/" | relURL }}{{ .integration_anchor }}/">Integratie-gids</a>
+        {{ with .swagger_url }}<a class="section-link" href="{{ . }}" target="_blank" rel="noopener noreferrer">Swagger API ↗</a>{{ end }}
+      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -42,13 +48,73 @@
           <tr{{ if .deprecated }} style="opacity:.55"{{ end }}>
             <td><span class="method method-{{ .method | lower }}">{{ .method }}</span></td>
             <td><code>{{ .path }}</code></td>
-            <td>{{ if .deprecated }}<em>{{ .description }}</em>{{ else }}{{ .description }}{{ end }}</td>
+            <td>
+              {{ if .deprecated }}<em>{{ .description }}</em>{{ else }}{{ .description }}{{ end }}
+              {{ if .test_only }}<span class="badge badge-version" style="margin-left:.45rem">test-route</span>{{ end }}
+            </td>
             <td>{{ .auth }}</td>
           </tr>
           {{ end }}
         </tbody>
       </table>
     </div>
+
+    {{ if .security_note }}
+    <div class="info-panel tip" style="margin-top:.75rem">
+      <div class="info-panel-title">Authenticatie volgens OpenAPI</div>
+      <p>{{ .security_note }}</p>
+    </div>
+    {{ end }}
+
+    {{ if .test_routes_note }}
+    <div class="info-panel warn" style="margin-top:.75rem">
+      <div class="info-panel-title">Test-routes</div>
+      <p>{{ .test_routes_note }}</p>
+    </div>
+    {{ end }}
+
+    {{ with $svc.oauth }}
+    <div class="info-panel" style="margin-top:.75rem">
+      <div class="info-panel-title">OAuth-verbinding voor {{ $svc.name }}</div>
+      <p style="margin-bottom:.75rem">
+        Haal een token voor {{ $svc.name }} op via de OAuth-endpoint die bij deze dienst hoort.
+        <a href="{{ printf "integration/%s/" $svc.integration_anchor | relURL }}#oauth-token">Bekijk de integratie-instructies.</a>
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Methode</th>
+              <th>Pad</th>
+              <th>Omschrijving</th>
+              <th>Auth</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .endpoints }}
+            <tr>
+              <td><span class="method method-{{ .method | lower }}">{{ .method }}</span></td>
+              <td><code>{{ .path }}</code></td>
+              <td>{{ .description }}</td>
+              <td>{{ .auth }}</td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:.75rem">
+        <strong>OAuth base URL:</strong> <code>{{ .base_url }}</code>
+      </p>
+      {{ with .swagger_url }}
+      <p style="margin-top:.5rem"><a href="{{ . }}" target="_blank" rel="noopener noreferrer">Swagger OAuth ↗</a></p>
+      {{ end }}
+      {{ if .contract_note }}
+      <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-top:.5rem">
+        <strong>OpenAPI-aantekening:</strong> {{ .contract_note }}
+      </p>
+      {{ end }}
+    </div>
+    {{ end }}
 
     {{ if .deprecation_warning }}
     <div class="info-panel warn" style="margin-top:.75rem">
@@ -58,7 +124,7 @@
     {{ end }}
 
     <div class="info-panel" style="margin-top:.75rem">
-      <div class="info-panel-title">Base URL {{ .environment }}</div>
+      <div class="info-panel-title">API-base URL {{ .environment }}</div>
       <p>
         <code style="font-family:var(--font-mono)">{{ .base_url }}</code>
         {{ if .base_url_note }}&nbsp;&mdash;&nbsp; {{ .base_url_note }}{{ end }}
