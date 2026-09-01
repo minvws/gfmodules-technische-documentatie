@@ -4,7 +4,7 @@ This repository contains the technical documentation for the 'Generieke Functies
 of the Ministry of Health, Welfare and Sport of the Dutch government.
 
 The documentation covers services and integration patterns for
-the GFModules platform. It is published as a static site using
+the Generieke Functies platform. It is published as a static site using
 [Hugo](https://gohugo.io).
 
 > [!CAUTION]
