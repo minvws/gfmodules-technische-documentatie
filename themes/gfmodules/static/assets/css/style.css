@@ -49,7 +49,7 @@ a:hover { text-decoration: underline; }
 }
 
 .nav-inner {
-  max-width: 1200px;
+  max-width: calc(1200px + 3rem);
   margin: 0 auto;
   padding: 0 1.5rem;
   display: flex;
@@ -84,11 +84,12 @@ a:hover { text-decoration: underline; }
 .nav-sub   { font-weight: 400; font-size: 0.75rem; opacity: .7; display: block; }
 
 .nav-links {
-  display: flex;
   list-style: none;
   gap: 0.2rem;
-  margin-left: auto;
 }
+
+.nav-links-desktop { display: flex; margin-left: auto; }
+.nav-menu { display: none; margin-left: auto; }
 
 .nav-links a {
   color: rgba(255,255,255,.8);
@@ -104,6 +105,27 @@ a:hover { text-decoration: underline; }
   background: rgba(255,255,255,.15);
   color: var(--white);
 }
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.nav-toggle:hover { background: rgba(255,255,255,.15); }
+.nav-toggle:focus-visible { outline: 3px solid rgba(255,255,255,.8); outline-offset: 2px; }
+.nav-toggle-icon { font-size: 1.2rem; line-height: 1; }
+.nav-toggle { list-style: none; }
+.nav-toggle::-webkit-details-marker { display: none; }
 
 /* ===== HERO ===== */
 .hero {
@@ -149,9 +171,10 @@ a:hover { text-decoration: underline; }
 
 /* ===== PAGE CONTENT ===== */
 .page-content {
+  width: calc(100% - 3rem);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 2.5rem 0;
   flex: 1;
 }
 
@@ -633,7 +656,28 @@ td code {
   .hero h1              { font-size: 1.6rem; }
   .hero-stats           { gap: 1.25rem; }
   .cl-entry             { grid-template-columns: 1fr; gap: 0.5rem; }
-  .nav-sub              { display: none; }
+  .nav-inner            { position: relative; gap: 1rem; }
+  .nav-title            { display: none; }
+  .nav-links-desktop    { display: none; }
+  .nav-toggle           { display: inline-flex; }
+  .nav-menu             { display: block; }
+  .nav-menu > .nav-links {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 1.5rem;
+    left: 1.5rem;
+    z-index: 101;
+    margin: 0;
+    padding: 0.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: var(--primary);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+  .nav-menu[open] > .nav-links { display: flex; }
+  .nav-links a          { display: block; padding: 0.65rem 0.75rem; font-size: 0.875rem; }
   .cards-grid           { grid-template-columns: 1fr; }
-  .nav-links a          { padding: 0.35rem 0.65rem; font-size: 0.82rem; }
 }
