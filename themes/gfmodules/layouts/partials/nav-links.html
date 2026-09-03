@@ -1,0 +1,6 @@
+{{ $currentURL := .RelPermalink }}
+{{ range .Site.Menus.main }}
+{{ $href := .URL | relURL }}
+{{ $isActive := or (eq $currentURL $href) (and (ne $href site.Home.RelPermalink) (strings.HasPrefix $currentURL $href)) }}
+<li><a href="{{ $href }}"{{ if $isActive }} class="active" aria-current="page"{{ end }}>{{ .Name }}</a></li>
+{{ end }}
