@@ -1,0 +1,154 @@
+{{ $svc := . }}
+{{ $oauth := $svc.oauth }}
+<section id="oauth-token">
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>OAuth-token voor {{ $svc.name }}</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      {{ $svc.name }} heeft een eigen OAuth 2.0 Authorization Service. Gebruik deze endpoint om een
+      token voor de {{ $svc.name }} API op te halen. De OpenAPI specificeert hiervoor vier verplichte
+      formuliervelden; de onderstaande mTLS- en scopevoorbeelden zijn bestaande Proeftuin-instructies.
+      Verifieer de verbindings- en autorisatieafspraken altijd bij de aansluiting.
+    </p>
+    <div class="endpoint-row" style="margin-top:1rem">
+      <span class="endpoint-label">Token</span>
+      <code>{{ $oauth.base_url }}/token</code>
+      <button class="copy-btn" title="Kopieer URL">📋</button>
+    </div>
+    {{ with $oauth.swagger_url }}
+    <p style="margin-top:.75rem"><a href="{{ . }}" target="_blank" rel="noopener noreferrer">Open Swagger OAuth ↗</a></p>
+    {{ end }}
+
+    <h4 style="margin:1.25rem 0 .5rem">Parameters en scopes</h4>
+    <table style="width:100%;font-size:.85rem;border-collapse:collapse;margin-bottom:.5rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Parameter</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Waarde</th>
+          <th style="text-align:left;padding:.4rem .6rem;color:var(--text-muted);font-weight:600">Toelichting</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>grant_type</code></td>
+          <td style="padding:.4rem .6rem"><code>client_credentials</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">Verplicht formulierveld. Dit is de bestaande Proeftuin-waarde; de OpenAPI specificeert geen toegestane waarde.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>target_audience</code></td>
+          <td style="padding:.4rem .6rem"><code>{{ $oauth.target_audience }}</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">Verplicht formulierveld; de getoonde URL is de huidige Proeftuin-waarde.</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>organization_id</code></td>
+          <td style="padding:.4rem .6rem"><code>{{ $oauth.organization_id_example }}</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">{{ $oauth.organization_id_description }}</td>
+        </tr>
+        {{ if $oauth.source_id_scopes }}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.4rem .6rem"><code>source_id</code></td>
+          <td style="padding:.4rem .6rem"><code>{{ $oauth.source_id_example }}</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">{{ $oauth.source_id_description }}</td>
+        </tr>
+        {{ end }}
+        {{ range $oauth.scopes }}
+        <tr{{ if not (eq .value $oauth.default_scope) }} style="border-bottom:1px solid var(--border)"{{ end }}>
+          <td style="padding:.4rem .6rem"><code>scope</code></td>
+          <td style="padding:.4rem .6rem"><code>{{ .value }}</code></td>
+          <td style="padding:.4rem .6rem;color:var(--text-muted)">{{ .description }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    <p style="font-size:.8rem;color:var(--text-muted)">
+      De voorbeelden gebruiken <code>{{ $oauth.default_scope }}</code>. Kies voor je API-aanroep de scope die bij de gewenste handeling hoort;
+      de OAuth OpenAPI somt geen toegestane scopewaarden op.
+      {{ if $oauth.source_id_scopes }}Gebruik <code>source_id</code> alleen wanneer dat voor <code>{{ $oauth.source_id_scopes }}</code> is afgesproken.{{ end }}
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Token ophalen</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
+      Dit is een bestaand Proeftuin-voorbeeld met <code>grant_type=client_credentials</code> en een
+      PKIoverheid-certificaat. De OAuth OpenAPI legt wel de formuliervelden vast, maar niet de
+      clientauthenticatie of toegestane grant- en scopewaarden.
+    </p>
+
+    <div data-tabs>
+      <div class="tabs">
+        <button class="tab-btn active">cURL</button>
+        <button class="tab-btn">PHP</button>
+        <button class="tab-btn">Python</button>
+      </div>
+
+      <div class="tab-panel active">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>curl -s -X POST \
+  --cert client-cert.pem \
+  --key  client-key.pem \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=client_credentials" \
+  --data-urlencode "scope={{ $oauth.default_scope }}" \
+  --data-urlencode "target_audience={{ $oauth.target_audience }}" \
+  --data-urlencode "organization_id={{ $oauth.organization_id_example }}" \
+{{ if $oauth.source_id_scopes }}  --data-urlencode "source_id={{ $oauth.source_id_example }}" \
+{{ end }}  {{ $oauth.base_url }}/token \
+  | python3 -m json.tool</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre>[$status, $body] = curlRequest($certFile, $keyFile, <span class="hl-str">'{{ $oauth.base_url }}/token'</span>, [
+    CURLOPT_POST       => <span class="hl-kw">true</span>,
+    CURLOPT_POSTFIELDS => http_build_query([
+        <span class="hl-str">'grant_type'</span>        => <span class="hl-str">'client_credentials'</span>,
+        <span class="hl-str">'scope'</span>             => <span class="hl-str">'{{ $oauth.default_scope }}'</span>,
+        <span class="hl-str">'target_audience'</span>   => <span class="hl-str">'{{ $oauth.target_audience }}'</span>,
+        <span class="hl-str">'organization_id'</span>   => <span class="hl-str">'{{ $oauth.organization_id_example }}'</span>,
+{{ if $oauth.source_id_scopes }}        <span class="hl-str">'source_id'</span>         => <span class="hl-str">'{{ $oauth.source_id_example }}'</span>,
+{{ end }}    ]),
+    CURLOPT_HTTPHEADER => [<span class="hl-str">'Content-Type: application/x-www-form-urlencoded'</span>],
+]);</pre>
+        </div>
+      </div>
+
+      <div class="tab-panel">
+        <div class="code-block">
+          <button class="copy-code">Kopieer</button>
+          <pre><span class="hl-kw">import</span> requests
+
+session = requests.Session()
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
+
+resp = session.post(
+    <span class="hl-str">"{{ $oauth.base_url }}/token"</span>,
+    data={
+        <span class="hl-str">"grant_type"</span>:      <span class="hl-str">"client_credentials"</span>,
+        <span class="hl-str">"scope"</span>:           <span class="hl-str">"{{ $oauth.default_scope }}"</span>,
+        <span class="hl-str">"target_audience"</span>: <span class="hl-str">"{{ $oauth.target_audience }}"</span>,
+        <span class="hl-str">"organization_id"</span>: <span class="hl-str">"{{ $oauth.organization_id_example }}"</span>,
+{{ if $oauth.source_id_scopes }}        <span class="hl-str">"source_id"</span>:       <span class="hl-str">"{{ $oauth.source_id_example }}"</span>,
+{{ end }}    },
+)</pre>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      De aangeleverde OAuth OpenAPI bevat geen schema voor de tokenresponse en legt geen refreshbeleid vast.
+      Raadpleeg de OAuth-metadata en de aansluitafspraken voordat je een responsevorm of tokenlevensduur implementeert.
+    </p>
+  </div>
+
+  <div class="info-panel" style="margin-bottom:1.25rem">
+    <div class="info-panel-title">Metadata en tokenverificatie</div>
+    <p>Gebruik de metadata en JWKS van de OAuth-service van {{ $svc.name }}:</p>
+    <p style="margin-top:.5rem">
+      <code>{{ $oauth.base_url }}/.well-known/oauth-authorization-server</code><br>
+      <code>{{ $oauth.base_url }}/jwks.json</code>
+    </p>
+  </div>
+</section>
