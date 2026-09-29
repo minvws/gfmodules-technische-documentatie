@@ -5,21 +5,124 @@
   <div class="section-header">
     <h2>👤 PRS — Pseudoniemendienst</h2>
   </div>
-  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
-    OPRF-gebaseerde pseudoniemendienst. Vereist: <a href="{{ "integration/mtls/" | relURL }}">mTLS</a> én een <a href="{{ "integration/oauth/" | relURL }}">OAuth-token</a> voor <code>{{ $svc.base_url }}</code>.
+  <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:720px">
+    De huidige Proeftuin-instructies hieronder beschrijven een OPRF-uitwisseling. De PRS OpenAPI
+    declareert hiervoor een <a href="#oauth-token">Bearer-token</a>; mTLS wordt algemeen in de
+    API-beschrijving genoemd, maar niet per operatie gemodelleerd. Volg de
+    <a href="{{ "integration/mtls/" | relURL }}">aansluitinstructies voor mTLS</a> voor <code>{{ $svc.base_url }}</code>.
   </p>
 
   {{ partial "integration-nav.html" $ }}
 
+  {{ with $svc.swagger_url }}
+  <p style="font-size:.875rem;margin:-.5rem 0 1.25rem"><a href="{{ . }}" target="_blank" rel="noopener noreferrer">Open Swagger voor {{ $svc.name }} API ↗</a></p>
+  {{ end }}
+
+  <div class="info-panel warn" style="margin-bottom:1.25rem">
+    <div class="info-panel-title">Conceptueel technisch ontwerp</div>
+    <p>
+      Dit overzicht vat het conceptuele Technisch Ontwerp Pseudoniemendienst v0.1 van 21 augustus
+      2026 samen. Het ontwerp is nog in ontwikkeling: niet alle hieronder beschreven stromen zijn
+      beschikbaar in de Proeftuin. Raadpleeg voor het actuele endpoint-, schema- en scopecontract
+      altijd de PRS OpenAPI-specificatie en de Proeftuin-instructies op deze pagina.
+    </p>
+  </div>
+
   <div class="card" style="margin-bottom:1.25rem">
-    <h3>PRS — {{ $svc.fullname }}</h3>
+    <h3>In het concept: vier pseudonimiseringsstromen</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+      De PRS maakt organisatie-specifieke pseudoniemen, zodat organisaties over personen kunnen
+      communiceren zonder het persoonsnummer onderling uit te wisselen. Het concept onderscheidt
+      vier stromen.
+    </p>
+    <div class="two-col" style="row-gap:1rem">
+      <div>
+        <h4>Omkeerbaar pseudoniem</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De PRS leidt een pseudoniem af dat zij, uitsluitend voor geautoriseerde organisaties,
+          later kan terugrekenen naar het persoonsnummer.
+        </p>
+      </div>
+      <div>
+        <h4>Niet-omkeerbaar pseudoniem</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De PRS berekent een pseudoniem waarvoor geen terugrekenfunctie bestaat en bewaart geen
+          persoonsnummer-pseudoniemkoppeling.
+        </p>
+      </div>
+      <div>
+        <h4>DigiD SAML-exchange</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De PRS valideert en ontsleutelt een DigiD SAML-assertion intern en retourneert een
+          pseudoniem, zodat de aanvragende dienst het persoonsnummer niet ziet.
+        </p>
+      </div>
+      <div>
+        <h4>Geblindeerde OPRF-uitwisseling</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          Een aanvrager blindeert het persoonsnummer lokaal. De PRS evalueert alleen die
+          geblindeerde invoer; de ontvangende organisatie leidt als enige het pseudoniem af.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Ontwerpprincipes</h3>
+    <div class="two-col" style="row-gap:1rem">
+      <div>
+        <h4>Context en niet-koppelbaarheid</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          Voor omkeerbare en niet-omkeerbare pseudoniemen bepaalt de combinatie van
+          doelorganisatie, domein en sleutelversie de uitkomst. Binnen die context is een
+          pseudoniem stabiel; tussen organisaties of domeinen niet onderling koppelbaar.
+        </p>
+      </div>
+      <div>
+        <h4>Beschermde uitvoer</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          Uitvoer die voor een ontvangende organisatie bestemd is, wordt in het ontwerp voor die
+          organisatie versleuteld. Die organisatie beheert haar eigen decryptie-private key.
+        </p>
+      </div>
+      <div>
+        <h4>Minimale gegevensverwerking</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          De PRS bewaart geen persoonsnummer-pseudoniemmapping en neemt geen persoonsnummers of
+          pseudoniemen op in de audit-log. Bij directe en SAML-stromen is het persoonsnummer wel
+          tijdelijk aanwezig binnen de vertrouwde PRS-infrastructuur.
+        </p>
+      </div>
+      <div>
+        <h4>Beheerde toegang</h4>
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+          Het ontwerp gebruikt mTLS, OAuth 2.0 en per operatie beheerde bevoegdheden. Langlevend
+          PRS-sleutelmateriaal valt onder een HSM/KMS-regime.
+        </p>
+      </div>
+    </div>
+    <div class="info-panel" style="margin-top:1rem">
+      <div class="info-panel-title">Domein is niet hetzelfde als OAuth-scope</div>
+      <p>
+        In het concept is een domein een pseudoniemnamespace voor een gebruikstoepassing, terwijl
+        een OAuth-scope een autorisatiebegrip is. De terminologie van de huidige Proeftuin-API
+        blijft ongewijzigd totdat het OpenAPI-contract een eventuele migratie vastlegt.
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3>Huidige Proeftuin: OPRF-uitwisseling</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
       De Pseudoniemendienst gebruikt een <strong>OPRF-protocol</strong> (Oblivious Pseudo-Random Function)
       om BSN-nummers om te zetten naar deterministische, onomkeerbare pseudoniemen.
-      De server ziet nooit het plaintext BSN; de client ziet nooit de serversleutel.
-      Elke aanvraag vereist mTLS én een geldig OAuth-token.
+      Binnen deze OPRF-stroom ziet de server nooit het plaintext BSN; de client ziet nooit de serversleutel.
+      De OpenAPI declareert voor deze route een Bearer-token; de bestaande Proeftuin-instructies
+      beschrijven daarnaast mTLS als verbindingsvereiste.
     </p>
   </div>
+
+  {{ partial "oauth-guide.html" $svc }}
 
   <div class="card" style="margin-bottom:1.25rem">
     <h3>Wat is OPRF en waarom drie partijen?</h3>
@@ -100,12 +203,16 @@
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3>OPRF-flow — drie partijen, vier stappen</h3>
+    <h3>Algemene OPRF-flow — drie partijen, vier stappen</h3>
     <div style="overflow-x:auto;margin-bottom:1.25rem">
       <img src="{{ "assets/img/oprf-flow.svg" | relURL }}"
            alt="OPRF swimlane: Client → PRS Server → Receiver"
            style="display:block;max-width:100%;height:auto;min-width:600px">
     </div>
+    <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;margin:-.5rem 0 1.25rem">
+      Dit diagram toont de generieke Receiver-stap. Voor de NVI wordt die stap ingevuld met de
+      FHIR <code>List</code>-route verderop op deze pagina.
+    </p>
     <ol class="steps">
       <li class="step">
         <div class="step-num">1</div>
@@ -126,7 +233,7 @@
         <div class="step-num">3</div>
         <div class="step-body">
           <h4>Doorsturen naar Receiver — Client → Receiver</h4>
-          <p>De client stuurt <code>blind_factor</code> en de JWE samen door naar de Receiver. De Receiver is de enige partij die de JWE kan ontsleutelen — hij beschikt over de bijbehorende private key.</p>
+          <p>Voor de NVI verpakt de client de JWE en de URL-safe Base64-gecodeerde <code>blind_factor</code> in een FHIR <code>List</code>-identifier. Andere geregistreerde Receivers volgen hun eigen contract. Alleen de Receiver kan de JWE ontsleutelen — hij beschikt over de bijbehorende private key.</p>
         </div>
       </li>
       <li class="step">
@@ -141,13 +248,18 @@
 
 
   <div class="info-panel" style="margin-bottom:1.25rem">
-    <div class="info-panel-title">NVI — vereiste waarden voor pseudoniem</div>
-    <p>Gebruik onderstaande waarden om een pseudoniem te genereren dat geschikt is voor gebruik bij de NVI:</p>
+    <div class="info-panel-title">Huidige Proeftuin — NVI-waarden voor pseudoniem</div>
+    <p>
+      Gebruik onderstaande waarden om in de huidige Proeftuin-API een pseudoniem te genereren dat
+      geschikt is voor gebruik bij de NVI. <code>recipientOrganization</code> is een OIN in de vorm
+      <code>oin:&lt;20-cijferig-oin&gt;</code>. De huidige parameternaam <code>recipientScope</code> is
+      onderdeel van dit contract; zie hierboven voor het onderscheid met het domein uit het concept.
+    </p>
     <table style="width:100%;font-size:.875rem;border-collapse:collapse;margin-top:.6rem">
       <tbody>
         <tr style="border-bottom:1px solid var(--border)">
           <td style="padding:.4rem .6rem;font-weight:600;white-space:nowrap">RECV_ORG</td>
-          <td style="padding:.4rem .6rem"><code>ura:90000901</code></td>
+          <td style="padding:.4rem .6rem"><code>oin:00000099000000001000</code></td>
         </tr>
         <tr>
           <td style="padding:.4rem .6rem;font-weight:600;white-space:nowrap">RECV_SCOPE</td>
@@ -226,7 +338,7 @@ bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()</pre>
     <div class="info-panel-title">Beschikbare OPRF-bibliotheken</div>
     <p>Niet alle programmeertalen hebben een volwaardige OPRF-implementatie beschikbaar. Bekende bibliotheken:</p>
     <ul style="font-size:.875rem;line-height:1.9;color:var(--text-muted);padding-left:1.1rem;margin:.5rem 0 0">
-      <li><strong>Python</strong> — <code>pyoprf</code></li>
+      <li><strong>Python</strong> — <a href="https://github.com/stef/liboprf/tree/master/python"><code>pyoprf</code></a></li>
       <li><strong>PHP</strong> — <a href="https://github.com/jaytaph/oprf-php">github.com/jaytaph/oprf-php</a></li>
     </ul>
   </div>
@@ -236,7 +348,7 @@ bi_b64 = base64.urlsafe_b64encode(blinded_input).decode()</pre>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>session = requests.Session()
-session.cert = (<span class="hl-str">"client-uzi-chain.crt"</span>, <span class="hl-str">"client-uzi.key"</span>)
+session.cert = (<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>)
 
 resp = session.post(
     f<span class="hl-str">"{PRS_URL}/oprf/eval"</span>,
@@ -253,32 +365,58 @@ jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comm
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3>Stap 3 — Doorsturen naar de Receiver</h3>
+    <h3>Stap 3 — NVI gebruiken via FHIR <code>List</code></h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
-      De client stuurt het resultaat door naar de Receiver — dit kan de NVI zijn, maar ook een andere partij
-      die als Receiver is geregistreerd. Welke Receiver je aanspreekt hangt af van de <code>recipientOrganization</code>
-      en <code>recipientScope</code> die je in stap 2 hebt meegegeven.
+      Voor de NVI is er geen afzonderlijk <code>oprf-receive-endpoint</code>. Verpak de JWE en
+      <code>blind_factor</code> in de NVI-identifier. Gebruik die identifier voor lokalisatie via
+      <code>GET /fhir/List</code>, of als <code>subject.identifier.value</code> bij registratie via
+      <code>POST /fhir/List</code>.
     </p>
     <div class="info-panel" style="margin-bottom:.85rem">
-      <div class="info-panel-title">Zowel JWE als blind_factor zijn verplicht</div>
-      <p>De Receiver heeft <strong>beide</strong> waarden nodig om het definitieve pseudoniem te berekenen:
-        de <code>jwe</code> bevat het geëvalueerde resultaat versleuteld met de publieke sleutel van de Receiver,
-        en de <code>blind_factor</code> is nodig om de blindingsstap ongedaan te maken (unblinden).
-        Zonder één van beide kan het pseudoniem niet worden afgeleid.
+      <div class="info-panel-title">JWE en blind factor samen in de List-identifier</div>
+      <p>
+        De identifier-waarde is <code>base64url(json({"evaluated_output": &lt;jwe&gt;, "blind_factor": base64url(&lt;rawBlind&gt;)}))</code>.
+        De buitenste Base64URL-codering is zonder padding; de binnenste <code>blind_factor</code> is een URL-safe Base64-string.
       </p>
     </div>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
-      <pre>RECEIVER_URL = <span class="hl-str">"&lt;receiver-url&gt;"</span>  <span class="hl-comment"># bijv. NVI_URL voor de NVI</span>
+      <pre><span class="hl-kw">import</span> base64, json, requests
 
-requests.post(
-    f<span class="hl-str">"{RECEIVER_URL}/&lt;oprf-receive-endpoint&gt;"</span>,
-    json={
+NVI_URL = <span class="hl-str">"https://nvi.proeftuin.gf.irealisatie.nl/v0.2/api"</span>
+NVI_IDENTIFIER_SYSTEM = <span class="hl-str">"http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier"</span>
+
+identifier_json = json.dumps(
+    {
+        <span class="hl-str">"evaluated_output"</span>: jwe_token,
         <span class="hl-str">"blind_factor"</span>: base64.urlsafe_b64encode(blind_factor).decode(),
-        <span class="hl-str">"jwe"</span>:          jwe_token,
     },
-)</pre>
+    separators=(<span class="hl-str">","</span>, <span class="hl-str">":"</span>),
+)
+identifier_value = base64.urlsafe_b64encode(identifier_json.encode()).rstrip(<span class="hl-str">b"="</span>).decode()
+subject_identifier = f<span class="hl-str">"{NVI_IDENTIFIER_SYSTEM}|{identifier_value}"</span>
+
+<span class="hl-comment"># Lokaliseren via GET /fhir/List</span>
+resp = requests.get(
+    f<span class="hl-str">"{NVI_URL}/fhir/List"</span>,
+    headers={<span class="hl-str">"Authorization"</span>: f<span class="hl-str">"Bearer {nvi_token}"</span>, <span class="hl-str">"Accept"</span>: <span class="hl-str">"application/fhir+json"</span>},
+    params={<span class="hl-str">"subject:identifier"</span>: subject_identifier},
+    cert=(<span class="hl-str">"client-cert.pem"</span>, <span class="hl-str">"client-key.pem"</span>),
+)
+resp.raise_for_status()
+
+<span class="hl-comment"># Registreren via POST /fhir/List: gebruik identifier_value hieronder.</span>
+list_subject = {
+    <span class="hl-str">"identifier"</span>: {<span class="hl-str">"system"</span>: NVI_IDENTIFIER_SYSTEM, <span class="hl-str">"value"</span>: identifier_value}
+}</pre>
     </div>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin:.85rem 0 0">
+      Voeg <code>list_subject</code> toe als <code>subject</code> van de verplichte FHIR <code>List</code>-resource
+      en stuur die als <code>application/fhir+json</code> naar <code>POST /fhir/List</code>. De complete
+      List-payload met custodian, bron, status, mode en emptyReason staat in de
+      <a href="{{ "integration/nvi/" | relURL }}">NVI-integratiehandleiding</a>. Voor een andere Receiver
+      geldt het contract van die Receiver.
+    </p>
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
@@ -289,29 +427,29 @@ requests.post(
 
     <ol style="font-size:.875rem;color:var(--text-muted);line-height:1.7;padding-left:1.2rem;margin-bottom:1rem">
       <li style="margin-bottom:.5rem">
-        <strong>Organisatie registreren bij de PRS</strong> — dit kan uitsluitend worden gedaan door een gfmodules-beheerder.
+        <strong>Organisatie registreren bij de PRS</strong> — dit kan uitsluitend worden gedaan door een beheerder van de Generieke Functies.
         Neem contact op via <a href="mailto:{{ $.Site.Params.contact_email }}">{{ $.Site.Params.contact_email }}</a> om je organisatie te laten registreren voordat je verdergaat.
       </li>
       <li>
         <strong>Publieke sleutel registreren</strong> — nadat je organisatie is geregistreerd, voeg je jouw publieke sleutel
-        eenmalig toe via <code>POST /register/certificate</code>. De PRS leest de sleutel automatisch uit je mTLS-certificaat.
+        eenmalig toe via <code>POST /administration/register/certificate</code>. De PRS leest de sleutel automatisch uit je PKIoverheid-certificaat.
       </li>
     </ol>
 
     <div class="info-panel warn" style="margin-bottom:1rem">
       <div class="info-panel-title">Vereiste: organisatie moet eerst geregistreerd zijn</div>
-      <p>De aanroep naar <code>/register/certificate</code> mislukt als jouw organisatie nog niet door een beheerder is toegevoegd. Zorg dat stap 1 is afgerond voordat je stap 2 uitvoert.</p>
+      <p>De aanroep naar <code>/administration/register/certificate</code> mislukt als jouw organisatie nog niet door een beheerder is toegevoegd. Zorg dat stap 1 is afgerond voordat je stap 2 uitvoert.</p>
     </div>
 
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>curl -s -X POST \
-  --cert client-uzi-chain.crt \
-  --key client-uzi.key \
+  --cert client-cert.pem \
+  --key client-key.pem \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"scope": ["&lt;scope&gt;"]}' \
-  {{ $svc.base_url }}/register/certificate</pre>
+  {{ $svc.base_url }}/administration/register/certificate</pre>
     </div>
     <p style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;line-height:1.6">
       <code>&lt;scope&gt;</code> is een vrij te kiezen waarde die door de beheerder van de Receiver wordt bepaald.
@@ -401,7 +539,7 @@ echo <span class="hl-str">"Pseudoniem: $pseudonym\n"</span>;</pre>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:center">
-    <a href="{{ "integration/oauth/" | relURL }}" class="filter-btn" style="text-decoration:none">&larr; OAuth</a>
+    <a href="#oauth-token" class="filter-btn" style="text-decoration:none">&uarr; OAuth-token</a>
     <a href="{{ "integration/nvi/" | relURL }}" class="filter-btn active" style="text-decoration:none">Volgende: NVI &rarr;</a>
   </div>
 
