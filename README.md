@@ -46,8 +46,12 @@ Hugo will print a local URL (usually `http://localhost:1313/gfmodules-technische
 
 ## Publishing
 
-Documentation is published automatically through GitHub Actions when changes are
-pushed to `main`.
+GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
+on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
+Suffixes starting with `-` or `+` are removed from the version path.
+
+Published versions are stored on `gh-pages`. Publishing replaces only the matching
+version directory and keeps the other versions.
 
 ## Contribution
 

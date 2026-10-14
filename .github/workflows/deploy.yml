@@ -1,42 +1,138 @@
-name: Deploy Hugo site to GitHub Pages
+name: Deploy versioned Hugo documentation
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    tags: ["v*"]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: pages
+  group: versioned-docs-pages
+  queue: max
   cancel-in-progress: false
 
 jobs:
   build:
+    if: github.event.deleted != true
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout
+      - name: Checkout documentation source
         uses: actions/checkout@v7
+
+      - name: Locate stored documentation
+        id: storage
+        run: |
+          set -euo pipefail
+          ref_file="$RUNNER_TEMP/pages-ref"
+
+          status=0
+          git ls-remote --exit-code --heads origin \
+            refs/heads/gh-pages > "$ref_file" || status=$?
+
+          case "$status" in
+            0)
+              read -r commit ref < "$ref_file"
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "commit=$commit" >> "$GITHUB_OUTPUT"
+              ;;
+            2)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              mkdir _stored-pages
+              ;;
+            *)
+              echo "::error::Unable to read gh-pages (Git exit status $status)."
+              exit "$status"
+              ;;
+          esac
+
+      - name: Checkout stored documentation snapshot
+        if: steps.storage.outputs.exists == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.storage.outputs.commit }}
+          path: _stored-pages
+          persist-credentials: false
+
+      - name: Determine target documentation version
+        id: target
+        env:
+          SOURCE_REF: ${{ github.ref }}
+        run: |
+          case "$SOURCE_REF" in
+            refs/heads/main)
+              version=latest
+              ;;
+            refs/tags/v*)
+              version="${SOURCE_REF#refs/tags/}"
+              version="${version%%[-+]*}"
+              if [[ "$version" == v ]]; then
+                echo "::error::Invalid version tag: $SOURCE_REF"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Unsupported source ref: $SOURCE_REF"
+              exit 1
+              ;;
+          esac
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: latest
+          extended: true
 
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v6
 
-      - name: Build
-        run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Build selected documentation version
+        env:
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+          HUGO_PARAMS_DOCSVERSION: ${{ steps.target.outputs.version }}
+        run: |
+          export HUGO_PARAMS_DOCSROOT="${PAGES_BASE_URL%/}/"
+          hugo --minify --destination public \
+            --baseURL "${HUGO_PARAMS_DOCSROOT}${HUGO_PARAMS_DOCSVERSION}/"
+          test -f public/index.html
 
-      - name: Upload artifact
+      - name: Prepare all versions and shared metadata
+        env:
+          DOCS_VERSION: ${{ steps.target.outputs.version }}
+        run: |
+          python3 scripts/versioned_docs.py \
+            --version "$DOCS_VERSION" --stored _stored-pages \
+            --build public --output _publish
+
+      - name: Store complete documentation snapshot
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./_publish
+          keep_files: false
+          force_orphan: false
+
+      - name: Checkout complete published collection
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: _pages
+          persist-credentials: false
+
+      - name: Upload all documentation versions
         uses: actions/upload-pages-artifact@v5
         with:
-          path: public
+          path: _pages
+          include-hidden-files: true
 
   deploy:
     environment:
