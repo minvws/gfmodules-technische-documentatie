@@ -44,6 +44,14 @@ hugo server
 
 Hugo will print a local URL (usually `http://localhost:1313/gfmodules-technische-documentatie/`).
 
+To test the version selector locally with sample versions (requires Python 3):
+
+```bash
+bash scripts/preview-versioned-docs.sh v1 v1.2.3
+```
+
+Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary preview files.
+
 ## Publishing
 
 GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
