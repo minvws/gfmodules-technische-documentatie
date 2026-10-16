@@ -17,6 +17,15 @@
     <ul class="nav-links nav-links-desktop">
       {{ partial "nav-links.html" . }}
     </ul>
+    {{ if and .Site.Params.docsroot .Site.Params.docsversion }}
+    <div class="version-selector" data-version-selector data-docs-root="{{ .Site.Params.docsroot }}" data-docs-version="{{ .Site.Params.docsversion }}" data-edition-base="{{ .Site.BaseURL }}" role="group" aria-label="Documentatieversie">
+      <label for="docs-version">Versie</label>
+      <select id="docs-version" name="version" aria-describedby="docs-version-help" disabled>
+        <option value="{{ .Site.Params.docsversion }}" selected>{{ if eq .Site.Params.docsversion "latest" }}Latest (ontwikkeling){{ else }}{{ .Site.Params.docsversion }}{{ end }}</option>
+      </select>
+      <span id="docs-version-help" class="visually-hidden">Selecteren opent direct de gekozen versie.</span>
+    </div>
+    {{ end }}
     <details class="nav-menu">
       <summary class="nav-toggle">
         <span>Menu</span>
@@ -38,6 +47,9 @@
   </div>
 </footer>
 
+{{ if and .Site.Params.docsroot .Site.Params.docsversion }}
+<script src="{{ "assets/js/version-selector.js" | relURL }}"></script>
+{{ end }}
 <script src="{{ "assets/js/main.js" | relURL }}"></script>
 </body>
 </html>

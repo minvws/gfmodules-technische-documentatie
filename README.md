@@ -44,10 +44,23 @@ hugo server
 
 Hugo will print a local URL (usually `http://localhost:1313/gfmodules-technische-documentatie/`).
 
+To test the version selector locally with sample versions (requires Python 3):
+
+```bash
+bash scripts/preview-versioned-docs.sh v1 v1.2.3
+```
+
+Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary preview files.
+
 ## Publishing
 
-Documentation is published automatically through GitHub Actions when changes are
-pushed to `main`.
+GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
+on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
+Suffixes starting with `-` or `+` are removed from the version path.
+
+When publishing a new version, existing versions are restored from the Actions cache.
+Only missing or changed releases are built. Without a cache, all `v*` tags are built.
+`/latest/` is always rebuilt from `main`.
 
 ## Contribution
 
