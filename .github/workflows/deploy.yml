@@ -4,14 +4,15 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  pull_request:
+    paths: [".github/workflows/deploy.yml"]
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  pages: read
 
 concurrency:
-  group: versioned-docs-pages
+  group: versioned-docs-${{ github.event.pull_request.number || 'pages' }}
   queue: max
   cancel-in-progress: false
 
@@ -57,6 +58,7 @@ jobs:
       - name: Build documentation collection
         env:
           SOURCE_REF: ${{ github.ref }}
+          LATEST_REF: ${{ github.event_name == 'pull_request' && 'HEAD' || 'refs/remotes/origin/main' }}
           PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
           set -euo pipefail
@@ -118,25 +120,39 @@ jobs:
           done
 
           # Cached snapshots are immutable, so latest is always refreshed.
-          build_version refs/remotes/origin/main latest
+          build_version "$LATEST_REF" latest
           if [[ "$SOURCE_REF" == refs/tags/* ]]; then
             build_version "$SOURCE_REF" "$selected_version"
           fi
 
       - name: Save documentation collection
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: github.event_name == 'push' && steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
           path: _stored-pages
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
+      - name: Upload pull request documentation
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: stored-pages
+          path: _stored-pages
+          include-hidden-files: true
+          if-no-files-found: error
+
       - name: Upload all documentation versions
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v5
         with:
           path: _stored-pages
           include-hidden-files: true
 
   deploy:
+    if: github.event_name == 'push'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
