@@ -28,7 +28,7 @@ def version_key(entry):
     return entry["id"] == "latest", parts
 
 
-def stage(stored, build, output, version):
+def stage(stored, build, output, version, commit=None):
     paths = [path.resolve() for path in (stored, build, output)]
     for left, right in combinations(paths, 2):
         if left == right or left in right.parents or right in left.parents:
@@ -36,7 +36,11 @@ def stage(stored, build, output, version):
     if not (build / "index.html").is_file():
         raise ValueError(f"build is missing index.html: {build}")
     editions = load_versions(stored)
-    editions[version] = {"id": version, "version": None if version == "latest" else version}
+    editions[version] = {
+        "id": version,
+        "version": None if version == "latest" else version,
+        "commit": commit,
+    }
 
     if output.exists():
         shutil.rmtree(output)
@@ -67,6 +71,7 @@ def stage(stored, build, output, version):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--commit")
     parser.add_argument("--stored", required=True, type=Path)
     parser.add_argument("--build", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
@@ -74,7 +79,7 @@ def main():
     try:
         if args.version != "latest" and not valid_version(args.version):
             raise ValueError(f"invalid version path: {args.version}")
-        stage(args.stored, args.build, args.output, args.version)
+        stage(args.stored, args.build, args.output, args.version, args.commit)
     except (KeyError, TypeError, ValueError, OSError) as error:
         parser.exit(1, f"error: {error}\n")
 

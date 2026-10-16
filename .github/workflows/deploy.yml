@@ -6,7 +6,7 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -25,64 +25,24 @@ jobs:
     steps:
       - name: Checkout documentation source
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Locate stored documentation
-        id: storage
+      - name: Determine release cache key
+        id: releases
         run: |
           set -euo pipefail
-          ref_file="$RUNNER_TEMP/pages-ref"
+          tag_hash="$(git for-each-ref --sort=refname \
+            --format='%(refname) %(objectname)' 'refs/tags/v*' | sha256sum | cut -d ' ' -f 1)"
+          echo "hash=$tag_hash" >> "$GITHUB_OUTPUT"
 
-          status=0
-          git ls-remote --exit-code --heads origin \
-            refs/heads/gh-pages > "$ref_file" || status=$?
-
-          case "$status" in
-            0)
-              read -r commit ref < "$ref_file"
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-              echo "commit=$commit" >> "$GITHUB_OUTPUT"
-              ;;
-            2)
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-              mkdir _stored-pages
-              ;;
-            *)
-              echo "::error::Unable to read gh-pages (Git exit status $status)."
-              exit "$status"
-              ;;
-          esac
-
-      - name: Checkout stored documentation snapshot
-        if: steps.storage.outputs.exists == 'true'
-        uses: actions/checkout@v7
+      - name: Restore documentation collection
+        id: cache
+        uses: actions/cache/restore@v6
         with:
-          ref: ${{ steps.storage.outputs.commit }}
           path: _stored-pages
-          persist-credentials: false
-
-      - name: Determine target documentation version
-        id: target
-        env:
-          SOURCE_REF: ${{ github.ref }}
-        run: |
-          case "$SOURCE_REF" in
-            refs/heads/main)
-              version=latest
-              ;;
-            refs/tags/v*)
-              version="${SOURCE_REF#refs/tags/}"
-              version="${version%%[-+]*}"
-              if [[ "$version" == v ]]; then
-                echo "::error::Invalid version tag: $SOURCE_REF"
-                exit 1
-              fi
-              ;;
-            *)
-              echo "::error::Unsupported source ref: $SOURCE_REF"
-              exit 1
-              ;;
-          esac
-          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          key: versioned-pages-v1-${{ steps.releases.outputs.hash }}
+          restore-keys: versioned-pages-v1-
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
@@ -94,44 +54,86 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
 
-      - name: Build selected documentation version
+      - name: Build documentation collection
         env:
+          SOURCE_REF: ${{ github.ref }}
           PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
-          HUGO_PARAMS_DOCSVERSION: ${{ steps.target.outputs.version }}
         run: |
+          set -euo pipefail
+          build_dir="$(mktemp -d)"
+          trap 'rm -rf "$build_dir"' EXIT
           export HUGO_PARAMS_DOCSROOT="${PAGES_BASE_URL%/}/"
-          hugo --minify --destination public \
-            --baseURL "${HUGO_PARAMS_DOCSROOT}${HUGO_PARAMS_DOCSVERSION}/"
-          test -f public/index.html
 
-      - name: Prepare all versions and shared metadata
-        env:
-          DOCS_VERSION: ${{ steps.target.outputs.version }}
-        run: |
-          python3 scripts/versioned_docs.py \
-            --version "$DOCS_VERSION" --stored _stored-pages \
-            --build public --output _publish
+          build_version() {
+            local ref="$1"
+            local version="$2"
+            if [[ "$version" == v ]]; then
+              echo "::error::Invalid version tag: $ref"
+              return 1
+            fi
 
-      - name: Store complete documentation snapshot
-        uses: peaceiris/actions-gh-pages@v4
+            rm -rf "$build_dir/source" "$build_dir/public"
+            mkdir -p "$build_dir/source"
+            git archive "$ref" | tar -x -C "$build_dir/source"
+            HUGO_PARAMS_DOCSVERSION="$version" \
+              hugo --minify --source "$build_dir/source" \
+                --destination "$build_dir/public" \
+                --baseURL "${HUGO_PARAMS_DOCSROOT}${version}/"
+            python3 scripts/versioned_docs.py \
+              --version "$version" --commit "$(git rev-parse "$ref^{commit}")" \
+              --stored _stored-pages \
+              --build "$build_dir/public" --output _publish
+            rm -rf _stored-pages
+            mv _publish _stored-pages
+          }
+
+          selected_version=latest
+          if [[ "$SOURCE_REF" == refs/tags/* ]]; then
+            selected_version="${SOURCE_REF#refs/tags/}"
+            selected_version="${selected_version%%[-+]*}"
+          fi
+
+          # Choose one tag per version before checking the cached source commits.
+          declare -A release_refs=()
+          while IFS= read -r ref; do
+            version="${ref#refs/tags/}"
+            version="${version%%[-+]*}"
+            release_refs["$version"]="$ref"
+          done < <(git for-each-ref --sort=refname --sort=creatordate \
+            --format='%(refname)' 'refs/tags/v*')
+
+          for version in "${!release_refs[@]}"; do
+            if [[ "$version" == "$selected_version" ]]; then
+              continue
+            fi
+            ref="${release_refs[$version]}"
+            commit="$(git rev-parse "$ref^{commit}")"
+            if [[ -f "_stored-pages/$version/index.html" ]] && \
+                jq -e --arg version "$version" --arg commit "$commit" \
+                  'any(.versions[]; .id == $version and .commit == $commit)' \
+                  _stored-pages/versions.json > /dev/null; then
+              continue
+            fi
+            build_version "$ref" "$version"
+          done
+
+          # Cached snapshots are immutable, so latest is always refreshed.
+          build_version refs/remotes/origin/main latest
+          if [[ "$SOURCE_REF" == refs/tags/* ]]; then
+            build_version "$SOURCE_REF" "$selected_version"
+          fi
+
+      - name: Save documentation collection
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./_publish
-          keep_files: false
-          force_orphan: false
-
-      - name: Checkout complete published collection
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: _pages
-          persist-credentials: false
+          path: _stored-pages
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
       - name: Upload all documentation versions
         uses: actions/upload-pages-artifact@v5
         with:
-          path: _pages
+          path: _stored-pages
           include-hidden-files: true
 
   deploy:

@@ -58,8 +58,9 @@ GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-te
 on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
 Suffixes starting with `-` or `+` are removed from the version path.
 
-Published versions are stored on `gh-pages`. Publishing replaces only the matching
-version directory and keeps the other versions.
+When publishing a new version, existing versions are restored from the Actions cache.
+Only missing or changed releases are built. Without a cache, all `v*` tags are built.
+`/latest/` is always rebuilt from `main`.
 
 ## Contribution
 
