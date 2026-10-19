@@ -1,13 +1,17 @@
-(function (root, factory) {
-  const api = factory();
-  if (typeof module === 'object' && module.exports) {
-    module.exports = api;
-  } else {
-    root.DocsVersions = api;
-  }
-})(typeof globalThis === 'object' ? globalThis : this, function () {
+/*
+ * Kept separate from main.js: scripts/versioned_docs.py copies this file into
+ * saved documentation versions so selector fixes reach older releases without
+ * replacing their other UI behavior. Keep window.DocsVersions compatible with
+ * the main.js files in those saved versions.
+ */
+window.DocsVersions = (function () {
   function safeVersion(value) {
-    return typeof value === 'string' && value.length > 0 && value !== '.' && value !== '..'
+    // Defensive sanity check: publishing already validates release names.
+    // Invalid versions.json entries are unexpected and cause validateManifest()
+    // to reject the entire manifest. The special latest entry is handled separately.
+    // Keep in sync with valid_version() in scripts/versioned_docs.py.
+    return typeof value === 'string' && value.length > 0
+      && !['v', '.', '..', '.git', '.github', 'latest', 'index.html', 'versions.json'].includes(value)
       && !/[/\\:?#%\s\x00-\x1f\x7f-\x9f+\-]/.test(value);
   }
 
@@ -62,12 +66,12 @@
     return target.href;
   }
 
-  async function loadManifest(docsRoot, currentVersion, currentURL, fetchManifest = globalThis.fetch) {
+  async function loadManifest(docsRoot, currentVersion, currentURL) {
     const manifestURL = new URL('versions.json', publicationRoot(docsRoot, currentURL));
-    const response = await fetchManifest(manifestURL.href, { cache: 'no-store' });
+    const response = await fetch(manifestURL.href, { cache: 'no-store' });
     if (!response.ok) throw new Error('Documentatieversies zijn niet beschikbaar');
     return validateManifest(await response.json(), currentVersion);
   }
 
-  return { validateManifest, versionURL, loadManifest };
-});
+  return { versionURL, loadManifest };
+})();
