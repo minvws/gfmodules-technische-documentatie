@@ -57,6 +57,10 @@ Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary pre
 GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
 on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
 Suffixes starting with `-` or `+` are removed from the version path.
+When tags share a version path, all deployments use the highest tag in natural
+version order, treating `+` and `-` as equivalent separators. For example,
+`v1.2.3+build1` and `v1.2.3-build2` both publish to `/v1.2.3/`, using
+`v1.2.3-build2`. Numeric suffixes sort naturally: `build10` comes after `build2`.
 Unsupported version tags are skipped with a GitHub Actions warning.
 
 Deployments on `main` reuse cached release documentation and rebuild missing or

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage a Hugo documentation version alongside the stored versions."""
+"""Select, validate, or stage Hugo documentation versions."""
 
 import argparse
 from itertools import combinations
@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 
 
 def valid_version(value):
@@ -21,11 +22,22 @@ def load_versions(stored):
     return {entry["id"]: entry for entry in entries}
 
 
+def natural_key(value):
+    return tuple((1, int(part)) if part.isdecimal() else (0, part)
+                 for part in re.split(r"(\d+)", value))
+
+
 def version_key(entry):
     version = (entry["version"] or "").removeprefix("v")
-    parts = tuple((1, int(part)) if part.isdecimal() else (0, part.casefold())
-                  for part in re.split(r"(\d+)", version))
-    return entry["id"] == "latest", parts
+    return entry["id"] == "latest", natural_key(version.casefold())
+
+
+def select_release_refs(refs):
+    selected = {}
+    for ref in sorted(refs, key=lambda ref: (natural_key(ref.replace("+", "-")), ref)):
+        version = re.split(r"[-+]", ref.removeprefix("refs/tags/"), maxsplit=1)[0]
+        selected[version] = ref
+    return selected
 
 
 def stage(stored, build, output, version, commit=None):
@@ -70,15 +82,30 @@ def stage(stored, build, output, version, commit=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", required=True)
-    parser.add_argument("--check-version", action="store_true",
-                        help="validate the version without staging files")
+    parser.add_argument("--version")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check-version", action="store_true",
+                      help="validate the version without staging files")
+    mode.add_argument("--list-releases", action="store_true",
+                      help="list the selected version, source tag, and commit for each release")
     parser.add_argument("--commit")
     parser.add_argument("--stored", type=Path)
     parser.add_argument("--build", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
+        if args.list_releases:
+            refs_output = subprocess.check_output(
+                ["git", "for-each-ref", "--format=%(refname)", "refs/tags/v*"],
+                text=True)
+            refs = [ref for ref in refs_output.split("\n") if ref]
+            for version, ref in select_release_refs(refs).items():
+                commit = subprocess.check_output(
+                    ["git", "rev-parse", f"{ref}^{{commit}}"], text=True).strip()
+                print(f"{version}\t{ref}\t{commit}")
+            return
+        if args.version is None:
+            parser.error("the following arguments are required: --version")
         if args.version != "latest" and not valid_version(args.version):
             raise ValueError(f"invalid version path: {args.version}")
         if args.check_version:
@@ -88,7 +115,7 @@ def main():
         if missing:
             parser.error(f"the following arguments are required: {', '.join(missing)}")
         stage(args.stored, args.build, args.output, args.version, args.commit)
-    except (KeyError, TypeError, ValueError, OSError) as error:
+    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"error: {error}\n")
 
 

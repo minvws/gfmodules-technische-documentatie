@@ -60,7 +60,6 @@ jobs:
 
       - name: Build documentation collection
         env:
-          SOURCE_REF: ${{ github.ref }}
           LATEST_REF: ${{ github.event_name == 'pull_request' && 'HEAD' || 'refs/remotes/origin/main' }}
           PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
@@ -72,6 +71,7 @@ jobs:
           build_version() {
             local ref="$1"
             local version="$2"
+            local commit="$3"
             if ! python3 scripts/versioned_docs.py --check-version --version "$version"; then
               printf '::warning::Skipping unsupported version tag: %s\n' "${ref//%/%25}"
               return 0
@@ -85,48 +85,27 @@ jobs:
                 --destination "$build_dir/public" \
                 --baseURL "${HUGO_PARAMS_DOCSROOT}${version}/"
             python3 scripts/versioned_docs.py \
-              --version "$version" --commit "$(git rev-parse "$ref^{commit}")" \
+              --version "$version" --commit "$commit" \
               --stored _stored-pages \
               --build "$build_dir/public" --output _publish
             rm -rf _stored-pages
             mv _publish _stored-pages
           }
 
-          selected_version=latest
-          if [[ "$SOURCE_REF" == refs/tags/* ]]; then
-            selected_version="${SOURCE_REF#refs/tags/}"
-            selected_version="${selected_version%%[-+]*}"
-          fi
-
-          # Choose one tag per version before checking the cached source commits.
-          declare -A release_refs=()
-          while IFS= read -r ref; do
-            version="${ref#refs/tags/}"
-            version="${version%%[-+]*}"
-            release_refs["$version"]="$ref"
-          done < <(git for-each-ref --sort=refname --sort=creatordate \
-            --format='%(refname)' 'refs/tags/v*')
-
-          for version in "${!release_refs[@]}"; do
-            if [[ "$version" == "$selected_version" ]]; then
-              continue
-            fi
-            ref="${release_refs[$version]}"
-            commit="$(git rev-parse "$ref^{commit}")"
+          python3 scripts/versioned_docs.py --list-releases > "$build_dir/releases"
+          while IFS=$'\t' read -r version ref commit; do
             if [[ -f "_stored-pages/$version/index.html" ]] && \
                 jq -e --arg version "$version" --arg commit "$commit" \
                   'any(.versions[]; .id == $version and .commit == $commit)' \
                   _stored-pages/versions.json > /dev/null; then
               continue
             fi
-            build_version "$ref" "$version"
-          done
+            build_version "$ref" "$version" "$commit"
+          done < "$build_dir/releases"
 
           # Cached snapshots are immutable, so latest is always refreshed.
-          build_version "$LATEST_REF" latest
-          if [[ "$SOURCE_REF" == refs/tags/* ]]; then
-            build_version "$SOURCE_REF" "$selected_version"
-          fi
+          latest_commit="$(git rev-parse "$LATEST_REF^{commit}")"
+          build_version "$LATEST_REF" latest "$latest_commit"
 
       - name: Save documentation collection
         if: github.event_name == 'push' && steps.cache.outputs.cache-hit != 'true'
