@@ -44,10 +44,31 @@ hugo server
 
 Hugo will print a local URL (usually `http://localhost:1313/gfmodules-technische-documentatie/`).
 
+To test the version selector locally with sample versions (requires Python 3):
+
+```bash
+bash scripts/preview-versioned-docs.sh v1 v1.2.3
+```
+
+Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary preview files.
+
 ## Publishing
 
-Documentation is published automatically through GitHub Actions when changes are
-pushed to `main`.
+GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
+on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
+Suffixes starting with `-` or `+` are removed from the version path.
+When tags share a version path, all deployments use the highest tag in natural
+version order, treating `+` and `-` as equivalent separators. For example,
+`v1.2.3+build1` and `v1.2.3-build2` both publish to `/v1.2.3/`, using
+`v1.2.3-build2`. Numeric suffixes sort naturally: `build10` comes after `build2`.
+Unsupported version tags are skipped with a GitHub Actions warning.
+
+Deployments on `main` reuse cached release documentation and rebuild missing or
+changed releases. Without a cache, all supported `v*` tags are built.
+
+Tag deployments can reuse caches from `main`, but `main` cannot reuse caches saved
+by tag deployments. New releases may therefore be rebuilt on the next main deployment.
+`/latest/` is always rebuilt from `main`.
 
 ## Contribution
 

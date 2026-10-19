@@ -1,44 +1,139 @@
-name: Deploy Hugo site to GitHub Pages
+name: Deploy versioned Hugo documentation
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+    tags: ["v*"]
+  pull_request:
+    paths: [".github/workflows/deploy.yml"]
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  pages: read
 
 concurrency:
-  group: pages
+  group: versioned-docs-${{ github.event.pull_request.number || 'pages' }}
+  queue: max
   cancel-in-progress: false
 
 jobs:
   build:
+    if: github.event.deleted != true
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout documentation source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Determine release cache key
+        id: releases
+        run: |
+          set -euo pipefail
+          python3 scripts/versioned_docs.py --list-releases > "$RUNNER_TEMP/documentation-releases.tsv"
+          release_hash="$(sha256sum < "$RUNNER_TEMP/documentation-releases.tsv" | cut -d ' ' -f 1)"
+          echo "hash=$release_hash" >> "$GITHUB_OUTPUT"
+
+      # Main and tag runs can restore caches saved on main. Caches saved by tag
+      # runs are scoped to that tag, so the next main run rebuilds new releases
+      # once to include them in its own cache.
+      - name: Restore documentation collection
+        id: cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: _stored-pages
+          key: versioned-pages-v1-${{ steps.releases.outputs.hash }}
+          restore-keys: versioned-pages-v1-
 
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v3
+        uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3.2.1
         with:
           hugo-version: latest
+          extended: true
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      - name: Build
-        run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Build documentation collection
+        env:
+          LATEST_REF: ${{ github.event_name == 'pull_request' && 'HEAD' || 'refs/remotes/origin/main' }}
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          set -euo pipefail
+          build_dir="$(mktemp -d)"
+          trap 'rm -rf "$build_dir"' EXIT
+          export HUGO_PARAMS_DOCSROOT="${PAGES_BASE_URL%/}/"
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+          build_version() {
+            local ref="$1"
+            local version="$2"
+            local commit="$3"
+            if ! python3 scripts/versioned_docs.py --check-version --version "$version"; then
+              printf '::warning::Skipping unsupported version tag: %s\n' "${ref//%/%25}"
+              return 0
+            fi
+
+            rm -rf "$build_dir/source" "$build_dir/public"
+            mkdir -p "$build_dir/source"
+            git archive "$ref" | tar -x -C "$build_dir/source"
+            HUGO_PARAMS_DOCSVERSION="$version" \
+              hugo --minify --source "$build_dir/source" \
+                --destination "$build_dir/public" \
+                --baseURL "${HUGO_PARAMS_DOCSROOT}${version}/"
+            python3 scripts/versioned_docs.py \
+              --version "$version" --commit "$commit" \
+              --stored _stored-pages \
+              --build "$build_dir/public" --output _publish
+            rm -rf _stored-pages
+            mv _publish _stored-pages
+          }
+
+          while IFS=$'\t' read -r version ref commit; do
+            if [[ -f "_stored-pages/$version/index.html" ]] && \
+                jq -e --arg version "$version" --arg commit "$commit" \
+                  'any(.versions[]; .id == $version and .commit == $commit)' \
+                  _stored-pages/versions.json > /dev/null; then
+              continue
+            fi
+            build_version "$ref" "$version" "$commit"
+          done < "$RUNNER_TEMP/documentation-releases.tsv"
+
+          # Cached snapshots are immutable, so latest is always refreshed.
+          latest_commit="$(git rev-parse "$LATEST_REF^{commit}")"
+          build_version "$LATEST_REF" latest "$latest_commit"
+
+      - name: Save documentation collection
+        if: github.event_name == 'push' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: public
+          path: _stored-pages
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Upload pull request documentation
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.0
+        with:
+          name: stored-pages
+          path: _stored-pages
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Upload all documentation versions
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _stored-pages
+          include-hidden-files: true
 
   deploy:
+    if: github.event_name == 'push'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -47,4 +142,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

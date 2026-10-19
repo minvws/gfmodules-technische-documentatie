@@ -8,16 +8,18 @@ disableKinds = ["taxonomy", "term"]
   subtitle = "Generieke Functies"
   environment = "Proeftuin"
   contact_email = "helpdesk@irealisatie.nl"
+  docsRoot = ""
+  docsVersion = ""
 
 [[menus.main]]
   name = "Overzicht"
-  url = "/"
+  pageRef = "/"
   weight = 1
 [[menus.main]]
   name = "Services"
-  url = "/services/"
+  pageRef = "/services"
   weight = 2
 [[menus.main]]
   name = "Integratie"
-  url = "/integration/"
+  pageRef = "/integration"
   weight = 3
