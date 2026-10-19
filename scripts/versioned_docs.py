@@ -11,8 +11,8 @@ import subprocess
 
 
 def valid_version(value):
-    return (isinstance(value, str) and bool(value)
-            and value not in {"v", ".", "..", ".git", ".github", "latest", "index.html", "versions.json"}
+    return (isinstance(value, str) and value.startswith("v") and len(value) > 1
+            and value != "versions.json"
             and not re.search(r"[/\\:?#%+\-\s\x00-\x1f\x7f-\x9f\ufeff]", value))
 
 
@@ -78,6 +78,8 @@ def stage(stored, build, output, version, commit=None):
     (output / "versions.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(Path(__file__).resolve().parent / "versioned_docs" / "index.html",
                     output / "index.html")
+    if version == "latest" and (build / "404.html").is_file():
+        shutil.copyfile(build / "404.html", output / "404.html")
 
 
 def main():

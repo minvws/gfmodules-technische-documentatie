@@ -10,8 +10,8 @@ window.DocsVersions = (function () {
     // Invalid versions.json entries are unexpected and cause validateManifest()
     // to reject the entire manifest. The special latest entry is handled separately.
     // Keep in sync with valid_version() in scripts/versioned_docs.py.
-    return typeof value === 'string' && value.length > 0
-      && !['v', '.', '..', '.git', '.github', 'latest', 'index.html', 'versions.json'].includes(value)
+    return typeof value === 'string' && value.startsWith('v') && value.length > 1
+      && value !== 'versions.json'
       && !/[/\\:?#%\s\x00-\x1f\x7f-\x9f+\-]/.test(value);
   }
 
