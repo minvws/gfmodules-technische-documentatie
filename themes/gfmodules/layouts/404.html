@@ -1,0 +1,11 @@
+{{ define "title" }}Pagina niet gevonden - {{ .Site.Title }}{{ end }}
+
+{{ define "main" }}
+<main class="page-content">
+  <div class="section-header">
+    <h1>404 - Pagina niet gevonden</h1>
+  </div>
+  <p>De pagina die je zoekt bestaat niet of is verplaatst.</p>
+  <p><a href="{{ absURL "" }}">Terug naar het overzicht</a></p>
+</main>
+{{ end }}
