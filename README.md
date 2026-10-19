@@ -57,9 +57,13 @@ Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary pre
 GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
 on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
 Suffixes starting with `-` or `+` are removed from the version path.
+Unsupported version tags are skipped with a GitHub Actions warning.
 
-When publishing a new version, existing versions are restored from the Actions cache.
-Only missing or changed releases are built. Without a cache, all `v*` tags are built.
+Deployments on `main` reuse cached release documentation and rebuild missing or
+changed releases. Without a cache, all supported `v*` tags are built.
+
+Tag deployments can reuse caches from `main`, but `main` cannot reuse caches saved
+by tag deployments. New releases may therefore be rebuilt on the next main deployment.
 `/latest/` is always rebuilt from `main`.
 
 ## Contribution

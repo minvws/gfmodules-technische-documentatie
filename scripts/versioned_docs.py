@@ -11,7 +11,7 @@ import shutil
 
 def valid_version(value):
     return (isinstance(value, str) and bool(value)
-            and value not in {".", "..", ".git", ".github", "latest", "index.html", "versions.json"}
+            and value not in {"v", ".", "..", ".git", ".github", "latest", "index.html", "versions.json"}
             and not re.search(r"[/\\:?#%+\-\s\x00-\x1f\x7f-\x9f\ufeff]", value))
 
 
@@ -71,14 +71,22 @@ def stage(stored, build, output, version, commit=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--check-version", action="store_true",
+                        help="validate the version without staging files")
     parser.add_argument("--commit")
-    parser.add_argument("--stored", required=True, type=Path)
-    parser.add_argument("--build", required=True, type=Path)
-    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--stored", type=Path)
+    parser.add_argument("--build", type=Path)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
         if args.version != "latest" and not valid_version(args.version):
             raise ValueError(f"invalid version path: {args.version}")
+        if args.check_version:
+            return
+        missing = [f"--{name}" for name in ("stored", "build", "output")
+                   if getattr(args, name) is None]
+        if missing:
+            parser.error(f"the following arguments are required: {', '.join(missing)}")
         stage(args.stored, args.build, args.output, args.version, args.commit)
     except (KeyError, TypeError, ValueError, OSError) as error:
         parser.exit(1, f"error: {error}\n")
