@@ -85,7 +85,7 @@
                   class="actor actor-bottom"></rect>
             <text x="525" y="650.5" style="text-anchor: middle; font-size: 16px; font-weight: 400;"
                   dominant-baseline="central" alignment-baseline="central" class="actor actor-box">
-                <tspan x="525" dy="0">PRS Server</tspan>
+                <tspan x="525" dy="0">PRS</tspan>
             </text>
         </g>
         <g>
@@ -116,7 +116,7 @@
                       class="actor actor-top"></rect>
                 <text x="525" y="32.5" style="text-anchor: middle; font-size: 16px; font-weight: 400;"
                       dominant-baseline="central" alignment-baseline="central" class="actor actor-box">
-                    <tspan x="525" dy="0">PRS Server</tspan>
+                    <tspan x="525" dy="0">PRS</tspan>
                 </text>
             </g>
         </g>

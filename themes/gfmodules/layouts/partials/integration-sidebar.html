@@ -1,0 +1,12 @@
+<aside class="integration-sidebar" aria-label="Sectienavigatie {{ .Title }}">
+  <nav class="integration-sidebar-desktop" aria-label="{{ .Title }}: op deze pagina">
+    <p class="integration-sidebar-title">Op deze pagina</p>
+    {{ partial "integration-section-links.html" .Params.sections }}
+  </nav>
+  <details class="integration-sidebar-mobile">
+    <summary>Op deze pagina</summary>
+    <nav aria-label="{{ .Title }}: op deze pagina">
+      {{ partial "integration-section-links.html" .Params.sections }}
+    </nav>
+  </details>
+</aside>

@@ -2,12 +2,11 @@
 <main class="page-content">
 
   <div class="section-header">
-    <h2>Changelog - {{ $.Site.Params.environment }}</h2>
+    <h2>Changelog</h2>
   </div>
 
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
-    Overzicht van alle wijzigingen in de {{ $.Site.Params.environment }}-omgeving. Raadpleeg deze pagina
-    altijd na een aankondiging van een nieuwe release.
+    Overzicht van wijzigingen in de API-documentatie van de {{ $.Site.Params.subtitle }}.
   </p>
 
   <div class="filters" data-filter-group="cl">
@@ -24,9 +23,6 @@
       <li class="cl-entry" data-filter-item="cl" data-filter-val="{{ delimit $entry.filters " " }}"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
         <div class="cl-side">
           <div class="cl-date">{{ $entry.date }}</div>
-          <div class="cl-envs">
-            {{ range $entry.environments }}<span class="badge badge-{{ lower . }}">{{ . }}</span>{{ end }}
-          </div>
         </div>
         <div class="cl-main">
           <div class="cl-title">

@@ -1,0 +1,14 @@
+<ul class="integration-section-links">
+  {{ range . }}
+  <li>
+    {{ if .id }}
+    <a href="#{{ .id }}">{{ .title }}</a>
+    {{ else }}
+    <span class="integration-section-group">{{ .title }}</span>
+    {{ end }}
+    {{ with .children }}
+    {{ partial "integration-section-links.html" . }}
+    {{ end }}
+  </li>
+  {{ end }}
+</ul>

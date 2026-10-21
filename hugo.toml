@@ -6,7 +6,6 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   subtitle = "Generieke Functies"
-  environment = "Proeftuin"
   contact_email = "helpdesk@irealisatie.nl"
   docsRoot = ""
   docsVersion = ""
@@ -16,10 +15,6 @@ disableKinds = ["taxonomy", "term"]
   pageRef = "/"
   weight = 1
 [[menus.main]]
-  name = "Services"
-  pageRef = "/services"
-  weight = 2
-[[menus.main]]
   name = "Integratie"
   pageRef = "/integration"
-  weight = 3
+  weight = 2
