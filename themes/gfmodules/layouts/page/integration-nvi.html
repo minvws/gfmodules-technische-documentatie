@@ -8,9 +8,9 @@
     <h2>📑 NVI — Nationale Verwijs Index</h2>
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:720px">
-    De integratievoorbeelden hieronder gebruiken <a href="{{ "integration/mtls/" | relURL }}">mTLS</a>
-    en een <a href="#oauth-token">OAuth-token van de NVI</a> voor het API-basispad <code>{{ $svc.base_path }}</code>.
-    Verifieer de verbindings- en autorisatieafspraken bij de aansluiting voordat je integreert.
+    Volg eerst de <a href="{{ "integration/aansluiten/" | relURL }}">aansluitinstructies</a> voor het
+    PKIoverheid-certificaat, de registratie en de mTLS-verbinding. Gebruik daarna een
+    <a href="#oauth-token">OAuth-token van de NVI</a> voor het API-basispad <code>{{ $svc.base_path }}</code>.
   </p>
 
   <div class="info-panel" style="margin-bottom:1.25rem">
@@ -136,7 +136,7 @@
       <code>subject.identifier</code> of <code>subject:identifier</code>. Het ontwerp
       beschrijft dat de NVI het pseudoniem alleen binnen de cryptoverwerking afleidt voor interne
       matching. Het beoogde responsmodel retourneert de JWE, het pseudoniem of een interne hash niet; raadpleeg de
-      CapabilityStatement voor het responsecontract. De integratievoorbeelden
+      <a href="#fhir-metadata">FHIR-capabilities</a> voor het responsecontract. De integratievoorbeelden
       gebruiken mTLS en een OAuth-token; stem de verbindings- en autorisatieafspraken af bij de aansluiting.
     </p>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-top:.75rem">
@@ -166,7 +166,7 @@
       <div class="info-panel-title">Verplichte List-velden</div>
       <p>
         De velden <code>extension</code>, <code>status</code>, <code>mode</code>,
-        <code>source</code> en <code>emptyReason</code> zijn vereist. Gebruik de CapabilityStatement
+        <code>source</code> en <code>emptyReason</code> zijn vereist. Raadpleeg de <a href="#fhir-metadata">FHIR-capabilities</a>
         voor het actuele FHIR-profiel en eventuele aanvullende afspraken.
       </p>
     </div>
@@ -335,11 +335,6 @@ resp.raise_for_status()</pre>
     </div>
   </div>
 
-  <div class="info-panel tip" style="margin-bottom:1.25rem">
-    <div class="info-panel-title">Testdata</div>
-    <p>Gebruik uitsluitend testidentificatoren die via de aansluitafspraken beschikbaar zijn gesteld.</p>
-  </div>
-
   <div class="card" style="margin-bottom:1.25rem">
     <h3 id="lokalisaties-opvragen">Lokalisaties opvragen (<code>GET /fhir/List</code>)</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
@@ -485,11 +480,17 @@ bundle = resp.json()
     </div>
   </div>
 
-  <div class="info-panel" id="fhir-metadata" style="margin-bottom:1.5rem">
-    <div class="info-panel-title">FHIR CapabilityStatement</div>
-    <p>De volledige API-beschrijving is beschikbaar via:
-      <code>{{ $svc.base_path }}/fhir/metadata</code>
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3 id="fhir-metadata">FHIR-capabilities opvragen</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+      Gebruik het metadata-endpoint om te zien welke FHIR-resources en interacties de NVI ondersteunt.
+      De respons is een FHIR <a href="https://hl7.org/fhir/R4/capabilitystatement.html"><code>CapabilityStatement</code></a>.
     </p>
+    <div class="endpoint-row">
+      <span class="method method-get">GET</span>
+      <code>{{ $svc.base_path }}/fhir/metadata</code>
+      <button class="copy-btn" title="Kopieer endpoint">📋</button>
+    </div>
   </div>
 
   <div style="display:flex;justify-content:space-between;align-items:center">

@@ -25,5 +25,5 @@ sections:
   - id: lokalisatie-verwijderen
     title: "Lokalisatie verwijderen"
   - id: fhir-metadata
-    title: "FHIR-metadata"
+    title: "FHIR-capabilities opvragen"
 ---

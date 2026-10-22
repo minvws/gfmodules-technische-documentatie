@@ -11,8 +11,8 @@
   <div class="card" style="margin-bottom:1.5rem">
     <h3>Hoe begin ik?</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.25rem">
-      De integratievoorbeelden voor beide diensten gebruiken <a href="{{ "integration/mtls/" | relURL }}">mTLS</a>
-      met een PKIoverheid-clientcertificaat. Registreer je organisatie en dit certificaat vooraf bij de
+      Begin met de <a href="{{ "integration/aansluiten/" | relURL }}">aansluitinstructies</a>.
+      Voor beide diensten heb je een PKIoverheid-clientcertificaat nodig. Registreer je organisatie en dit certificaat vooraf bij de
       beheerder van de betreffende dienst. In de voorbeelden haal je met het certificaat bij het
       OAuth-endpoint van de gekozen dienst een token op; met dat token en het certificaat roep je
       vervolgens die dienst aan.
@@ -21,7 +21,7 @@
       <div>
         <h4 style="margin-bottom:.65rem">PRS</h4>
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
-          <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS</a>
+          <a href="{{ "integration/aansluiten/" | relURL }}" class="filter-btn active" style="text-decoration:none">① Aansluiten</a>
           <span style="color:var(--text-muted)">→</span>
           <a href="{{ "integration/prs/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">② Token via PRS OAuth</a>
           <span style="color:var(--text-muted)">→</span>
@@ -31,7 +31,7 @@
       <div>
         <h4 style="margin-bottom:.65rem">NVI</h4>
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.875rem">
-          <a href="{{ "integration/mtls/" | relURL }}" class="filter-btn active" style="text-decoration:none">① mTLS</a>
+          <a href="{{ "integration/aansluiten/" | relURL }}" class="filter-btn active" style="text-decoration:none">① Aansluiten</a>
           <span style="color:var(--text-muted)">→</span>
           <a href="{{ "integration/nvi/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">② Token via NVI OAuth</a>
           <span style="color:var(--text-muted)">→</span>
@@ -47,15 +47,15 @@
       <div class="service-card-top">
         <div class="service-icon">📜</div>
         <div>
-          <div class="service-name">mTLS</div>
-          <div class="service-fullname">Mutual TLS — clientidentificatie</div>
+          <div class="service-name">Aansluiten</div>
+          <div class="service-fullname">Certificaat, registratie en verbinding</div>
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">Gebruik een PKIoverheid-certificaat en test de mTLS-verbinding. Dit is de basis voor alle andere stappen.</p>
+        <p class="service-desc">Bereid je aansluiting voor met een PKIoverheid-certificaat, registreer je organisatie en test de verbinding met de PRS of NVI.</p>
       </div>
       <div class="service-card-footer">
-        <a href="{{ "integration/mtls/" | relURL }}">Naar mTLS-documentatie &rarr;</a>
+        <a href="{{ "integration/aansluiten/" | relURL }}">Naar aansluitinstructies &rarr;</a>
       </div>
     </div>
 
@@ -68,7 +68,7 @@
         </div>
       </div>
       <div class="service-card-body">
-        <p class="service-desc">De PRS-documentatie beschrijft de OPRF-uitwisseling en het ontwerp voor omkeerbare en niet-omkeerbare pseudoniemen en DigiD SAML-exchange.</p>
+        <p class="service-desc">De PRS biedt vier gebruiksmogelijkheden: omkeerbare pseudoniemen, niet-omkeerbare pseudoniemen, DigiD SAML-exchange en geblindeerde OPRF-uitwisseling. De documentatie beschrijft ook OAuth-toegang tot de dienst.</p>
       </div>
       <div class="service-card-footer">
         <a href="{{ "integration/prs/" | relURL }}">Naar PRS-documentatie &rarr;</a>

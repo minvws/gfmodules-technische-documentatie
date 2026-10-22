@@ -8,16 +8,29 @@
     <h2>👤 PRS — Pseudoniemendienst</h2>
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:720px">
-    Deze documentatie beschrijft de OPRF-uitwisseling met de PRS. Volg eerst de
-    <a href="{{ "integration/mtls/" | relURL }}">aansluitinstructies</a> en haal daarna via OAuth
+    De PRS biedt vier gebruiksmogelijkheden voor pseudonimisering. Volg eerst de
+    <a href="{{ "integration/aansluiten/" | relURL }}">aansluitinstructies</a> en haal daarna via OAuth
     een <a href="#oauth-token">Bearer-token</a> op.
   </p>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3 id="concept-pseudonimiseringsstromen">Vier pseudonimiseringsstromen</h3>
+    <h3 id="wat-de-prs-doet">Wat de PRS doet</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
-      De PRS maakt organisatie-specifieke pseudoniemen, zodat organisaties over personen kunnen
-      communiceren zonder het persoonsnummer onderling uit te wisselen. Er zijn vier stromen.
+      Met de Pseudoniemendienst (PRS) maak je organisatie-specifieke pseudoniemen op basis van
+      een persoonsnummer, zoals het BSN. Zo kunnen organisaties over een persoon communiceren
+      zonder het persoonsnummer onderling uit te wisselen.
+    </p>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
+      Welke partij het persoonsnummer verwerkt en wie het pseudoniem ontvangt, hangt af van
+      de gekozen gebruiksmogelijkheid.
+    </p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3 id="concept-pseudonimiseringsstromen">Vier gebruiksmogelijkheden</h3>
+    <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+      Je kunt de PRS op vier manieren gebruiken. Hieronder staat per gebruiksmogelijkheid
+      hoe het pseudoniem tot stand komt.
     </p>
     <div class="two-col" style="row-gap:1rem">
       <div>
@@ -42,7 +55,7 @@
         </p>
       </div>
       <div>
-        <h4>Geblindeerde OPRF-uitwisseling</h4>
+        <h4><a href="#api-oprf-uitwisseling">Geblindeerde OPRF-uitwisseling</a></h4>
         <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
           Een aanvrager blindeert het persoonsnummer lokaal. De PRS evalueert alleen die
           geblindeerde invoer; de ontvangende organisatie leidt als enige het pseudoniem af.
@@ -73,7 +86,7 @@
         <h4>Minimale gegevensverwerking</h4>
         <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
           De PRS bewaart geen persoonsnummer-pseudoniemmapping en neemt geen persoonsnummers of
-          pseudoniemen op in de audit-log. Bij directe en SAML-stromen is het persoonsnummer wel
+          pseudoniemen op in de audit-log. Bij directe pseudonimisering en DigiD SAML-exchange is het persoonsnummer wel
           tijdelijk aanwezig binnen de vertrouwde PRS-infrastructuur.
         </p>
       </div>
@@ -95,17 +108,18 @@
     </div>
   </div>
 
+  {{ partial "oauth-guide.html" $svc }}
+
+  <section aria-labelledby="api-oprf-uitwisseling">
   <div class="card" style="margin-bottom:1.25rem">
-    <h3 id="api-oprf-uitwisseling">OPRF-uitwisseling</h3>
+    <h3 id="api-oprf-uitwisseling">Geblindeerde OPRF-uitwisseling</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
-      De Pseudoniemendienst gebruikt een <strong>OPRF-protocol</strong> (Oblivious Pseudo-Random Function)
+      Bij deze gebruiksmogelijkheid gebruikt de PRS een <strong>OPRF-protocol</strong> (Oblivious Pseudo-Random Function)
       om BSN-nummers om te zetten naar deterministische, onomkeerbare pseudoniemen.
-      Binnen deze OPRF-stroom ziet de server nooit het plaintext BSN; de client ziet nooit de serversleutel.
-      Gebruik voor deze route een Bearer-token en mTLS volgens de aansluitinstructies.
+      Bij de geblindeerde uitwisseling ziet de server nooit het plaintext BSN; de client ziet nooit de serversleutel.
+      Gebruik voor de aanroepen een <a href="#oauth-token">Bearer-token</a> en mTLS volgens de aansluitinstructies.
     </p>
   </div>
-
-  {{ partial "oauth-guide.html" $svc }}
 
   <div class="card" style="margin-bottom:1.25rem">
     <h3 id="oprf-uitleg">Wat is OPRF en waarom drie partijen?</h3>
@@ -138,7 +152,7 @@
           <td style="padding:.5rem .6rem;color:var(--text-muted)">Het BSN, het pseudoniem</td>
         </tr>
         <tr>
-          <td style="padding:.5rem .6rem;font-weight:600">Receiver</td>
+          <td style="padding:.5rem .6rem;font-weight:600">Ontvanger</td>
           <td style="padding:.5rem .6rem;color:var(--text-muted)">Het pseudoniem, zijn eigen private key</td>
           <td style="padding:.5rem .6rem;color:var(--text-muted)">Het BSN, de serversleutel</td>
         </tr>
@@ -152,15 +166,15 @@
       naar de PRS stuurt. De PRS voert zijn berekening uit op de verblinde waarde en stuurt het
       resultaat terug. Doordat de PRS de blind factor nooit ziet, kan hij het resultaat niet
       koppelen aan het originele BSN. De client kan het resultaat vervolgens "ontmaskeren"
-      (unblinden) — maar in dit protocol doet de <em>Receiver</em> dat, niet de client zelf.
+      (unblinden) — maar in dit protocol doet de <em>ontvanger</em> dat, niet de client zelf.
     </p>
 
     <h4 style="margin-bottom:.5rem">Waarom kan de client het resultaat niet zien?</h4>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
       De PRS versleutelt het evaluatieresultaat als een <strong>JWE</strong> (JSON Web Encryption)
-      met de publieke sleutel van de Receiver. Alleen de Receiver bezit de bijbehorende private key
+      met de publieke sleutel van de ontvanger. Alleen de ontvanger bezit de bijbehorende private key
       en kan de JWE openen. De client ontvangt de JWE en stuurt die — samen met de
-      <code>blind_factor</code> — door naar de Receiver, maar kan de inhoud zelf niet lezen.
+      <code>blind_factor</code> — door naar de ontvanger, maar kan de inhoud zelf niet lezen.
       Zo weet de client het BSN maar niet het pseudoniem.
     </p>
 
@@ -179,7 +193,7 @@
       <ul style="font-size:.875rem;line-height:1.9;color:var(--text-muted);padding-left:1.1rem;margin:0">
         <li>De PRS ziet nooit een plaintext BSN of het definitieve pseudoniem.</li>
         <li>De client ziet nooit de serversleutel of het definitieve pseudoniem.</li>
-        <li>De Receiver ziet nooit het BSN.</li>
+        <li>De ontvanger ziet nooit het BSN.</li>
         <li>Elke organisatie en scope krijgt een uniek, niet-koppelbaar pseudoniem.</li>
       </ul>
     </div>
@@ -189,7 +203,7 @@
     <h3 id="oprf-flow">Algemene OPRF-flow — drie partijen, vier stappen</h3>
     <div style="overflow-x:auto;margin-bottom:1.25rem">
       <img src="{{ "assets/img/oprf-flow.svg" | relURL }}"
-           alt="OPRF swimlane: Client → PRS → Receiver"
+           alt="OPRF swimlane: Client → PRS → Ontvanger"
            style="display:block;max-width:100%;height:auto;min-width:600px">
     </div>
     <p style="font-size:.8rem;color:var(--text-muted);line-height:1.6;margin:-.5rem 0 1.25rem">
@@ -201,7 +215,7 @@
         <div class="step-num">1</div>
         <div class="step-body">
           <h4>BSN afschermen — Client</h4>
-          <p>Maak een HKDF-afleiding van het BSN met de ontvanger als context, en blind het resultaat met <code>pyoprf.blind()</code>. Bewaar de <code>blind_factor</code> lokaal — die is later nodig voor de Receiver.</p>
+          <p>Maak een HKDF-afleiding van het BSN met de ontvanger als context, en blind het resultaat met <code>pyoprf.blind()</code>. Bewaar de <code>blind_factor</code> lokaal — die is later nodig voor de ontvanger.</p>
           <p>Let op: de gebruikte curve voor OPRF is <a href="https://www.rfc-editor.org/rfc/rfc9497.html#name-oprfristretto255-sha-512">Ristretto255 / Sha512</a>.</p>
         </div>
       </li>
@@ -209,21 +223,21 @@
         <div class="step-num">2</div>
         <div class="step-body">
           <h4>Evaluatie aanvragen — Client → PRS (<code>POST /oprf/eval</code>)</h4>
-          <p>Stuur het verblinde getal naar de PRS. De server evalueert het met zijn sleutel en retourneert het resultaat versleuteld als JWE — versleuteld met de <em>publieke sleutel van de Receiver</em>. De client kan de JWE niet ontsleutelen.</p>
+          <p>Stuur het verblinde getal naar de PRS. De server evalueert het met zijn sleutel en retourneert het resultaat versleuteld als JWE — versleuteld met de <em>publieke sleutel van de ontvanger</em>. De client kan de JWE niet ontsleutelen.</p>
         </div>
       </li>
       <li class="step">
         <div class="step-num">3</div>
         <div class="step-body">
-          <h4>Doorsturen naar Receiver — Client → Receiver</h4>
-          <p>Stuur de JWE en de <code>blind_factor</code> door volgens de afspraken met de ontvangende dienst. Alleen de Receiver kan de JWE ontsleutelen — hij beschikt over de bijbehorende private key.</p>
+          <h4>Doorsturen naar de ontvanger — Client → Ontvanger</h4>
+          <p>Stuur de JWE en de <code>blind_factor</code> door volgens de afspraken met de ontvangende dienst. Alleen de ontvanger kan de JWE ontsleutelen — hij beschikt over de bijbehorende private key.</p>
         </div>
       </li>
       <li class="step">
         <div class="step-num">4</div>
         <div class="step-body">
-          <h4>Ontsleutelen + unblinden — Receiver</h4>
-          <p>De Receiver ontsleutelt de JWE met zijn private key (<code>jwcrypto</code>) en combineert de geëvalueerde waarde met de <code>blind_factor</code> via <code>pyoprf.unblind()</code>. Het resultaat is het definitieve, deterministische pseudoniem.</p>
+          <h4>Ontsleutelen + unblinden — Ontvanger</h4>
+          <p>De ontvanger ontsleutelt de JWE met zijn private key (<code>jwcrypto</code>) en combineert de geëvalueerde waarde met de <code>blind_factor</code> via <code>pyoprf.unblind()</code>. Het resultaat is het definitieve, deterministische pseudoniem.</p>
         </div>
       </li>
     </ol>
@@ -250,6 +264,13 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="info-panel" style="margin-bottom:1.25rem">
+    <div class="info-panel-title">Deterministisch &amp; organisatie-specifiek</div>
+    <p>Hetzelfde BSN levert voor elke combinatie van <code>recipientOrganization</code> en <code>recipientScope</code>
+       een <em>ander</em> pseudoniem op. Twee organisaties kunnen een persoon dus niet op basis van pseudoniem
+       koppelen.</p>
   </div>
 
 
@@ -349,16 +370,16 @@ resp = session.post(
     },
 )
 resp.raise_for_status()
-jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comment"># versleuteld voor de Receiver — client kan dit NIET lezen</span></pre>
+jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comment"># versleuteld voor de ontvanger — client kan dit NIET lezen</span></pre>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3 id="doorsturen-naar-receiver">Stap 3 — Doorsturen naar de Receiver</h3>
+    <h3 id="doorsturen-naar-receiver">Stap 3 — Doorsturen naar de ontvanger</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
       Stuur de ontvangen <code>jwe_token</code> samen met de <code>blind_factor</code> naar de
       ontvangende dienst. Gebruik het endpoint en het formaat dat die dienst voorschrijft.
-      De Receiver ontsleutelt de JWE en gebruikt de blind factor voor het unblinden.
+      De ontvanger ontsleutelt de JWE en gebruikt de blind factor voor het unblinden.
     </p>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7">
       Voor registratie bij de NVI volg je de instructies voor
@@ -368,9 +389,9 @@ jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comm
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3 id="receiver-instellen">Receiver instellen</h3>
+    <h3 id="receiver-instellen">Ontvanger instellen</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
-      Om als Receiver te kunnen ontvangen zijn twee stappen vereist voordat je <code>/oprf/eval</code> kunt gebruiken:
+      Richt de ontvanger in met de volgende twee stappen voordat je <code>/oprf/eval</code> gebruikt:
     </p>
 
     <ol style="font-size:.875rem;color:var(--text-muted);line-height:1.7;padding-left:1.2rem;margin-bottom:1rem">
@@ -403,16 +424,16 @@ jwe_token = resp.json()[<span class="hl-str">"jwe"</span>]  <span class="hl-comm
   "{{ $svc.url_placeholder }}{{ $svc.base_path }}/administration/register/certificate"</pre>
     </div>
     <p style="font-size:.8rem;color:var(--text-muted);margin-top:.75rem;line-height:1.6">
-      <code>&lt;scope&gt;</code> is een vrij te kiezen waarde die door de beheerder van de Receiver wordt bepaald.
+      <code>&lt;scope&gt;</code> is een vrij te kiezen waarde die door de beheerder van de ontvanger wordt bepaald.
       Deze waarde <strong>moet exact overeenkomen</strong> met de <code>recipientScope</code> die later bij <code>POST /oprf/eval</code> wordt meegegeven —
-      anders kan de PRS het resultaat niet versleutelen voor de juiste Receiver.
+      anders kan de PRS het resultaat niet versleutelen voor de juiste ontvanger.
     </p>
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3 id="ontsleutelen-unblinden">Stap 4 — Ontsleutelen + unblinden (Receiver)</h3>
+    <h3 id="ontsleutelen-unblinden">Stap 4 — Ontsleutelen + unblinden (ontvanger)</h3>
     <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem">
-      De Receiver ontvangt de <code>jwe</code> en <code>blind_factor</code> van de Client.
+      De ontvanger ontvangt de <code>jwe</code> en <code>blind_factor</code> van de Client.
       Hij ontsleutelt de JWE met zijn private key om het geëvalueerde element te verkrijgen,
       en past vervolgens de inverse blindingsstap toe om het definitieve pseudoniem te berekenen.
     </p>
@@ -437,7 +458,7 @@ RECEIVER_PRIVATE_KEY_PEM = <span class="hl-str">"-----BEGIN PRIVATE KEY-----\n..
 blind_factor = base64.urlsafe_b64decode(<span class="hl-str">"&lt;blind_factor_b64&gt;"</span>)
 jwe_token    = <span class="hl-str">"&lt;jwe-string&gt;"</span>
 
-<span class="hl-comment"># Stap 4a — JWE ontsleutelen met de private key van de Receiver</span>
+<span class="hl-comment"># Stap 4a — JWE ontsleutelen met de private key van de ontvanger</span>
 priv_key = jwk.JWK.from_pem(RECEIVER_PRIVATE_KEY_PEM.encode())
 token = jwe.JWE()
 token.deserialize(jwe_token)
@@ -465,7 +486,7 @@ print(<span class="hl-str">"Pseudoniem:"</span>, pseudonym)</pre>
 $blind    = <span class="hl-str">'&lt;raw-blind-scalar&gt;'</span>;   <span class="hl-comment">// binaire string, 32 bytes</span>
 $jweToken = <span class="hl-str">'&lt;jwe-string&gt;'</span>;
 
-<span class="hl-comment">// Stap 4a — JWE ontsleutelen met de private key van de Receiver</span>
+<span class="hl-comment">// Stap 4a — JWE ontsleutelen met de private key van de ontvanger</span>
 <span class="hl-comment">// (gebruik je eigen JWE-bibliotheek; het payload is een JSON-object)</span>
 $payload = jweDecrypt($jweToken, $receiverPrivateKey);
 $parts   = explode(<span class="hl-str">':'</span>, $payload[<span class="hl-str">'subject'</span>]);
@@ -482,12 +503,7 @@ echo <span class="hl-str">"Pseudoniem: $pseudonym\n"</span>;</pre>
     </div>
   </div>
 
-  <div class="info-panel" style="margin-bottom:1.5rem">
-    <div class="info-panel-title">Deterministisch &amp; organisatie-specifiek</div>
-    <p>Hetzelfde BSN levert voor elke combinatie van <code>recipientOrganization</code> en <code>recipientScope</code>
-       een <em>ander</em> pseudoniem op. Twee organisaties kunnen een persoon dus niet op basis van pseudoniem
-       koppelen.</p>
-  </div>
+  </section>
 
   <div style="display:flex;justify-content:space-between;align-items:center">
     <a href="#oauth-token" class="filter-btn" style="text-decoration:none">&uarr; OAuth-token</a>

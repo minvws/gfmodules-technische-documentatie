@@ -13,6 +13,63 @@ document.querySelectorAll('[data-tabs]').forEach(container => {
   });
 });
 
+/* ===== INTEGRATION SECTION NAVIGATION ===== */
+document.querySelectorAll('.integration-sidebar').forEach(sidebar => {
+  const links = [...sidebar.querySelectorAll('a[href^="#"]')];
+  const targetIds = new Set(links.map(link => link.getAttribute('href').slice(1)));
+  const sections = [...document.querySelectorAll('.integration-content [id]')]
+    .filter(section => targetIds.has(section.id));
+  if (!sections.length) return;
+
+  let currentId;
+  let framePending = false;
+
+  function updateCurrentSection() {
+    framePending = false;
+    const offset = parseFloat(getComputedStyle(sections[0]).scrollMarginTop) || 0;
+    let current = sections[0];
+    sections.forEach(section => {
+      if (section.getBoundingClientRect().top <= offset + 1) current = section;
+    });
+    if (window.scrollY > 0 && Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight) {
+      current = sections[sections.length - 1];
+    }
+    if (current.id !== currentId) {
+      currentId = current.id;
+      links.forEach(link => {
+        const active = link.getAttribute('href') === `#${currentId}`;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    }
+
+    if (sidebar.scrollHeight > sidebar.clientHeight) {
+      const activeLink = links.find(link =>
+        link.getAttribute('href') === `#${currentId}` && link.getClientRects().length);
+      if (!activeLink) return;
+      const top = sidebar.getBoundingClientRect().top + sidebar.clientTop;
+      const bottom = top + sidebar.clientHeight;
+      const bounds = activeLink.getBoundingClientRect();
+      if (bounds.top < top) sidebar.scrollTop += bounds.top - top;
+      else if (bounds.bottom > bottom) sidebar.scrollTop += bounds.bottom - bottom;
+    }
+  }
+
+  function scheduleUpdate() {
+    if (framePending) return;
+    framePending = true;
+    requestAnimationFrame(updateCurrentSection);
+  }
+
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', scheduleUpdate);
+  window.addEventListener('hashchange', scheduleUpdate);
+  window.addEventListener('load', scheduleUpdate);
+  window.addEventListener('pageshow', scheduleUpdate);
+  updateCurrentSection();
+});
+
 /* ===== COPY TO CLIPBOARD ===== */
 function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(() => {

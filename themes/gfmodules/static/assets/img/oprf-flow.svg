@@ -77,7 +77,7 @@
                   class="actor actor-bottom"></rect>
             <text x="756.5" y="650.5" style="text-anchor: middle; font-size: 16px; font-weight: 400;"
                   dominant-baseline="central" alignment-baseline="central" class="actor actor-box">
-                <tspan x="756.5" dy="0">Receiver</tspan>
+                <tspan x="756.5" dy="0">Ontvanger</tspan>
             </text>
         </g>
         <g>
@@ -104,7 +104,7 @@
                       class="actor actor-top"></rect>
                 <text x="756.5" y="32.5" style="text-anchor: middle; font-size: 16px; font-weight: 400;"
                       dominant-baseline="central" alignment-baseline="central" class="actor actor-box">
-                    <tspan x="756.5" dy="0">Receiver</tspan>
+                    <tspan x="756.5" dy="0">Ontvanger</tspan>
                 </text>
             </g>
         </g>
@@ -202,7 +202,7 @@
             </text>
             <text x="525" y="275" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">
-                <tspan x="525">JWE aanmaken - pub key van Receiver</tspan>
+                <tspan x="525">JWE aanmaken - pub key van de ontvanger</tspan>
             </text>
             <text x="525" y="294" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">
@@ -213,7 +213,7 @@
             <rect x="-46" y="386" fill="#EDF2AE" stroke="#666" width="242" height="58" class="note"></rect>
             <text x="75" y="391" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">
-                <tspan x="75">3. Doorsturen naar Receiver</tspan>
+                <tspan x="75">3. Naar de ontvanger</tspan>
             </text>
             <text x="75" y="410" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">

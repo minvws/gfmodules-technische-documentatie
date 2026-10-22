@@ -1,21 +1,32 @@
 {{ define "main" }}
-<main class="page-content">
+<main class="page-content integration-layout">
+  {{ partial "integration-sidebar.html" $ }}
+  <div class="integration-content">
 
   <div class="section-header">
-    <h2>mTLS — Mutual TLS</h2>
+    <h2>Aansluiten</h2>
   </div>
   <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:680px">
-    Gebruik een PKIoverheid-certificaat om de client bij een mTLS-verbinding te identificeren.
-    Leg de certificaat- en registratievereisten vast bij de aansluiting op de betreffende dienst.
+    Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat nodig.
+    Hieronder lees je hoe je de aansluiting voorbereidt, je organisatie registreert en de verbinding test.
   </p>
 
   <div class="card" style="margin-bottom:1.25rem">
-    <h3>Wat is mTLS?</h3>
+    <h3 id="aansluitstappen">Aansluiten in vier stappen</h3>
+    <ol style="font-size:.9rem;color:var(--text-muted);line-height:1.7;padding-left:1.1rem">
+      <li><a href="#certificaat">Zorg voor een PKIoverheid-clientcertificaat</a> met de volledige certificaatketen en de bijbehorende private key.</li>
+      <li><a href="#registratie">Registreer je organisatie en certificaat</a> bij de beheerder van de dienst en stem de aansluitafspraken af.</li>
+      <li><a href="#verbinding-testen">Test de mTLS-verbinding</a> met de afgesproken serveradressen.</li>
+      <li>Volg de OAuth-instructies voor <a href="{{ "integration/prs/" | relURL }}#oauth-token">PRS</a> of <a href="{{ "integration/nvi/" | relURL }}#oauth-token">NVI</a> om een token op te halen en de dienst aan te roepen.</li>
+    </ol>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3 id="certificaat">PKIoverheid-certificaat</h3>
     <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
-      Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
-      verifieert ook de server de cliënt aan de hand van een clientcertificaat. Deze documentatie beschrijft
-      het gebruik van een PKIoverheid-clientcertificaat. Wanneer mTLS vereist is, wordt een verbinding
-      zonder geldig clientcertificaat op transportniveau geweigerd.
+      Vraag een PKIoverheid-certificaat aan dat geschikt is voor clientauthenticatie.
+      Met dit certificaat identificeert je client zich bij de PRS of NVI.
+      Stem het te gebruiken certificaat en de registratievereisten vooraf af met de beheerder van de dienst.
     </p>
 
     <div class="two-col">
@@ -42,17 +53,30 @@
       <p>Organisatie-identificatie: <strong>Organisatie-identificatienummer (OIN)</strong>.</p>
     </div>
 
-    <div class="info-panel" style="margin-top:1rem">
-      <div class="info-panel-title">Organisatie vooraf registreren</div>
-      <p>
-        Registreer je organisatie en het PKIoverheid-clientcertificaat dat je gebruikt vooraf bij de
-        beheerder van de betreffende dienst. Stem deze registratie af voordat je een OAuth-token
-        ophaalt of PRS/NVI aanroept.
-      </p>
-    </div>
   </div>
 
   <div class="card" style="margin-bottom:1.25rem">
+    <h3 id="registratie">Organisatie en certificaat registreren</h3>
+    <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7">
+      Registreer je organisatie en het PKIoverheid-clientcertificaat dat je gebruikt vooraf bij de
+      beheerder van de betreffende dienst. Stem daarbij de serveradressen en de benodigde
+      toegangsrechten af. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
+    </p>
+  </div>
+
+  <div class="info-panel tip" id="testdata" style="margin-bottom:1.25rem">
+    <div class="info-panel-title">Testdata</div>
+    <p>Gebruik uitsluitend testidentificatoren die via de aansluitafspraken beschikbaar zijn gesteld.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.25rem">
+    <h3 id="verbinding-testen">Verbinding testen met mTLS</h3>
+    <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1rem">
+      Bij gewone TLS verifieert alleen de cliënt de server. Bij <strong>Mutual TLS (mTLS)</strong>
+      verifieert ook de server de cliënt aan de hand van een clientcertificaat.
+      Voor de aansluiting gebruik je hiervoor het PKIoverheid-clientcertificaat.
+      Een verbinding zonder geldig clientcertificaat wordt op transportniveau geweigerd.
+    </p>
     <h4>PKIoverheid-certificaat gebruiken</h4>
     <p style="margin-bottom:.25rem">Gebruik voor de mTLS-verbinding je PKIoverheid-clientcertificaat met volledige certificaatketen en de bijbehorende private key. De bestandsnamen hieronder zijn voorbeelden; vervang ze door de paden naar je eigen bestanden:</p>
     <ul style="font-size:.875rem;line-height:2;padding-left:1.1rem;color:var(--text-muted);margin-bottom:.75rem">
@@ -60,7 +84,7 @@
       <li><code>client-key.pem</code> — de bijbehorende private key.</li>
     </ul>
 
-    <h4>Verbinding testen met curl</h4>
+    <h4 id="verbinding-curl">Verbinding testen met curl</h4>
     <p style="margin-bottom:.75rem">Test het OAuth-endpoint van de dienst waarmee je wilt verbinden. Vervang de URL-placeholders in de voorbeelden door de afgesproken serveradressen, inclusief <code>https://</code> en zonder afsluitende slash. Gebruik voor de API en de OAuth-service het bijbehorende serveradres.</p>
     {{ range site.Data.services }}
     {{ $svc := . }}
@@ -77,7 +101,7 @@ curl -v \
     {{ end }}
     {{ end }}
 
-    <h4>Metadata en healthchecks</h4>
+    <h4 id="metadata-healthchecks">Metadata en healthchecks</h4>
     <p style="margin-bottom:.75rem">De metadata- en health-endpoints hieronder vereisen mTLS. Een OAuth-token is niet nodig. Gebruik je PKIoverheid-clientcertificaat en de bijbehorende private key om de verbinding te testen.</p>
     {{ range site.Data.services }}
     {{ $svc := . }}
@@ -91,7 +115,7 @@ curl -v \
     {{ end }}
     {{ end }}
 
-    <h4>Verbinding testen met een PKCS#12-bundle (<code>.pfx</code> / <code>.p12</code>)</h4>
+    <h4 id="verbinding-pkcs12">Verbinding testen met een PKCS#12-bundle (<code>.pfx</code> / <code>.p12</code>)</h4>
     {{ range site.Data.services }}
     {{ $svc := . }}
     <h5 style="margin:.9rem 0 .4rem">{{ $svc.name }}</h5>
@@ -102,7 +126,7 @@ curl "{{ $svc.url_placeholder }}{{ $svc.base_path }}/health" --cert-type P12 --c
     </div>
     {{ end }}
 
-    <h4>PKCS#12-bundle aanmaken</h4>
+    <h4 id="pkcs12-aanmaken">PKCS#12-bundle aanmaken</h4>
     <div class="code-block">
       <button class="copy-code">Kopieer</button>
       <pre>openssl pkcs12 -export \
@@ -114,7 +138,7 @@ curl "{{ $svc.url_placeholder }}{{ $svc.base_path }}/health" --cert-type P12 --c
     </div>
   </div>
 
-  <div class="info-panel warn" style="margin-bottom:1.5rem">
+  <div class="info-panel warn" id="private-key-beveiligen" style="margin-bottom:1.5rem">
     <div class="info-panel-title">Beveilig je private key</div>
     <p>Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager
        (Vault, AWS Secrets Manager, Azure Key Vault) of een OS-sleutelketen.</p>
@@ -125,5 +149,6 @@ curl "{{ $svc.url_placeholder }}{{ $svc.base_path }}/health" --cert-type P12 --c
     <a href="{{ "integration/nvi/" | relURL }}#oauth-token" class="filter-btn active" style="text-decoration:none">Volgende: NVI &rarr;</a>
   </div>
 
+  </div>
 </main>
 {{ end }}
