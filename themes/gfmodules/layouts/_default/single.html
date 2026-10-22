@@ -1,0 +1,11 @@
+{{ define "main" }}
+<main class="page-content{{ if .Params.sections }} integration-layout{{ end }}">
+  {{ if .Params.sections }}{{ partial "integration-sidebar.html" . }}{{ end }}
+  <div class="markdown-content{{ if .Params.sections }} integration-content{{ end }}">
+    <div class="section-header">
+      <h2>{{ .Params.heading | default .Title }}</h2>
+    </div>
+    {{ .Content }}
+  </div>
+</main>
+{{ end }}

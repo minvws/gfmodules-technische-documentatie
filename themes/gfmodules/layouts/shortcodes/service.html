@@ -1,0 +1,6 @@
+{{- $field := .Get 0 -}}
+{{- $value := index (where site.Data.services "id" .Page.Params.service) 0 -}}
+{{- range split $field "." -}}
+  {{- $value = index $value . -}}
+{{- end -}}
+{{- with $value -}}{{- . | safeHTML -}}{{- end -}}

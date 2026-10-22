@@ -1,0 +1,22 @@
+<div class="cards-grid">
+  {{ range site.Data.services }}
+  <div class="service-card">
+    <div class="service-card-top">
+      <div class="service-icon {{ .icon_class }}" aria-hidden="true">{{ .icon }}</div>
+      <div>
+        <div class="service-name">{{ .name }}</div>
+        <div class="service-fullname">{{ .fullname }}</div>
+      </div>
+    </div>
+    <div class="service-card-body">
+      <p class="service-desc">{{ .description }}</p>
+      <div class="service-meta">
+        <span class="badge badge-version">{{ .version }}</span>
+      </div>
+    </div>
+    <div class="service-card-footer">
+      <a href="{{ printf "integration/%s/" .integration_anchor | relURL }}">{{ .name }}-documentatie</a>
+    </div>
+  </div>
+  {{ end }}
+</div>

@@ -1,0 +1,36 @@
+{{- $entries := site.Data.changelog -}}
+{{- with .Get "limit" -}}
+  {{- $entries = first (int .) $entries -}}
+{{- end -}}
+{{- $filters := eq (.Get "filters") "true" -}}
+{{- if $filters }}
+<div class="filters" data-filter-group="cl">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all">Alle</button>
+  {{ range site.Data.services }}
+  <button class="filter-btn" data-filter="{{ .id }}">{{ .name }}</button>
+  {{ end }}
+</div>
+{{ end -}}
+<div class="card">
+  <ul class="changelog" style="padding:0">
+    {{ range $i, $entry := $entries }}
+    <li class="cl-entry"{{ if $filters }} data-filter-item="cl" data-filter-val="{{ delimit $entry.filters " " }}"{{ end }}{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
+      <div class="cl-side">
+        <div class="cl-date">{{ $entry.date }}</div>
+      </div>
+      <div class="cl-main">
+        <div class="cl-title">
+          {{ range $j, $svc := $entry.services }}{{ if $j }}&nbsp;&nbsp;{{ end }}{{ $svc.name }} <span class="cl-version">{{ $svc.version }}</span>{{ end }}
+        </div>
+        <div class="cl-summary">{{ $entry.summary | $.Page.RenderString }}</div>
+        <ul class="cl-changes">
+          {{ range $entry.changes }}
+          <li class="cl-change"><span class="change-tag tag-{{ .type }}">{{ .tag }}</span> {{ .text | $.Page.RenderString }}</li>
+          {{ end }}
+        </ul>
+      </div>
+    </li>
+    {{ end }}
+  </ul>
+</div>

@@ -4,6 +4,10 @@ title = "Generieke Functies Technische Documentatie"
 theme = "gfmodules"
 disableKinds = ["taxonomy", "term"]
 
+# Markdown component shortcodes emit the theme's HTML wrappers.
+[markup.goldmark.renderer]
+  unsafe = true
+
 [params]
   subtitle = "Generieke Functies"
   contact_email = "helpdesk@irealisatie.nl"

@@ -26,9 +26,9 @@ document.querySelectorAll('.integration-sidebar').forEach(sidebar => {
 
   function updateCurrentSection() {
     framePending = false;
-    const offset = parseFloat(getComputedStyle(sections[0]).scrollMarginTop) || 0;
     let current = sections[0];
     sections.forEach(section => {
+      const offset = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
       if (section.getBoundingClientRect().top <= offset + 1) current = section;
     });
     if (window.scrollY > 0 && Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight) {

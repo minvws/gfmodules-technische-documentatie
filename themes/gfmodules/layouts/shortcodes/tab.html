@@ -1,0 +1,7 @@
+{{- $first := not (.Parent.Scratch.Get "labels") -}}
+{{- .Parent.Scratch.Add "labels" (slice (.Get 0)) -}}
+<div class="tab-panel{{ if $first }} active{{ end }}">
+
+{{ .Inner }}
+
+</div>

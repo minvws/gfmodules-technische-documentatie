@@ -37,11 +37,10 @@
       </ul>
     </details>
   </nav>
+  {{ if eq .Section "integration" }}
+  {{ partial "integration-nav.html" . }}
+  {{ end }}
 </header>
-
-{{ if eq .Section "integration" }}
-{{ partial "integration-nav.html" . }}
-{{ end }}
 
 {{ block "main" . }}{{ end }}
 

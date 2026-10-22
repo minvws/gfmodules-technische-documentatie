@@ -6,25 +6,25 @@
   version: v0.0.38
 
   url_placeholder: "<prs-api-url>"
-  base_path: "/v0.2/api"
+  base_path: "/api"
   base_path_note: "De endpointtabellen tonen de volledige paden, inclusief dit basispad."
   description: "Pseudoniemendienst voor OPRF-, pseudoniem- en RID-uitwisseling."
-  security_note: "Gebruik een Bearer-token voor de beschermde PRS API-routes. Volg de aansluitafspraken voor mTLS en de toegang tot service-informatie."
+  security_note: "Gebruik een Bearer-token voor de beschermde PRS API-routes."
   test_routes_note: "Routes onder /test zijn alleen beschikbaar wanneer test-routes zijn ingeschakeld en zijn uitsluitend bedoeld voor tests."
   integration_anchor: prs
   oauth:
     title: "PRS OAuth"
     url_placeholder: "<prs-oauth-url>"
-    base_path: "/v0.2/oauth"
+    base_path: "/oauth"
     target_audience: "<target-audience>"
     organization_id_label: organisatie-ID
     organization_id_example: "<organisatie-id>"
-    organization_id_description: "Verplicht formulierveld. Stem het verwachte formaat af bij de aansluiting."
+    organization_id_description: "Verplicht formulierveld: ID van de aanvragende organisatie."
     default_scope: "prs:read"
     scopes:
       - value: "prs:read"
-        description: "Voorbeeldwaarde; stem de toegestane scopewaarden af bij de aansluiting."
-    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id. Stem clientauthenticatie, toegestane grant- en scopewaarden, tokenresponse en refreshbeleid af bij de aansluiting."
+        description: "Voorbeeldscope."
+    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id."
     endpoints:
       - method: GET
         path: "/"
@@ -141,33 +141,33 @@
   version: v0.2.5-rc.0
 
   url_placeholder: "<nvi-api-url>"
-  base_path: "/v0.2/api"
+  base_path: "/api"
   base_path_note: "De endpointtabellen tonen de volledige paden, inclusief dit basispad."
   description: "Lokalisatiedienst voor gegevensbeschikbaarheid."
-  security_note: "Volg de aansluitafspraken voor de vereiste clientauthenticatie en autorisatie."
+  security_note: "De voorbeelden gebruiken mTLS en een OAuth-token."
   integration_anchor: nvi
   oauth:
     title: "NVI OAuth"
     url_placeholder: "<nvi-oauth-url>"
-    base_path: "/v0.2/oauth"
+    base_path: "/oauth"
     target_audience: "<target-audience>"
     organization_id_label: organisatie-ID
     organization_id_example: "<organisatie-id>"
-    organization_id_description: "Verplicht formulierveld. Stem het verwachte formaat af bij de aansluiting."
+    organization_id_description: "Verplicht formulierveld: ID van de aanvragende organisatie."
     source_id_scopes: "de getoonde voorbeelden"
     source_id_example: "<bron-id>"
-    source_id_description: "Extra parameter voor brongebonden autorisatie. Gebruik deze alleen wanneer dit bij de aansluiting is afgesproken."
+    source_id_description: "Extra parameter voor brongebonden autorisatie."
     default_scope: "nvi:read"
     scopes:
       - value: "nvi:read"
-        description: "Voorbeeldwaarde; stem de toegestane scopewaarden af bij de aansluiting."
+        description: "Voorbeeldscope."
       - value: "nvi:localize"
-        description: "Voorbeeldwaarde; stem de toegestane scopewaarden af bij de aansluiting."
+        description: "Voorbeeldscope."
       - value: "nvi:create"
-        description: "Voorbeeldwaarde; stem de toegestane scopewaarden af bij de aansluiting."
+        description: "Voorbeeldscope."
       - value: "nvi:delete"
-        description: "Voorbeeldwaarde; stem de toegestane scopewaarden af bij de aansluiting."
-    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id. Stem clientauthenticatie, toegestane grant- en scopewaarden, tokenresponse en refreshbeleid af bij de aansluiting."
+        description: "Voorbeeldscope."
+    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id."
     endpoints:
       - method: GET
         path: "/"

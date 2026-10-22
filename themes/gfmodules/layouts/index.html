@@ -4,106 +4,13 @@
 <section class="hero">
   <div class="hero-inner">
     <div>
-      <h1>Technische Documentatie Generieke Functies</h1>
-      <p class="hero-desc">
-        Technische uitleg van de Generieke Functies, met API-documentatie,
-        integratie-instructies, ontwerpen en wijzigingshistorie.
-      </p>
+      <h1>{{ .Params.hero_title }}</h1>
+      <p class="hero-desc">{{ .Description }}</p>
     </div>
   </div>
 </section>
 
-<main class="page-content">
-
-  <div class="section-header">
-    <h2>Services</h2>
-  </div>
-
-  <div class="cards-grid">
-    {{ range site.Data.services }}
-    <div class="service-card">
-      <div class="service-card-top">
-        <div class="service-icon {{ .icon_class }}">{{ .icon }}</div>
-        <div>
-          <div class="service-name">{{ .name }}</div>
-          <div class="service-fullname">{{ .fullname }}</div>
-        </div>
-      </div>
-      <div class="service-card-body">
-        <p class="service-desc">{{ .description }}</p>
-        <div class="service-meta">
-          <span class="badge badge-version">{{ .version }}</span>
-        </div>
-      </div>
-      <div class="service-card-footer">
-        <a href="{{ "integration/" | relURL }}{{ .integration_anchor }}/">{{ .name }}-documentatie</a>
-      </div>
-    </div>
-    {{ end }}
-  </div>
-
-  <p style="color:var(--text-muted);font-size:.9rem;margin-top:1.5rem;max-width:680px">
-    Voor meer informatie over generieke functies verwijzen we je naar
-    <a href="https://www.generiekefuncties.nl/">generiekefuncties.nl</a>.
-  </p>
-
-  <hr class="section-sep">
-
-  <div class="section-header">
-    <h2>Snel van start</h2>
-    <a class="section-link" href="{{ "integration/" | relURL }}">Volledige documentatie &rarr;</a>
-  </div>
-
-  <div class="qs-grid">
-    <div class="qs-card">
-      <div class="qs-card-icon">📜</div>
-      <h4>Aansluiten</h4>
-      <p>Zorg voor een PKIoverheid-certificaat, registreer je organisatie en test de verbinding.</p>
-      <a href="{{ "integration/aansluiten/" | relURL }}">Aansluitinstructies &rarr;</a>
-    </div>
-    <div class="qs-card">
-      <div class="qs-card-icon">👥</div>
-      <h4>PRS aanroepen</h4>
-      <p>Vier gebruiksmogelijkheden, OAuth-instructies en de uitwerking van de geblindeerde OPRF-uitwisseling.</p>
-      <a href="{{ "integration/prs/" | relURL }}">PRS-documentatie &rarr;</a>
-    </div>
-    <div class="qs-card">
-      <div class="qs-card-icon">📱</div>
-      <h4>NVI bevragen</h4>
-      <p>Instructies voor OAuth en het registreren en lokaliseren van gegevensbeschikbaarheid in de Nationale Verwijs Index.</p>
-      <a href="{{ "integration/nvi/" | relURL }}">NVI-documentatie &rarr;</a>
-    </div>
-  </div>
-
-  <hr class="section-sep">
-
-  <div class="section-header">
-    <h2>Recente wijzigingen</h2>
-    <!-- <a class="section-link" href="{{ "/changelog/" | relURL }}">Volledige changelog &rarr;</a> -->
-  </div>
-
-  <div class="card">
-    <ul class="changelog" style="padding:0">
-      {{ range $i, $entry := first 3 site.Data.changelog }}
-      <li class="cl-entry"{{ if eq $i 0 }} style="padding-top:0"{{ end }}>
-        <div class="cl-side">
-          <div class="cl-date">{{ $entry.date }}</div>
-        </div>
-        <div class="cl-main">
-          <div class="cl-title">
-            {{ range $j, $svc := $entry.services }}{{ if $j }}&nbsp;&nbsp;{{ end }}{{ $svc.name }} <span class="cl-version">{{ $svc.version }}</span>{{ end }}
-          </div>
-          <div class="cl-summary">{{ $entry.summary | safeHTML }}</div>
-          <ul class="cl-changes">
-            {{ range $entry.changes }}
-            <li class="cl-change"><span class="change-tag tag-{{ .type }}">{{ .tag }}</span> {{ .text | safeHTML }}</li>
-            {{ end }}
-          </ul>
-        </div>
-      </li>
-      {{ end }}
-    </ul>
-  </div>
-
+<main class="page-content markdown-content">
+  {{ .Content }}
 </main>
 {{ end }}

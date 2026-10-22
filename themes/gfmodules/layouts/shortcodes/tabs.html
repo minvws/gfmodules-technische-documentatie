@@ -1,0 +1,11 @@
+{{- $panels := .Inner -}}
+<div data-tabs>
+<div class="tabs">
+{{ range $i, $label := .Scratch.Get "labels" -}}
+<button class="tab-btn{{ if eq $i 0 }} active{{ end }}" type="button">{{ $label }}</button>
+{{ end -}}
+</div>
+
+{{ $panels }}
+
+</div>

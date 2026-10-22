@@ -1,0 +1,10 @@
+{{ define "main" }}
+<main class="page-content">
+  <div class="markdown-content">
+    <div class="section-header">
+      <h2>{{ .Params.heading | default .Title }}</h2>
+    </div>
+    {{ .Content }}
+  </div>
+</main>
+{{ end }}

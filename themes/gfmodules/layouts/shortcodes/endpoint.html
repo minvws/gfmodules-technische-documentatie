@@ -1,0 +1,10 @@
+{{- $service := index (where site.Data.services "id" .Page.Params.service) 0 -}}
+{{- $address := printf "%s%s" $service.base_path (.Get "path") -}}
+{{- if .Get "oauth" -}}
+  {{- $address = printf "%s%s%s" $service.oauth.url_placeholder $service.oauth.base_path (.Get "path") -}}
+{{- end -}}
+<div class="endpoint-row">
+  {{ with .Get "method" }}<span class="method method-{{ lower . }}">{{ . }}</span>{{ else }}<span class="endpoint-label">{{ .Get "label" }}</span>{{ end }}
+  <code>{{ $address }}</code>
+  <button class="copy-btn" type="button" title="Kopieer endpoint">📋</button>
+</div>

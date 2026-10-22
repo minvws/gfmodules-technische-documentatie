@@ -1,0 +1,12 @@
+{{- $service := index (where site.Data.services "id" .Page.Params.service) 0 -}}
+{{- $oauth := $service.oauth -}}
+{{- if $oauth.source_id_scopes -}}
+  {{- $format := .Get 0 -}}
+  {{- if eq $format "curl" -}}
+    {{- printf "  --data-urlencode \"source_id=%s\" \\\n" $oauth.source_id_example | safeHTML -}}
+  {{- else if eq $format "php" -}}
+    {{- printf "        'source_id'         => '%s',\n" $oauth.source_id_example | safeHTML -}}
+  {{- else if eq $format "python" -}}
+    {{- printf "        \"source_id\":       \"%s\",\n" $oauth.source_id_example | safeHTML -}}
+  {{- end -}}
+{{- end -}}
