@@ -1,20 +1,16 @@
 {{- $service := index (where site.Data.services "id" .Page.Params.service) 0 -}}
 {{- $oauth := $service.oauth -}}
-{{- $rows := slice
-  "| Parameter | Waarde | Toelichting |"
-  "| --- | --- | --- |"
-  "| `grant_type` | `client_credentials` | Verplicht formulierveld. |"
-  (printf "| `target_audience` | `%s` | Verplicht formulierveld: identificatie van de doelservice, geen endpointpad. |" $oauth.target_audience)
-  (printf "| `organization_id` | `%s` | %s |" $oauth.organization_id_example $oauth.organization_id_description)
--}}
-{{- with $oauth.source_id_scopes -}}
-  {{- $rows = $rows | append (printf "| `source_id` | `%s` | %s |" $oauth.source_id_example $oauth.source_id_description) -}}
-{{- end -}}
-{{- range $oauth.scopes -}}
-  {{- $rows = $rows | append (printf "| `scope` | `%s` | %s |" .value .description) -}}
-{{- end -}}
-<div class="oauth-parameters-wrap" tabindex="0" role="region" aria-label="Parameters en scopes voor {{ $service.name }}">
+<div class="oauth-parameters-wrap" tabindex="0" role="region" aria-label="OAuth-parameters voor {{ $service.name }}">
 
-{{ delimit $rows "\n" | safeHTML }}
+| Parameter | Waarde | Toelichting |
+| --- | --- | --- |
+| `grant_type` | `client_credentials` | Verplicht formulierveld. |
+| `target_audience` | `{{ $oauth.target_audience_example | safeHTML }}` | Verplicht formulierveld: identificatie van de doelservice, geen endpointpad. |
+| `organization_external_id` | `{{ $oauth.organization_id_example | safeHTML }}` | {{ $oauth.organization_id_description | safeHTML }} |
+| `client_id` | `<client-id>` | Verplicht formulierveld: de UUID van de geregistreerde client. |
+| `scope` | `<scope>` | Verplicht formulierveld: één of meer scopes uit de tabel hieronder, gescheiden door spaties. |
+{{- with $oauth.source_id_scopes }}
+| `source_id` | `{{ $oauth.source_id_example | safeHTML }}` | {{ $oauth.source_id_description | safeHTML }} |
+{{- end }}
 
 </div>
