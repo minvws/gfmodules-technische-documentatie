@@ -7,6 +7,8 @@ The documentation covers services and integration patterns for
 the Generieke Functies. It is published as a static site using
 [Hugo](https://gohugo.io).
 
+Read the [latest documentation](https://minvws.github.io/gfmodules-technische-documentatie/latest/).
+
 > [!CAUTION]
 >
 > ## Disclaimer
