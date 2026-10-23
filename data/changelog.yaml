@@ -1,25 +1,35 @@
-- date: "2026-05-11"
+- date: "2026-08-24"
   filters:
-    - oauth
     - prs
     - nvi
-  environments:
-    - Proeftuin
   services:
-    - name: OAuth Service
-      version: v0.0.8
+    - name: PRS
+      version: v0.0.38
+    - name: NVI
+      version: v0.2.5-rc.0
+  summary: "PRS- en NVI-documentatie bijgewerkt."
+  changes:
+    - tag: Gewijzigd
+      type: break
+      text: "PRS: instructies voor OPRF-uitwisseling, sleutelregistratie en OAuth bijgewerkt."
+    - tag: Gewijzigd
+      type: break
+      text: "NVI: FHIR List-voorbeelden voor registratie, lokalisatie en verwijderen bijgewerkt; OAuth-instructies opgenomen in de NVI-documentatie."
+
+- date: "2026-05-11"
+  filters:
+    - prs
+    - nvi
+  services:
     - name: PRS
       version: v0.0.18
     - name: NVI
       version: v0.1.4
-  summary: "Initiële release van de Proeftuin-omgeving."
+  summary: "Initiële API-documentatie voor PRS en NVI."
   changes:
     - tag: Nieuw
       type: new
-      text: "OAuth Service: initiële release"
+      text: "PRS: initiële API-documentatie"
     - tag: Nieuw
       type: new
-      text: "PRS: initiële release"
-    - tag: Nieuw
-      type: new
-      text: "NVI: initiële release"
+      text: "NVI: initiële API-documentatie"

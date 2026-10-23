@@ -1,128 +1,252 @@
-- id: oauth
-  icon: "🔑"
-  icon_class: icon-oauth
-  name: OAuth Service
-  fullname: "OAuth 2.0 Authorization Service"
-  version: v0.0.8
-  environment: Proeftuin
-  env_filter: proeftuin
-
-  base_url: "https://oauth.proeftuin.gf.irealisatie.nl"
-  base_url_note: "Alle paden hierboven zijn relatief aan deze base URL."
-  description: "Centrale authenticatie- en autorisatiedienst. Geeft RS256-gesigneerde access tokens uit na mTLS-authenticatie met een UZI-certificaat. Geen client secret vereist."
-  integration_anchor: oauth
-  endpoints:
-    - method: GET
-      path: "/.well-known/oauth-authorization-server"
-      description: "OAuth 2.0 server metadata"
-      auth: "-"
-    - method: POST
-      path: "/oauth/token"
-      description: "Token ophalen (client_credentials / refresh_token)"
-      auth: "mTLS (tls_client_auth)"
-    - method: GET
-      path: "/oauth/jwks.json"
-      description: "JWKS voor lokale tokenverificatie"
-      auth: "-"
-    - method: GET
-      path: "/health"
-      description: "Service health check"
-      auth: "-"
-    - method: GET
-      path: "/version.json"
-      description: "Versie-informatie"
-      auth: "-"
-
 - id: prs
   icon: "👤"
   icon_class: icon-prs
   name: PRS
   fullname: Pseudoniemendienst
-  version: v0.0.18
-  environment: Proeftuin
-  env_filter: proeftuin
+  version: v0.0.38
 
-  base_url: "https://pseudoniemendienst.proeftuin.gf.irealisatie.nl"
-  base_url_note: ""
-  description: "OPRF-gebaseerde pseudoniemendienst. Zet een persoonlijk identificatienummer om naar een versleuteld pseudoniem via een RID/JWE-uitwisselingsprotocol. Vereist mTLS én een geldig OAuth-token."
+  url_placeholder: "<prs-api-url>"
+  base_path: "/api"
+  base_path_note: "De endpointtabellen tonen de volledige paden, inclusief dit basispad."
+  description: "Pseudoniemendienst voor OPRF-, pseudoniem- en RID-uitwisseling."
+  security_note: "Gebruik een Bearer-token voor de beschermde PRS API-routes."
+  test_routes_note: "Routes onder /test zijn alleen beschikbaar wanneer test-routes zijn ingeschakeld en zijn uitsluitend bedoeld voor tests."
   integration_anchor: prs
+  oauth:
+    title: "PRS OAuth"
+    url_placeholder: "<prs-oauth-url>"
+    base_path: "/oauth"
+    target_audience: "<target-audience>"
+    organization_id_label: organisatie-ID
+    organization_id_example: "<organisatie-id>"
+    organization_id_description: "Verplicht formulierveld: ID van de aanvragende organisatie."
+    default_scope: "prs:read"
+    scopes:
+      - value: "prs:read"
+        description: "Voorbeeldscope."
+    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id."
+    endpoints:
+      - method: GET
+        path: "/"
+        description: "Index"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/version.json"
+        description: "Versie-informatie"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/health"
+        description: "Health check"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/.well-known/oauth-authorization-server"
+        description: "OAuth 2.0 Authorization Server-metadata"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/jwks.json"
+        description: "OAuth 2.0 JSON Web Key Set"
+        auth: "Niet gespecificeerd"
+      - method: POST
+        path: "/token"
+        description: "Nieuw token aanmaken (application/x-www-form-urlencoded)"
+        auth: "Niet gespecificeerd"
   endpoints:
-    - method: POST
-      path: "/oprf/eval"
-      description: "Evalueer een OPRF-blind en retourneer een versleutelde JWE"
-      auth: "mTLS + bearer token"
-    - method: POST
-      path: "/exchange/rid"
-      description: "Wissel persoonlijk ID in voor een RID (versleuteld voor ontvanger)"
-      auth: "mTLS + bearer token"
-    - method: POST
-      path: "/exchange/pseudonym"
-      description: "Wissel persoonlijk ID in voor een pseudoniem (JWE)"
-      auth: "mTLS + bearer token"
-    - method: POST
-      path: "/receive"
-      description: "Ontvang en ontsleutel een RID, retourneer pseudoniem"
-      auth: "mTLS + bearer token"
-    - method: POST
-      path: "/register/certificate"
-      description: "Registreer publieke sleutel voor een organisatie"
-      auth: "mTLS + bearer token"
     - method: GET
-      path: "/keys/{ura}"
-      description: "Publieke sleutels van een organisatie opvragen"
-      auth: "mTLS + bearer token"
-    - method: GET
-      path: "/health"
-      description: "Service health check"
-      auth: "-"
+      path: "/"
+      description: "Servicebanner en versie-informatie"
+      auth: "Niet gespecificeerd"
     - method: GET
       path: "/version.json"
-      description: "Versie-informatie"
-      auth: "-"
+      description: "Serviceversie als JSON"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/health"
+      description: "Health check"
+      auth: "Niet gespecificeerd"
+    - method: POST
+      path: "/oprf/eval"
+      description: "Evalueer een OPRF-blind en retourneer een versleutelde JWE voor de organisatie"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/receive"
+      description: "Ontvang en ontsleutel een RID"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/exchange/rid"
+      description: "Wissel een RID uit"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/exchange/pseudonym"
+      description: "Wissel een pseudoniem uit"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/administration/register/certificate"
+      description: "Registreer publieke-sleutelinformatie voor de geautoriseerde organisatie"
+      auth: "Bearer-token"
+    - method: GET
+      path: "/administration/keys"
+      description: "Lijst met publieke-sleutelinformatie voor de geautoriseerde organisatie"
+      auth: "Bearer-token"
+    - method: PUT
+      path: "/administration/keys/{id}"
+      description: "Werk een sleutel van de geautoriseerde organisatie bij"
+      auth: "Bearer-token"
+    - method: DELETE
+      path: "/administration/keys/{id}"
+      description: "Verwijder een sleutel van de geautoriseerde organisatie"
+      auth: "Bearer-token"
+    - method: GET
+      path: "/administration/key-versions"
+      description: "Lijst met HSM-sleutelversies voor de geautoriseerde organisatie"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/administration/key-versions"
+      description: "Maak een nieuwe HSM-sleutelversie aan"
+      auth: "Bearer-token"
+    - method: PUT
+      path: "/administration/key-versions/{id}"
+      description: "Werk een HSM-sleutelversie bij"
+      auth: "Bearer-token"
+    - method: POST
+      path: "/test/oprf/client"
+      description: "Maak een geblindeerde invoer en factor voor een testwaarde"
+      auth: "Bearer-token"
+      test_only: true
+    - method: POST
+      path: "/test/oprf/receiver"
+      description: "Test het ontsleutelen van de ontvanger met een blind factor"
+      auth: "Bearer-token"
+      test_only: true
+    - method: POST
+      path: "/test/jwe/decode"
+      description: "Decodeer een JWE met een opgegeven privésleutel"
+      auth: "Bearer-token"
+      test_only: true
+    - method: POST
+      path: "/test/pseudonym/reversible"
+      description: "Keer een pseudoniem om"
+      auth: "Bearer-token"
+      test_only: true
+    - method: GET
+      path: "/test/mtls"
+      description: "Geef mTLS-informatie over de aanroepende organisatie terug"
+      auth: "Bearer-token"
+      test_only: true
 
 - id: nvi
   icon: "📑"
   icon_class: icon-nvi
   name: NVI
   fullname: "Nationale Verwijs Index"
-  version: v0.1.4
-  environment: Proeftuin
-  env_filter: proeftuin
+  version: v0.2.5-rc.0
 
-  base_url: "https://nvi.proeftuin.gf.irealisatie.nl"
-  base_url_note: ""
-  description: "FHIR-gebaseerde lokalisatiedienst. Slaat List-resources op die verwijzen naar betrokkenheid van een persoon bij een organisatie. Vereist mTLS én een geldig OAuth-token."
+  url_placeholder: "<nvi-api-url>"
+  base_path: "/api"
+  base_path_note: "De endpointtabellen tonen de volledige paden, inclusief dit basispad."
+  description: "Lokalisatiedienst voor gegevensbeschikbaarheid."
+  security_note: "De voorbeelden gebruiken mTLS en een OAuth-token."
   integration_anchor: nvi
+  oauth:
+    title: "NVI OAuth"
+    url_placeholder: "<nvi-oauth-url>"
+    base_path: "/oauth"
+    target_audience: "<target-audience>"
+    organization_id_label: organisatie-ID
+    organization_id_example: "<organisatie-id>"
+    organization_id_description: "Verplicht formulierveld: ID van de aanvragende organisatie."
+    source_id_scopes: "de getoonde voorbeelden"
+    source_id_example: "<bron-id>"
+    source_id_description: "Extra parameter voor brongebonden autorisatie."
+    default_scope: "nvi:read"
+    scopes:
+      - value: "nvi:read"
+        description: "Voorbeeldscope."
+      - value: "nvi:localize"
+        description: "Voorbeeldscope."
+      - value: "nvi:create"
+        description: "Voorbeeldscope."
+      - value: "nvi:delete"
+        description: "Voorbeeldscope."
+    contract_note: "Gebruik de verplichte formuliervelden grant_type, target_audience, scope en organization_id."
+    endpoints:
+      - method: GET
+        path: "/"
+        description: "Index"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/version.json"
+        description: "Versie-informatie"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/health"
+        description: "Health check"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/.well-known/oauth-authorization-server"
+        description: "OAuth 2.0 Authorization Server-metadata"
+        auth: "Niet gespecificeerd"
+      - method: GET
+        path: "/jwks.json"
+        description: "OAuth 2.0 JSON Web Key Set"
+        auth: "Niet gespecificeerd"
+      - method: POST
+        path: "/token"
+        description: "Nieuw token aanmaken (application/x-www-form-urlencoded)"
+        auth: "Niet gespecificeerd"
   endpoints:
-    - method: POST
-      path: "/v1-poc/fhir/List"
-      description: "Lokalisatie aanmaken (FHIR List resource)"
-      auth: "mTLS + bearer token"
     - method: GET
-      path: "/v1-poc/fhir/List"
-      description: "Lokalisaties zoeken (query parameters)"
-      auth: "mTLS + bearer token"
-    - method: GET
-      path: "/v1-poc/fhir/List/{id}"
-      description: "Specifieke lokalisatie opvragen"
-      auth: "mTLS + bearer token"
-    - method: DELETE
-      path: "/v1-poc/fhir/List/{id}"
-      description: "Lokalisatie verwijderen"
-      auth: "mTLS + bearer token"
-    - method: POST
-      path: "/v1-poc/fhir"
-      description: "Batch-registratie via FHIR Bundle"
-      auth: "mTLS + bearer token"
-    - method: GET
-      path: "/fhir/metadata"
-      description: "FHIR CapabilityStatement"
-      auth: "-"
-    - method: GET
-      path: "/health"
-      description: "Service health check"
-      auth: "-"
+      path: "/"
+      description: "API-index"
+      auth: "Niet gespecificeerd"
     - method: GET
       path: "/version.json"
       description: "Versie-informatie"
-      auth: "-"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/health"
+      description: "Health check"
+      auth: "Niet gespecificeerd"
+    - method: POST
+      path: "/fhir/List"
+      description: "Maak een FHIR List-resource aan (application/fhir+json)"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/fhir/List"
+      description: "Zoek FHIR List-resources met subject:identifier en source:identifier"
+      auth: "Niet gespecificeerd"
+    - method: DELETE
+      path: "/fhir/List"
+      description: "Verwijder FHIR List-resources met subject:identifier en source:identifier"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/fhir/List/{id}"
+      description: "Haal een FHIR List-resource op aan de hand van id"
+      auth: "Niet gespecificeerd"
+    - method: DELETE
+      path: "/fhir/List/{id}"
+      description: "Verwijder een FHIR List-resource aan de hand van id"
+      auth: "Niet gespecificeerd"
+    - method: POST
+      path: "/fhir"
+      description: "Registreer een Bundle met LocalizationList-resources (application/json)"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/fhir/metadata"
+      description: "FHIR CapabilityStatement"
+      auth: "Niet gespecificeerd"
+    - method: GET
+      path: "/registrations"
+      description: "Haal een registratie op met pseudonym en oprf_key"
+      auth: "Niet gespecificeerd"
+    - method: POST
+      path: "/registrations"
+      description: "Voeg een registratie toe met pseudonym en oprf_key"
+      auth: "Niet gespecificeerd"
+    - method: DELETE
+      path: "/registrations"
+      description: "Verwijder een registratie met pseudonym en oprf_key"
+      auth: "Niet gespecificeerd"
+    - method: POST
+      path: "/localize"
+      description: "Lokaliseer met pseudonym en oprf_key"
+      auth: "Niet gespecificeerd"

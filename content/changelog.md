@@ -1,5 +1,7 @@
 ---
 title: "Changelog"
-type: "page"
-layout: "changelog"
 ---
+
+Overzicht van wijzigingen in de API-documentatie van de Generieke Functies.
+
+{{< changelog filters="true" >}}

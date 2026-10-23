@@ -1,0 +1,6 @@
+<div class="info-panel{{ with .Get "type" }} {{ . }}{{ end }}"{{ with .Get "id" }} id="{{ . }}"{{ end }}>
+{{ with .Get "title" }}<div class="info-panel-title">{{ . }}</div>{{ end }}
+
+{{ .Inner }}
+
+</div>

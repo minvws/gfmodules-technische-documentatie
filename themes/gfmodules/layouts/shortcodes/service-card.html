@@ -1,0 +1,22 @@
+{{- $quickstart := eq (.Get "type") "quickstart" -}}
+{{- if $quickstart -}}
+<div class="qs-card">
+{{ with .Get "icon" }}<div class="qs-card-icon" aria-hidden="true">{{ . }}</div>{{ end }}
+
+{{ .Inner }}
+
+</div>
+{{- else -}}
+<div class="service-card markdown-service-card">
+{{ with .Get "icon" }}
+<div class="service-card-top">
+<div class="service-icon {{ $.Get "icon-class" }}" aria-hidden="true">{{ . }}</div>
+</div>
+{{ end }}
+<div class="service-card-body">
+
+{{ .Inner }}
+
+</div>
+</div>
+{{- end -}}

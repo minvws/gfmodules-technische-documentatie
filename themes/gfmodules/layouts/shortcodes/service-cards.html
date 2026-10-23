@@ -1,0 +1,9 @@
+{{- $class := "cards-grid" -}}
+{{- if eq (.Get "type") "quickstart" -}}
+  {{- $class = "qs-grid" -}}
+{{- end -}}
+<div class="{{ $class }}">
+
+{{ .Inner }}
+
+</div>

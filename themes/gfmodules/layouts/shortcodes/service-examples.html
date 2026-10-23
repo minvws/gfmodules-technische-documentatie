@@ -1,0 +1,4 @@
+{{- $name := .Get 0 -}}
+{{- range site.Data.services -}}
+  {{- partial (printf "service-examples/%s.md" $name) . -}}
+{{- end -}}
