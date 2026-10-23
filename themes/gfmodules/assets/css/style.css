@@ -601,10 +601,22 @@ td code {
   table-layout: fixed;
   min-width: 40rem;
 }
-.oauth-parameters-wrap th:first-child { width: 10rem; }
+.oauth-parameters-wrap th:first-child { width: 16rem; }
 .oauth-parameters-wrap th:nth-child(2) { width: 12rem; }
 .oauth-parameters-wrap td { vertical-align: top; }
 .oauth-parameters-wrap td:nth-child(-n+2) code { white-space: nowrap; }
+
+/* ===== OAUTH SCOPES ===== */
+.oauth-scopes-wrap { overflow-x: auto; }
+.oauth-scopes-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.integration-content .oauth-scopes-wrap table {
+  display: table;
+  table-layout: fixed;
+  min-width: 32rem;
+}
+.oauth-scopes-wrap th:first-child { width: 16rem; }
+.oauth-scopes-wrap td { vertical-align: top; }
+.oauth-scopes-wrap td:first-child code { white-space: nowrap; }
 
 /* ===== TABS ===== */
 .tabs {
