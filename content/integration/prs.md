@@ -145,14 +145,14 @@ Een aanvraag doorloopt de volgende onderdelen:
 | Onderdeel | Verantwoordelijkheid |
 | --- | --- |
 | OAuth-service | Authenticeert de geregistreerde client via mTLS en geeft een access token uit voor de gevraagde organisatie, doelservice en bevoegdheden. |
-| OIN-verifier / toegangsgateway | Controleert het clientcertificaat en Bearer-token, verwijdert aangeleverde interne identiteitsheaders en geeft de geverifieerde identiteit en scopes door aan de PRS. |
+| OIN-verifier / toegangsgateway | Controleert het clientcertificaat en Bearer-token en geeft de geverifieerde identiteit en scopes door aan de PRS. |
 | PRS API en pseudoniemservices | Controleren de audience, scope, organisatiebevoegdheden en ontvangstsleutel; valideren directe persoonsnummers en voeren de gekozen pseudonimisering uit. |
 | Crypto-service / HSM | Voert in een HSM-omgeving de cryptografische operaties uit met het betreffende sleutelmateriaal. De PRS gebruikt daarvoor een intern HTTP-koppelvlak. |
 | PRS-database | Bewaart organisatieregistraties, verzoek- en ontvangstbevoegdheden, publieke sleutels met domeinen en sleutelversies met geldigheidsperioden. |
 | Auditlogging | Registreert onder meer operatie, handelende organisatie, organisatie namens wie wordt gehandeld, ontvanger en gebruikte sleutelversie. |
 | Ontvanger | Ontsleutelt de JWE, controleert de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit. |
 
-De PRS vertrouwt op de identiteit die de OIN-verifier doorgeeft. Het PRS-applicatieproces controleert zelf geen Bearer-handtekening en authenticeert de externe client niet zelfstandig met mTLS. De toegang tot dat proces moet daarom uitsluitend via de verifier lopen. Interne `x-gf-*`-headers worden door de gateway gezet en horen niet in clientaanvragen.
+De PRS vertrouwt op de identiteit die de OIN-verifier doorgeeft. Het PRS-applicatieproces controleert zelf geen Bearer-handtekening en authenticeert de externe client niet zelfstandig met mTLS. De toegang tot dat proces moet daarom uitsluitend via de verifier lopen.
 
 Autorisatie kent twee lagen. De OAuth-scope geeft toegang tot de operatie. Daarnaast moet de organisatie namens wie je handelt het betreffende pseudoniemtype mogen aanvragen, en moet de ontvanger dat type mogen ontvangen. Deze organisatiebevoegdheden worden door een PRS-beheerder toegekend. De PRS controleert eerst de aanvrager en daarna de ontvanger. Sleutelbeheer is altijd beperkt tot de organisatie namens wie de aanvraag wordt gedaan.
 
@@ -846,13 +846,16 @@ De toegangsgateway en OAuth-service kunnen een aanvraag al afwijzen voordat die 
 
 ### Service-informatie en testroutes {#service-informatie}
 
-| Methode en pad | Respons |
-| --- | --- |
-| `GET /` | Tekstbanner met versie- en commitinformatie wanneer beschikbaar. De gateway kan voor dit pad authenticatie vereisen. |
-| `GET /version.json` | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
-| `GET /health` | `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt. |
+De volgende endpoints zijn zonder OAuth-token bereikbaar. Gebruik wel mTLS met je PKIoverheid-clientcertificaat en de bijbehorende private key.
 
-`/version.json` en `/health` vereisen geen OAuth-token. De aansluitomgeving kan wel mTLS vereisen. De health check controleert de database en is geen volledige test van alle cryptografische afhankelijkheden.
+| Methode en pad | Informatie |
+| --- | --- |
+| `GET /oauth/.well-known/oauth-authorization-server` | OAuth-servermetadata. |
+| `GET /oauth/health` | Health check van de OAuth-service. |
+| `GET /api/health` | Health check van de API: `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt. |
+| `GET /api/version.json` | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
+
+De API-healthcheck controleert de database en is geen volledige test van alle cryptografische afhankelijkheden. `GET /api/` toont een tekstbanner met versie- en commitinformatie wanneer beschikbaar. De gateway kan voor dit pad authenticatie vereisen.
 
 Als testroutes zijn ingeschakeld, zijn daarnaast de volgende helpers beschikbaar. Zij vereisen een geauthenticeerde aanvraag met een voor de PRS bekende OAuth-scope, zonder aanvullende operatiescope:
 

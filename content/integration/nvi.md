@@ -38,6 +38,8 @@ sections:
     title: "Core JSON API"
   - id: foutafhandeling
     title: "Foutafhandeling"
+  - id: service-informatie
+    title: "Service-informatie"
 heading: "📑 NVI — Nationale Verwijs Index"
 service: nvi
 ---
@@ -914,7 +916,7 @@ Voor verwijderen gebruik je dezelfde queryparameters met `-X DELETE --get` en ee
 
 {{% card %}}
 
-### Foutafhandeling en service-informatie {#foutafhandeling}
+### Foutafhandeling {#foutafhandeling}
 
 FHIR-fouten bevatten een `OperationOutcome` met één of meer items in `issue`. Lees `issue[].code` en `issue[].details.text` voor de oorzaak. Bij schemavalidatiefouten heet het resourceveld `resourceType`; bij overige gemapte fouten en zelfstandige DELETE-antwoorden heet dit veld `resource_type`. Houd bij het verwerken van deze antwoorden rekening met beide vormen. Core-fouten zijn JSON: gemapte fouten geven een JSON-string, validatiefouten een lijst met veldfouten en onverwachte fouten een object met `error`.
 
@@ -944,7 +946,22 @@ Voorbeeld van een niet-gevonden registratie:
 
 Behandel een lege zoekuitkomst als een geldig HTTP `200`-antwoord. Controleer bij Bundles daarnaast de status per entry. Een ontbrekende scope wordt niet opgelost door hetzelfde token opnieuw te gebruiken: vraag een token aan met de juiste geregistreerde autorisatie.
 
-De algemene routes `GET /version.json` en `GET /health` zijn beschikbaar zonder OAuth-token. `GET /` toont een servicebanner en vereist via de API-gateway een OAuth-token. `version.json` geeft versie- en buildinformatie plus een `features`-lijst voor de betreffende omgeving. Gebruik ook voor deze informatieroutes de mTLS-verbinding van de aansluiting. Gebruik deze routes om te controleren welke NVI-instantie je bereikt.
+{{% /card %}}
+
+{{% card %}}
+
+### Service-informatie {#service-informatie}
+
+De volgende endpoints zijn zonder OAuth-token bereikbaar. Gebruik wel mTLS met je PKIoverheid-clientcertificaat en de bijbehorende private key.
+
+| Methode en pad | Informatie |
+| --- | --- |
+| `GET /oauth/.well-known/oauth-authorization-server` | OAuth-servermetadata. |
+| `GET /oauth/health` | Health check van de OAuth-service. |
+| `GET /api/health` | Health check van de API. |
+| `GET /api/version.json` | Versie- en buildinformatie plus een `features`-lijst voor de betreffende omgeving. |
+
+`GET /api/` toont een servicebanner en vereist via de API-gateway een OAuth-token. Gebruik deze routes om te controleren welke NVI-instantie je bereikt.
 
 {{% /card %}}
 

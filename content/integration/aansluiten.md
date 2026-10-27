@@ -16,8 +16,6 @@ sections:
     children:
       - id: verbinding-curl
         title: "Met curl"
-      - id: metadata-healthchecks
-        title: "Metadata en healthchecks"
       - id: verbinding-pkcs12
         title: "Met een PKCS#12-bundle"
       - id: pkcs12-aanmaken
@@ -72,7 +70,7 @@ Vraag een PKIoverheid-certificaat aan dat geschikt is voor clientauthenticatie. 
 
 {{% notice title="Certificaatidentiteit" %}}
 
-Gebruik een PKIoverheid-certificaat dat geschikt is voor TLS-clientauthenticatie (`clientAuth`). De aansluiting koppelt het OIN en de domeinidentiteit uit het certificaat aan de geregistreerde client.
+Gebruik een PKIoverheid-certificaat dat geschikt is voor TLS-clientauthenticatie (`clientAuth`). De aansluiting koppelt het OIN en een domeinnaam uit de Subject Alternative Names (SANs) van het certificaat aan de geregistreerde client.
 
 Organisatie-identificatie: **Organisatie-identificatienummer (OIN)**.
 
@@ -90,9 +88,9 @@ Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager (Vault,
 
 ### Organisatie en certificaat registreren {#registratie}
 
-Registreer je organisatie en client vooraf bij de beheerder van de betreffende dienst. De registratie koppelt de client aan de organisatie waarvoor deze handelt, de handelende organisatie uit het clientcertificaat, de toegestane domeinnamen en de toegestane scopes. Je ontvangt een `client_id` in UUID-formaat. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
+Registreer je organisatie en client vooraf bij de beheerder van de betreffende dienst. De registratie koppelt de client aan de organisatie waarvoor deze handelt, de handelende organisatie uit het clientcertificaat, de toegestane domeinnamen uit de SANs van het clientcertificaat en de toegestane scopes. Je ontvangt een `client_id` in UUID-formaat. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
 
-Voor de PRS gebruik je het OIN van 20 posities zonder voorvoegsel als `organization_external_id`. Voor de NVI gebruik je de URA van de zorgaanbieder. Registreer voor het beheren en lezen van NVI-registraties ook de bronidentifier (`source_id`). De client kan namens een andere organisatie handelen als die bevoegdheid in de registratie is vastgelegd.
+Voor de PRS gebruik je het OIN van 20 posities. Voor de NVI gebruik je de URA van de zorgaanbieder. Registreer voor het beheren en lezen van NVI-registraties ook de bronidentifier (`source_id`). De client kan namens een andere organisatie handelen als die bevoegdheid in de registratie is vastgelegd.
 
 Ontvangt je organisatie PRS-uitvoer, registreer dan ook een aparte publieke ontvangersleutel en de bijbehorende domeinen via het [sleutelbeheer van de PRS](/integration/prs/#receiver-instellen). Deze sleutel versleutelt de JWE voor de ontvanger en staat los van het certificaat waarmee de client de mTLS-verbinding opzet.
 
@@ -116,12 +114,6 @@ Gebruik voor de mTLS-verbinding je PKIoverheid-clientcertificaat met volledige c
 Test het OAuth-endpoint van de dienst waarmee je wilt verbinden. Vervang de URL-placeholders in de voorbeelden door de basisadressen, inclusief `https://` en een eventuele versieprefix, zonder afsluitende slash. De voorbeelden voegen `/api` of `/oauth` toe. Gebruik voor de API en de OAuth-service het bijbehorende basisadres en de geregistreerde audience.
 
 {{% service-examples "connection-curl" %}}
-
-#### Metadata en healthchecks {#metadata-healthchecks}
-
-De metadata- en health-endpoints hieronder vereisen mTLS. Een OAuth-token is niet nodig. Gebruik je PKIoverheid-clientcertificaat en de bijbehorende private key om de verbinding te testen.
-
-{{% service-examples "connection-metadata" %}}
 
 #### Verbinding testen met een PKCS#12-bundle (`.pfx` / `.p12`) {#verbinding-pkcs12}
 
