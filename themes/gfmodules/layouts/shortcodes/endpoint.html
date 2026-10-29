@@ -4,7 +4,8 @@
   {{- $address = printf "%s%s%s" $service.oauth.url_placeholder $service.oauth.base_path (.Get "path") -}}
 {{- end -}}
 <div class="endpoint-row">
-  {{ with .Get "method" }}<span class="method method-{{ lower . }}">{{ . }}</span>{{ else }}<span class="endpoint-label">{{ .Get "label" }}</span>{{ end }}
+  <span class="endpoint-label">Endpoint</span>
+  {{ with .Get "method" }}<span class="method method-{{ lower . }}">{{ . }}</span>{{ end }}
   <code>{{ $address }}</code>
   <button class="copy-btn" type="button" title="Kopieer endpoint">📋</button>
 </div>
