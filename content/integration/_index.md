@@ -8,11 +8,7 @@ Stap-voor-stap instructies voor het verbinden met de Generieke Functies.
 {{% card %}}
 ### Hoe begin ik?
 
-Begin met de [aansluitinstructies](/integration/aansluiten/).
-Voor beide diensten heb je een PKIoverheid-clientcertificaat en een geregistreerde client nodig. Registreer je organisatie en client vooraf bij de
-beheerder van de betreffende dienst. Je ontvangt een `client_id` en toegang tot de afgesproken scopes. In de voorbeelden haal je met het certificaat bij het
-OAuth-endpoint van de gekozen dienst een token op; met dat token en het certificaat roep je
-vervolgens die dienst aan.
+Volg de [aansluitinstructies](/integration/aansluiten/) en haal daarna een OAuth-token op voor PRS of NVI.
 
 {{% columns %}}
 
@@ -53,7 +49,7 @@ Bereid je aansluiting voor met een PKIoverheid-certificaat, registreer je organi
 
 *Pseudoniemendienst*
 
-De PRS levert omkeerbare en niet-omkeerbare pseudoniemen en geblindeerde OPRF-uitwisseling. De documentatie beschrijft OAuth-toegang, ontvangersleutels, sleutelversies en de afzonderlijk inschakelbare SAML-testkoppeling.
+De PRS levert omkeerbare en niet-omkeerbare pseudoniemen en geblindeerde OPRF-uitwisseling.
 
 [Naar PRS-documentatie →](/integration/prs/)
 {{% /service-card %}}
@@ -63,7 +59,7 @@ De PRS levert omkeerbare en niet-omkeerbare pseudoniemen en geblindeerde OPRF-ui
 
 *Nationale Verwijs Index*
 
-De NVI registreert en lokaliseert gegevensbeschikbaarheid bij zorgaanbieders. De documentatie beschrijft privacybeschermde matching, brongebonden autorisatie en de FHIR- en Core-API.
+De NVI registreert en lokaliseert gegevensbeschikbaarheid bij zorgaanbieders.
 
 [Naar NVI-documentatie →](/integration/nvi/)
 {{% /service-card %}}

@@ -235,7 +235,7 @@ Gebruik deze waarde bij registratie in `subject.identifier.value` en bij zoeken 
 
 ### OAuth-token voor NVI
 
-De NVI gebruikt een OAuth 2.0 Authorization Service. Vraag een token aan met mTLS en de vijf verplichte formuliervelden `grant_type`, `scope`, `target_audience`, `organization_external_id` en `client_id`. `organization_external_id` is de URA waarvoor de client handelt. `client_id` is de UUID van de geregistreerde clientautorisatie. Stuur voor `nvi:create`, `nvi:read` en `nvi:delete` ook de bijbehorende `source_id` mee. Alleen `nvi:localize` kan zonder bron worden aangevraagd.
+Vraag bij de NVI OAuth-service een access token aan met onderstaande parameters.
 
 Vervang `{{% service "oauth.url_placeholder" %}}` door de basis-URL van de OAuth-service, inclusief `https://` en een eventuele versieprefix, zonder afsluitende slash.
 
@@ -384,7 +384,7 @@ De [algemene OAuth-uitleg](/integration/oauth/#metadata-en-tokenverificatie) bes
 
 ### Lokalisatie registreren (`POST /fhir/List`) {#lokalisatie-registreren}
 
-Registreer een lokalisatie door een FHIR `List`-resource als `application/fhir+json` te sturen. De identificerende OPRF-uitvoer staat in `subject.identifier.value`; volg hiervoor de instructies voor [de identifier opbouwen](#identifier-opbouwen). De List bevat daarnaast de custodian-extensie, bronreferentie, status, mode en `emptyReason`. Gebruik een token met `nvi:create` en een geautoriseerde `source_id`. De URA in de custodian-extensie en de bron in `source.identifier.value` moeten overeenkomen met de tokencontext.
+Registreer een lokalisatie door een FHIR `List`-resource als `application/fhir+json` te sturen. De identificerende OPRF-uitvoer staat in `subject.identifier.value`; volg hiervoor de instructies voor [de identifier opbouwen](#identifier-opbouwen). Gebruik een token met `nvi:create` en een geautoriseerde `source_id`. De URA in de custodian-extensie en de bron in `source.identifier.value` moeten overeenkomen met de tokencontext.
 
 {{% notice title="Verplichte List-velden" type="tip" %}}
 

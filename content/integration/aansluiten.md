@@ -25,7 +25,7 @@ aliases:
 heading: "Aansluiten"
 ---
 
-Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat en een geregistreerde client nodig. Hieronder lees je hoe je de aansluiting voorbereidt, je organisatie en client registreert en de verbinding test.
+Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat en een geregistreerde client nodig.
 
 {{% card %}}
 
@@ -100,7 +100,7 @@ Ontvangt je organisatie PRS-uitvoer, registreer dan ook een aparte publieke ontv
 
 ### Verbinding testen met mTLS {#verbinding-testen}
 
-Bij gewone TLS verifieert alleen de cliënt de server. Bij **Mutual TLS (mTLS)** verifieert ook de server de cliënt aan de hand van een clientcertificaat. Voor de aansluiting gebruik je hiervoor het PKIoverheid-clientcertificaat. Een verbinding zonder geldig clientcertificaat wordt op transportniveau geweigerd.
+De diensten vereisen mTLS met een geldig PKIoverheid-clientcertificaat.
 
 #### PKIoverheid-certificaat gebruiken
 

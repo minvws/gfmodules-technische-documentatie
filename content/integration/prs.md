@@ -166,7 +166,7 @@ In een HSM-omgeving wordt het berekeningssleutelmateriaal per organisatie, sleut
 
 ### OAuth-token voor PRS
 
-Gebruik de PRS OAuth-service om een access token op te halen. Stuur de vijf verplichte formuliervelden `grant_type`, `target_audience`, `scope`, `organization_external_id` en `client_id` mee. `client_id` is de bij de clientregistratie verstrekte UUID. `organization_external_id` identificeert de organisatie namens wie je handelt; gebruik voor PRS het kale OIN van 20 posities, zonder `oin:`-prefix.
+Vraag bij de PRS OAuth-service een access token aan met onderstaande parameters.
 
 {{< endpoint method="POST" oauth=true path="/token" >}}
 
@@ -478,42 +478,6 @@ De OPRF-evaluatie controleert of de geblindeerde invoer een geldig Ristretto255-
 ### Uitwisseling in vier stappen {#oprf-flow}
 
 ![OPRF swimlane: Client → PRS → Ontvanger](/assets/img/oprf-flow.svg)
-
-{{% steps %}}
-
-{{% step number="1" %}}
-
-#### Client: BSN afschermen
-
-Normaliseer en serialiseer het persoonsnummer. Leid met HKDF-SHA256 een 32-byte invoer af, met ontvanger en domein als context. Blind de invoer lokaal en bewaar de blind factor voor de ontvanger.
-
-{{% /step %}}
-
-{{% step number="2" %}}
-
-#### Client → PRS: evaluatie aanvragen
-
-Stuur de geblindeerde invoer, `recipientOrganization` en `recipientScope` naar `POST /oprf/eval`. De PRS controleert de bevoegdheden, selecteert de ontvangstsleutel en voert de evaluatie uit. De respons bevat een JWE voor de ontvanger.
-
-{{% /step %}}
-
-{{% step number="3" %}}
-
-#### Client → ontvanger: JWE en blind factor doorgeven
-
-Gebruik het aanlevercontract van de ontvanger om beide waarden door te sturen. De client kan de evaluatie in de JWE niet lezen.
-
-{{% /step %}}
-
-{{% step number="4" %}}
-
-#### Ontvanger: ontsleutelen en unblinden
-
-De ontvanger ontsleutelt de JWE, controleert de context en combineert de evaluatie met de blind factor. De uitkomst is het pseudoniem voor deze invoer, ontvangercontext en OPRF-sleutelversie.
-
-{{% /step %}}
-
-{{% /steps %}}
 
 {{% /card %}}
 
