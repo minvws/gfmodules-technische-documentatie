@@ -16,8 +16,6 @@ sections:
     children:
       - id: verbinding-curl
         title: "Met curl"
-      - id: metadata-healthchecks
-        title: "Metadata en healthchecks"
       - id: verbinding-pkcs12
         title: "Met een PKCS#12-bundle"
       - id: pkcs12-aanmaken
@@ -27,7 +25,7 @@ aliases:
 heading: "Aansluiten"
 ---
 
-Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat nodig. Hieronder lees je hoe je de aansluiting voorbereidt, je organisatie registreert en de verbinding test.
+Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat en een geregistreerde client nodig.
 
 {{% card %}}
 
@@ -70,9 +68,9 @@ Vraag een PKIoverheid-certificaat aan dat geschikt is voor clientauthenticatie. 
 
 {{% /columns %}}
 
-{{% notice title="Vereist PKIoverheid-certificaatprofiel" %}}
+{{% notice title="Certificaatidentiteit" %}}
 
-Type: `G4 Private TLS Generic Devices Organization Validated Server` (`OID 2.16.528.1.1003.1.2.44.15.35.11`). Dit profiel ondersteunt clientauthenticatie (`clientAuth`) en serverauthenticatie (`serverAuth`). De voorbeelden gebruiken het certificaat voor clientauthenticatie bij mTLS.
+Gebruik een PKIoverheid-certificaat dat geschikt is voor TLS-clientauthenticatie (`clientAuth`). De aansluiting koppelt het OIN en een domeinnaam uit de Subject Alternative Names (SANs) van het certificaat aan de geregistreerde client.
 
 Organisatie-identificatie: **Organisatie-identificatienummer (OIN)**.
 
@@ -90,7 +88,11 @@ Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager (Vault,
 
 ### Organisatie en certificaat registreren {#registratie}
 
-Registreer je organisatie en het PKIoverheid-clientcertificaat dat je gebruikt vooraf bij de beheerder van de betreffende dienst. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
+Registreer je organisatie en client vooraf bij de beheerder van de betreffende dienst. De registratie koppelt de client aan de organisatie waarvoor deze handelt, de handelende organisatie uit het clientcertificaat, de toegestane domeinnamen uit de SANs van het clientcertificaat en de toegestane scopes. Je ontvangt een `client_id` in UUID-formaat. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
+
+Voor de PRS gebruik je het OIN van 20 posities. Voor de NVI gebruik je de URA van de zorgaanbieder. Registreer voor het beheren en lezen van NVI-registraties ook de bronidentifier (`source_id`). De client kan namens een andere organisatie handelen als die bevoegdheid in de registratie is vastgelegd.
+
+Ontvangt je organisatie PRS-uitvoer, registreer dan ook een aparte publieke ontvangersleutel en de bijbehorende domeinen via het [sleutelbeheer van de PRS](/integration/prs/#receiver-instellen). Deze sleutel versleutelt de JWE voor de ontvanger en staat los van het certificaat waarmee de client de mTLS-verbinding opzet.
 
 {{% /card %}}
 
@@ -98,7 +100,7 @@ Registreer je organisatie en het PKIoverheid-clientcertificaat dat je gebruikt v
 
 ### Verbinding testen met mTLS {#verbinding-testen}
 
-Bij gewone TLS verifieert alleen de cliënt de server. Bij **Mutual TLS (mTLS)** verifieert ook de server de cliënt aan de hand van een clientcertificaat. Voor de aansluiting gebruik je hiervoor het PKIoverheid-clientcertificaat. Een verbinding zonder geldig clientcertificaat wordt op transportniveau geweigerd.
+De diensten vereisen mTLS met een geldig PKIoverheid-clientcertificaat.
 
 #### PKIoverheid-certificaat gebruiken
 
@@ -109,15 +111,9 @@ Gebruik voor de mTLS-verbinding je PKIoverheid-clientcertificaat met volledige c
 
 #### Verbinding testen met curl {#verbinding-curl}
 
-Test het OAuth-endpoint van de dienst waarmee je wilt verbinden. Vervang de URL-placeholders in de voorbeelden door de serveradressen, inclusief `https://` en zonder afsluitende slash. Gebruik voor de API en de OAuth-service het bijbehorende serveradres.
+Test het OAuth-endpoint van de dienst waarmee je wilt verbinden. Vervang de URL-placeholders in de voorbeelden door de basisadressen, inclusief `https://` en een eventuele versieprefix, zonder afsluitende slash. De voorbeelden voegen `/api` of `/oauth` toe. Gebruik voor de API en de OAuth-service het bijbehorende basisadres en de geregistreerde audience.
 
 {{% service-examples "connection-curl" %}}
-
-#### Metadata en healthchecks {#metadata-healthchecks}
-
-De metadata- en health-endpoints hieronder vereisen mTLS. Een OAuth-token is niet nodig. Gebruik je PKIoverheid-clientcertificaat en de bijbehorende private key om de verbinding te testen.
-
-{{% service-examples "connection-metadata" %}}
 
 #### Verbinding testen met een PKCS#12-bundle (`.pfx` / `.p12`) {#verbinding-pkcs12}
 

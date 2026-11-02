@@ -30,7 +30,7 @@ Zorg voor een PKIoverheid-certificaat, registreer je organisatie en test de verb
 {{% service-card type="quickstart" icon="👥" %}}
 ### PRS aanroepen
 
-Vier gebruiksmogelijkheden, OAuth-instructies en de uitwerking van de geblindeerde OPRF-uitwisseling.
+Pseudoniemen uitwisselen, OPRF gebruiken, OAuth-toegang regelen en ontvangersleutels beheren.
 
 [PRS-documentatie →](/integration/prs/)
 {{% /service-card %}}

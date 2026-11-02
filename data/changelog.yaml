@@ -1,4 +1,4 @@
-- date: "2026-08-24"
+- date: "2026-10-22"
   filters:
     - prs
     - nvi
@@ -11,10 +11,13 @@
   changes:
     - tag: Gewijzigd
       type: break
-      text: "PRS: instructies voor OPRF-uitwisseling, sleutelregistratie en OAuth bijgewerkt."
+      text: "OAuth: client_id, organization_external_id en de vereiste scopes opgenomen in de aansluitinstructies en voorbeelden."
     - tag: Gewijzigd
       type: break
-      text: "NVI: FHIR List-voorbeelden voor registratie, lokalisatie en verwijderen bijgewerkt; OAuth-instructies opgenomen in de NVI-documentatie."
+      text: "PRS: directe pseudonimisering, OPRF, JWE-antwoorden, ontvangersleutels, sleutelrotatie en de SAML-testkoppeling uitgewerkt."
+    - tag: Gewijzigd
+      type: break
+      text: "NVI: FHIR- en Core-contracten, bronautorisatie, zoekgedrag, herhaalde registratie en cryptografische verwerking bijgewerkt."
 
 - date: "2026-05-11"
   filters:

@@ -310,20 +310,23 @@ a:hover { text-decoration: underline; }
 .integration-content .two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .integration-content .two-col > *,
 .integration-content .step-body { min-width: 0; }
-.integration-content table { display: block; max-width: 100%; overflow-x: auto; }
-.integration-content .info-panel table { display: table; table-layout: fixed; }
-.integration-content .info-panel th:first-child { width: 8rem; }
 
 /* Markdown content uses the same components as the page layouts. */
 .markdown-content { min-width: 0; overflow-wrap: anywhere; }
 .markdown-content > h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.25rem; }
 .markdown-content p { font-size: .875rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1rem; }
+.markdown-content > .cards-grid + p { margin-top: 1.5rem; }
 .markdown-content h3 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 .75rem; }
 .markdown-content h4 { font-size: .9rem; font-weight: 600; margin: 1rem 0 .4rem; }
 .markdown-content h5 { margin: .9rem 0 .4rem; }
 .markdown-content ul:not([class]),
 .markdown-content ol:not([class]) { padding-left: 1.2rem; margin: .75rem 0 1rem; font-size: .875rem; color: var(--text-muted); line-height: 1.9; }
-.markdown-content table { margin: .75rem 0 1rem; }
+.markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: .75rem 0 1rem;
+}
 .markdown-content img { display: block; max-width: 100%; height: auto; margin: .75rem 0; }
 .markdown-content hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 .markdown-content .card { margin-bottom: 1.25rem; }
@@ -560,6 +563,7 @@ table {
   border-collapse: collapse;
   background: var(--white);
   font-size: 0.875rem;
+  overflow-wrap: normal;
 }
 
 th {
@@ -578,8 +582,17 @@ th {
 td {
   padding: 0.8rem 1rem;
   border-bottom: 1px solid #f0f4f8;
-  vertical-align: middle;
+  vertical-align: top;
 }
+
+/* Let labels size the first column and keep identifiers in either column intact. */
+th:first-child,
+td:first-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+td:nth-child(-n+2) code { white-space: nowrap; }
 
 tr:last-child td  { border-bottom: none; }
 tr:hover td       { background: #fafbfd; }
@@ -598,13 +611,16 @@ td code {
 .oauth-parameters-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .integration-content .oauth-parameters-wrap table {
   display: table;
-  table-layout: fixed;
   min-width: 40rem;
 }
-.oauth-parameters-wrap th:first-child { width: 10rem; }
-.oauth-parameters-wrap th:nth-child(2) { width: 12rem; }
-.oauth-parameters-wrap td { vertical-align: top; }
-.oauth-parameters-wrap td:nth-child(-n+2) code { white-space: nowrap; }
+
+/* ===== OAUTH SCOPES ===== */
+.oauth-scopes-wrap { overflow-x: auto; }
+.oauth-scopes-wrap:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.integration-content .oauth-scopes-wrap table {
+  display: table;
+  min-width: 32rem;
+}
 
 /* ===== TABS ===== */
 .tabs {
@@ -873,7 +889,6 @@ td code {
 }
 
 @media (max-width: 700px) {
-  .integration-content .info-panel th:first-child { width: 7rem; }
   .integration-content .info-panel th,
   .integration-content .info-panel td { padding-left: .5rem; padding-right: .5rem; }
   body:has(.version-selector) .integration-layout { --integration-section-offset: 11.5rem; }
