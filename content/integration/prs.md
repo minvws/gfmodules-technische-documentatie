@@ -352,7 +352,7 @@ curl --fail-with-body -sS -X POST \
   -d '{
     "personalId": {"landCode":"NL","type":"bsn","value":"950000012"},
     "recipientOrganization": "oin:00000099000000001000",
-    "recipientScope": "nationale-verwijsindex"
+    "recipientScope": "zorgportaal"
   }' \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/exchange/reversible-pseudonym"
 ```
@@ -381,7 +381,7 @@ Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan,
 {
   "personalId": "NL:bsn:950000012",
   "recipientOrganization": "oin:00000099000000001000",
-  "recipientScope": "nationale-verwijsindex"
+  "recipientScope": "zorgportaal"
 }
 ```
 
@@ -393,7 +393,7 @@ Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan,
 {
   "reversiblePseudonym": "pseudonym:reversible:<base64url-waarde>",
   "recipientOrganization": "oin:00000099000000001000",
-  "recipientScope": "nationale-verwijsindex"
+  "recipientScope": "zorgportaal"
 }
 ```
 
@@ -409,7 +409,7 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
 {
   "subject": "pseudonym:irreversible:<waarde-versie-2>",
   "aud": "oin:00000099000000001000",
-  "scope": "nationale-verwijsindex",
+  "scope": "zorgportaal",
   "version": "1.1",
   "iat": 1792620000,
   "exp": 1792620300,
@@ -443,7 +443,7 @@ curl --fail-with-body -sS -X POST \
   -d '{
     "reversiblePseudonym": "pseudonym:reversible:<base64url-waarde>",
     "recipientOrganization": "oin:00000099000000001000",
-    "recipientScope": "nationale-verwijsindex"
+    "recipientScope": "zorgportaal"
   }' \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/exchange/personal-id"
 ```
@@ -614,7 +614,7 @@ Voorbeeld van de ontsleutelde inhoud:
 {
   "subject": "pseudonym:eval:<evaluatie-met-nieuwste-sleutel>",
   "aud": "oin:00000099000000001000",
-  "scope": "nvi",
+  "scope": "nationale-verwijsindex",
   "version": "1.1",
   "iat": 1791977856,
   "exp": 1791978156,
@@ -741,7 +741,7 @@ proof.add_signature(
     }),
 )
 registration = {
-    "domains": ["nationale-verwijsindex"],
+    "domains": ["zorgportaal"],
     "jws": proof.serialize(compact=True),
 }
 Path("key-registration.json").write_text(json.dumps(registration), encoding="utf-8")
@@ -763,7 +763,7 @@ De respons is `201 Created` met een JSON-object van deze vorm:
 ```json
 {
   "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-  "domains": ["nationale-verwijsindex"],
+  "domains": ["zorgportaal"],
   "jwk": {"kty":"RSA","kid":"<sleutelidentificatie>","n":"<modulus>","e":"AQAB"}
 }
 ```
