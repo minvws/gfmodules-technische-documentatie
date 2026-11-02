@@ -32,12 +32,62 @@ def version_key(entry):
     return entry["id"] == "latest", natural_key(version.casefold())
 
 
-def select_release_refs(refs):
-    selected = {}
-    for ref in sorted(refs, key=lambda ref: (natural_key(ref.replace("+", "-")), ref)):
-        version = re.split(r"[-+]", ref.removeprefix("refs/tags/"), maxsplit=1)[0]
-        selected[version] = ref
-    return selected
+def configured_release_refs(config):
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate configuration key: {key}")
+            result[key] = value
+        return result
+
+    data = json.loads(config.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+    if not isinstance(data, dict) or set(data) != {"versions"} or not isinstance(data["versions"], dict):
+        raise ValueError("configuration must contain a versions mapping")
+    releases = []
+    for version, source in sorted(data["versions"].items()):
+        if not valid_version(version):
+            raise ValueError(f"invalid version path: {version}")
+        if not isinstance(source, str):
+            raise ValueError(f"invalid source for {version}")
+        if re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", source):
+            ref = source
+        else:
+            ref = f"refs/tags/{source}"
+            subprocess.run(["git", "check-ref-format", ref], check=True, capture_output=True)
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--verify", f"{ref}^{{commit}}"],
+            text=True, stderr=subprocess.PIPE).strip()
+        releases.append((version, ref, commit))
+    return releases
+
+
+def reconcile(stored, versions):
+    if not stored.exists():
+        return
+    manifest_path = stored / "versions.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("versions"), list):
+        raise ValueError("invalid cached manifest")
+    entries = manifest["versions"]
+    ids = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
+            raise ValueError("invalid cached manifest entry")
+        version = entry["id"]
+        if (version != "latest" and not valid_version(version)) or version in ids:
+            raise ValueError(f"invalid cached version: {version}")
+        if not (stored / version).is_dir() or (stored / version).is_symlink():
+            raise ValueError(f"missing or unsafe cached version: {version}")
+        ids.add(version)
+    for child in stored.iterdir():
+        if child.is_dir() and (child.name == "latest" or valid_version(child.name)) and child.name not in ids:
+            raise ValueError(f"unlisted cached version: {child.name}")
+    kept = versions | {"latest"}
+    for version in ids - kept:
+        shutil.rmtree(stored / version)
+    manifest["versions"] = [entry for entry in entries if entry["id"] in kept]
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
 def stage(stored, build, output, version, commit=None):
@@ -89,21 +139,22 @@ def main():
     mode.add_argument("--check-version", action="store_true",
                       help="validate the version without staging files")
     mode.add_argument("--list-releases", action="store_true",
-                      help="list the selected version, source tag, and commit for each release")
+                      help="list the selected version, source ref, and commit for each release")
+    mode.add_argument("--reconcile", action="store_true",
+                      help="remove cached releases absent from the configuration")
     parser.add_argument("--commit")
     parser.add_argument("--stored", type=Path)
     parser.add_argument("--build", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
+        if args.reconcile:
+            if args.stored is None:
+                parser.error("--reconcile requires --stored")
+            reconcile(args.stored, {version for version, _, _ in configured_release_refs(Path("versions.json"))})
+            return
         if args.list_releases:
-            refs_output = subprocess.check_output(
-                ["git", "for-each-ref", "--format=%(refname)", "refs/tags/v*"],
-                text=True)
-            refs = [ref for ref in refs_output.split("\n") if ref]
-            for version, ref in select_release_refs(refs).items():
-                commit = subprocess.check_output(
-                    ["git", "rev-parse", f"{ref}^{{commit}}"], text=True).strip()
+            for version, ref, commit in configured_release_refs(Path("versions.json")):
                 print(f"{version}\t{ref}\t{commit}")
             return
         if args.version is None:

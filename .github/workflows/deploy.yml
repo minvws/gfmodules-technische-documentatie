@@ -3,9 +3,8 @@ name: Deploy versioned Hugo documentation
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
-    paths: [".github/workflows/deploy.yml"]
+    paths: [".github/workflows/deploy.yml", "scripts/versioned_docs.py", "scripts/versioned_docs/**", "versions.json"]
 
 permissions:
   contents: read
@@ -37,9 +36,6 @@ jobs:
           release_hash="$(sha256sum < "$RUNNER_TEMP/documentation-releases.tsv" | cut -d ' ' -f 1)"
           echo "hash=$release_hash" >> "$GITHUB_OUTPUT"
 
-      # Main and tag runs can restore caches saved on main. Caches saved by tag
-      # runs are scoped to that tag, so the next main run rebuilds new releases
-      # once to include them in its own cache.
       - name: Restore documentation collection
         id: cache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -47,6 +43,9 @@ jobs:
           path: _stored-pages
           key: versioned-pages-v1-${{ steps.releases.outputs.hash }}
           restore-keys: versioned-pages-v1-
+
+      - name: Remove unconfigured cached releases
+        run: python3 scripts/versioned_docs.py --reconcile --stored _stored-pages
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3.2.1

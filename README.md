@@ -57,20 +57,30 @@ Open <http://localhost:8000/>. Press Ctrl+C to stop and remove the temporary pre
 ## Publishing
 
 GitHub Actions publishes to [GitHub Pages](https://minvws.github.io/gfmodules-technische-documentatie/)
-on pushes to `main` (`/latest/`) and `v*` tags (`v1.2.3` → `/v1.2.3/`).
-Suffixes starting with `-` or `+` are removed from the version path.
-When tags share a version path, all deployments use the highest tag in natural
-version order, treating `+` and `-` as equivalent separators. For example,
-`v1.2.3+build1` and `v1.2.3-build2` both publish to `/v1.2.3/`, using
-`v1.2.3-build2`. Numeric suffixes sort naturally: `build10` comes after `build2`.
-Unsupported version tags are skipped with a GitHub Actions warning.
+only on pushes to `main`. `/latest/` is always built from `main`; pushing a
+tag alone does not deploy.
 
-Deployments on `main` reuse cached release documentation and rebuild missing or
-changed releases. Without a cache, all supported `v*` tags are built.
+Configure release paths and source tags or full commit hashes in the root `versions.json`:
 
-Tag deployments can reuse caches from `main`, but `main` cannot reuse caches saved
-by tag deployments. New releases may therefore be rebuilt on the next main deployment.
-`/latest/` is always rebuilt from `main`.
+```json
+{
+  "versions": {
+    "v1.0": "3b1ee5f44795d6d59841e9704b99f412e329b511",
+    "v2.0": "v2.0.0"
+  }
+}
+```
+
+This publishes the pinned commit at `/v1.0/` and tag `v2.0.0` at `/v2.0/` on the
+next main deployment. Version paths must start with `v` and cannot contain
+URL separators, whitespace, `+` or `-`. Tags must already exist and point to
+commits. Full commit hashes pin releases even if tags are moved. An invalid
+configuration, missing tag, or missing commit fails the build.
+
+An empty mapping publishes only `/latest/`. Removing a mapping removes that
+version from the next deployment. Cached releases are reused when their
+configured source still resolves to the same commit; new or changed releases
+are rebuilt.
 
 ## Contribution
 
