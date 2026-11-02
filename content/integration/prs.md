@@ -26,6 +26,8 @@ sections:
         title: "Omkeerbaar pseudoniem"
       - id: api-niet-omkeerbaar
         title: "Niet-omkeerbaar pseudoniem"
+      - id: api-persoonsnummer
+        title: "Persoonsnummer terugleveren"
       - id: jwe-contract
         title: "JWE ontvangen en controleren"
   - id: api-oprf-uitwisseling
@@ -80,7 +82,7 @@ De PRS ondersteunt het BSN als persoonsnummertype. Bij directe pseudonimisering 
 
 #### [Omkeerbaar pseudoniem](#api-omkeerbaar)
 
-Lever een persoonsnummer aan. De PRS maakt een deterministisch pseudoniem dat zij later intern kan terugrekenen. De uitkomst wordt versleuteld voor de ontvanger.
+Lever een persoonsnummer aan, of een eerder voor jouw organisatie uitgegeven omkeerbaar pseudoniem. De PRS maakt een deterministisch pseudoniem dat zij later kan terugrekenen. De uitkomst wordt versleuteld voor de ontvanger.
 
 {{% /column %}}
 
@@ -89,6 +91,14 @@ Lever een persoonsnummer aan. De PRS maakt een deterministisch pseudoniem dat zi
 #### [Niet-omkeerbaar pseudoniem](#api-niet-omkeerbaar)
 
 Lever een persoonsnummer aan, of een eerder voor jouw organisatie uitgegeven omkeerbaar pseudoniem. De PRS berekent een pseudoniem met een eenrichtingsfunctie en versleutelt de uitkomst voor de ontvanger.
+
+{{% /column %}}
+
+{{% column %}}
+
+#### [Persoonsnummer terugleveren](#api-persoonsnummer)
+
+Een bevoegde organisatie kan een eerder aan haar uitgegeven omkeerbaar pseudoniem laten omzetten naar het oorspronkelijke persoonsnummer, versleuteld voor een bevoegde ontvanger.
 
 {{% /column %}}
 
@@ -122,11 +132,11 @@ De beschikbaarheid van de directe exchanges en de testkoppeling verschilt per om
 
 Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de migratie van opgeslagen verwijzingen.
 
-Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij gekozen identificatie van de gebruikstoepassing. De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
+Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij gekozen identificatie van de gebruikstoepassing. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
 
 #### Versleuteling voor de ontvanger
 
-De PRS verpakt zowel directe pseudoniemen als OPRF-evaluaties in een JWE. De geregistreerde publieke RSA-sleutel van de ontvanger bepaalt wie de uitvoer kan lezen. De ontvanger beheert de bijbehorende private key en bewaart die in de eigen omgeving. Deze decryptiesleutel staat los van de PRS-sleutels waarmee pseudoniemen worden berekend.
+De PRS verpakt directe pseudoniemen, teruggeleverde persoonsnummers en OPRF-evaluaties in een JWE. De geregistreerde publieke RSA-sleutel van de ontvanger bepaalt wie de uitvoer kan lezen. De ontvanger beheert de bijbehorende private key en bewaart die in de eigen omgeving. Deze decryptiesleutel staat los van de PRS-sleutels waarmee pseudoniemen worden berekend.
 
 #### Gescheiden berekeningen en opslag
 
@@ -145,18 +155,14 @@ Een aanvraag doorloopt de volgende onderdelen:
 | Onderdeel | Verantwoordelijkheid |
 | --- | --- |
 | OAuth-service | Authenticeert de geregistreerde client via mTLS en geeft een access token uit voor de gevraagde organisatie, doelservice en bevoegdheden. |
-| OIN-verifier / toegangsgateway | Controleert het clientcertificaat en Bearer-token en geeft de geverifieerde identiteit en scopes door aan de PRS. |
+| Toegangsgateway | Controleert het clientcertificaat en het Bearer-token. |
 | PRS API en pseudoniemservices | Controleren de audience, scope, organisatiebevoegdheden en ontvangstsleutel; valideren directe persoonsnummers en voeren de gekozen pseudonimisering uit. |
-| Crypto-service / HSM | Voert in een HSM-omgeving de cryptografische operaties uit met het betreffende sleutelmateriaal. De PRS gebruikt daarvoor een intern HTTP-koppelvlak. |
+| HSM | Voert cryptografische operaties uit met het betreffende sleutelmateriaal. |
 | PRS-database | Bewaart organisatieregistraties, verzoek- en ontvangstbevoegdheden, publieke sleutels met domeinen en sleutelversies met geldigheidsperioden. |
 | Auditlogging | Registreert onder meer operatie, handelende organisatie, organisatie namens wie wordt gehandeld, ontvanger en gebruikte sleutelversie. |
 | Ontvanger | Ontsleutelt de JWE, controleert de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit. |
 
-De PRS vertrouwt op de identiteit die de OIN-verifier doorgeeft. Het PRS-applicatieproces controleert zelf geen Bearer-handtekening en authenticeert de externe client niet zelfstandig met mTLS. De toegang tot dat proces moet daarom uitsluitend via de verifier lopen.
-
-Autorisatie kent twee lagen. De OAuth-scope geeft toegang tot de operatie. Daarnaast moet de organisatie namens wie je handelt het betreffende pseudoniemtype mogen aanvragen, en moet de ontvanger dat type mogen ontvangen. Deze organisatiebevoegdheden worden door een PRS-beheerder toegekend. De PRS controleert eerst de aanvrager en daarna de ontvanger. Sleutelbeheer is altijd beperkt tot de organisatie namens wie de aanvraag wordt gedaan.
-
-In een HSM-omgeving wordt het berekeningssleutelmateriaal per organisatie, sleuteltype en versie beheerd. Het domein maakt deel uit van de invoer van de directe pseudoniemberekening. Bij OPRF verwerkt de client de ontvanger en het domein vooraf in de afgeleide invoer. Lokale ontwikkelomgevingen kunnen lokale berekeningssleutels gebruiken.
+Autorisatie kent twee lagen. De OAuth-scope geeft toegang tot de operatie. Daarnaast moet de organisatie namens wie je handelt het betreffende pseudoniemtype mogen aanvragen, en moet de ontvanger dat pseudoniemtype mogen ontvangen. Voor het terugleveren van een persoonsnummer zijn afzonderlijke bevoegdheden voor het aanvragen en ontvangen van persoonsnummers nodig. De PRS controleert eerst de aanvrager en daarna de ontvanger. Sleutelbeheer is altijd beperkt tot de organisatie namens wie de aanvraag wordt gedaan.
 
 {{% /card %}}
 
@@ -297,6 +303,7 @@ Alle onderstaande paden zijn relatief aan `{{% service "base_path" %}}`. Vul het
 | --- | --- | --- | --- |
 | `POST` | `/exchange/reversible-pseudonym` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token. |
 | `POST` | `/exchange/irreversible-pseudonym` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token. |
+| `POST` | `/exchange/personal-id` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token met persoonsnummer. |
 | `POST` | `/oprf/eval` | `prs:oprf-pseudonym` | `200`, JSON-object met `jwe`. |
 | `POST` | `/administration/keys` | `prs:administration` | `201`, geregistreerde publieke sleutel. |
 | `GET` | `/administration/keys` | `prs:administration` | `200`, lijst van eigen publieke sleutels. |
@@ -305,8 +312,6 @@ Alle onderstaande paden zijn relatief aan `{{% service "base_path" %}}`. Vul het
 | `POST` | `/administration/key-versions` | `prs:administration` | `201`, nieuwe sleutelversie. |
 | `GET` | `/administration/key-versions` | `prs:administration` | `200`, lijst van eigen sleutelversies. |
 | `PUT` | `/administration/key-versions/{id}` | `prs:administration` | `200`, bijgewerkte sleutelversie. |
-
-De twee routes onder `/exchange` zijn beschikbaar wanneer directe pseudonimisering is ingeschakeld. De beheerroutes, OPRF-evaluatie en publieke service-informatie zijn afzonderlijk beschikbaar.
 
 {{% /card %}}
 
@@ -336,7 +341,7 @@ De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype
 
 {{< endpoint method="POST" path="/exchange/reversible-pseudonym" >}}
 
-Vereiste OAuth-scope: `prs:pseudonym`. De aanvrager moet `reversible_pseudonym` mogen aanvragen en de ontvanger moet `reversible_pseudonym` mogen ontvangen.
+Vereiste OAuth-scope: `prs:pseudonym`. De aanvrager moet omkeerbare pseudoniemen mogen aanvragen en de ontvanger moet omkeerbare pseudoniemen mogen ontvangen.
 
 ```bash
 curl --fail-with-body -sS -X POST \
@@ -347,14 +352,14 @@ curl --fail-with-body -sS -X POST \
   -d '{
     "personalId": {"landCode":"NL","type":"bsn","value":"950000012"},
     "recipientOrganization": "oin:00000099000000001000",
-    "recipientScope": "nationale-verwijsindex"
+    "recipientScope": "zorgportaal"
   }' \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/exchange/reversible-pseudonym"
 ```
 
 De respons is `201 Created` met `Content-Type: application/jwe`. De body bevat rechtstreeks het compact geserialiseerde JWE-token. Lees deze respons als tekst. De ontsleutelde payload bevat `subject: "pseudonym:reversible:<waarde>"` en `keyVersion` met de gebruikte, hoogste actieve sleutelversie.
 
-Alleen de PRS kan het omkeerbare pseudoniem terugrekenen. Voor omzetting naar een niet-omkeerbaar pseudoniem kan de organisatie voor wie het is uitgegeven de ontsleutelde waarde als `reversiblePseudonym` aanbieden bij de volgende operatie. De JWE zelf is geen geldige waarde voor dat veld.
+Alleen de PRS kan het omkeerbare pseudoniem terugrekenen. De organisatie voor wie het is uitgegeven kan de ontsleutelde waarde als `reversiblePseudonym` aanbieden voor een nieuw omkeerbaar of niet-omkeerbaar pseudoniem, of voor het [terugleveren van het persoonsnummer](#api-persoonsnummer). De JWE zelf is geen geldige waarde voor dat veld. Bij het aanvragen van een nieuw omkeerbaar pseudoniem geef je, net als bij de niet-omkeerbare operatie, precies één van `personalId` en `reversiblePseudonym` op.
 
 {{% /card %}}
 
@@ -364,9 +369,9 @@ Alleen de PRS kan het omkeerbare pseudoniem terugrekenen. Voor omzetting naar ee
 
 {{< endpoint method="POST" path="/exchange/irreversible-pseudonym" >}}
 
-Vereiste OAuth-scope: `prs:pseudonym`. De aanvrager moet `irreversible_pseudonym` mogen aanvragen en de ontvanger moet `irreversible_pseudonym` mogen ontvangen. De uitkomst wordt met HMAC-SHA256 berekend; er is geen API-operatie die deze uitkomst terugrekent naar een persoonsnummer.
+Vereiste OAuth-scope: `prs:pseudonym`. De aanvrager moet niet-omkeerbare pseudoniemen mogen aanvragen en de ontvanger moet niet-omkeerbare pseudoniemen mogen ontvangen. De uitkomst wordt met HMAC-SHA256 berekend; er is geen API-operatie die deze uitkomst terugrekent naar een persoonsnummer.
 
-Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan, samen met `recipientOrganization` en `recipientScope`. Andere velden worden afgewezen.
+Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan, samen met `recipientOrganization` en `recipientScope`.
 
 {{% tabs %}}
 
@@ -376,7 +381,7 @@ Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan,
 {
   "personalId": "NL:bsn:950000012",
   "recipientOrganization": "oin:00000099000000001000",
-  "recipientScope": "nationale-verwijsindex"
+  "recipientScope": "zorgportaal"
 }
 ```
 
@@ -388,7 +393,7 @@ Lever **precies één** van de velden `personalId` en `reversiblePseudonym` aan,
 {
   "reversiblePseudonym": "pseudonym:reversible:<base64url-waarde>",
   "recipientOrganization": "oin:00000099000000001000",
-  "recipientScope": "nationale-verwijsindex"
+  "recipientScope": "zorgportaal"
 }
 ```
 
@@ -404,7 +409,7 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
 {
   "subject": "pseudonym:irreversible:<waarde-versie-2>",
   "aud": "oin:00000099000000001000",
-  "scope": "nationale-verwijsindex",
+  "scope": "zorgportaal",
   "version": "1.1",
   "iat": 1792620000,
   "exp": 1792620300,
@@ -414,6 +419,40 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
 ```
 
 `extraVersions` ontbreekt bij deze operatie wanneer er geen oudere actieve versies zijn. De waarden in die map bevatten geen `pseudonym:irreversible:`-prefix. Gebruik de oude en nieuwe waarde tijdens een migratie om bestaande verwijzingen aan de nieuwe sleutelversie te koppelen.
+
+{{% /card %}}
+
+{{% card %}}
+
+### Persoonsnummer terugleveren {#api-persoonsnummer}
+
+{{< endpoint method="POST" path="/exchange/personal-id" >}}
+
+De PRS levert het oorspronkelijke persoonsnummer versleuteld voor een ontvangende organisatie. Hiervoor gebruik je een omkeerbaar pseudoniem dat is uitgegeven aan de organisatie namens wie je handelt. Niet-omkeerbare pseudoniemen en OPRF-uitkomsten kunnen hiervoor niet worden gebruikt.
+
+De ontvangende organisatie mag een andere organisatie zijn dan de organisatie namens wie je de aanvraag doet.
+
+Vereiste OAuth-scope: `prs:pseudonym`. De aanvragende organisatie moet persoonsnummers mogen aanvragen en de ontvanger moet persoonsnummers mogen ontvangen. De ontvanger moet bovendien een publieke sleutel voor het opgegeven domein (`recipientScope`) hebben.
+
+```bash
+curl --fail-with-body -sS -X POST \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/jwe" \
+  -d '{
+    "reversiblePseudonym": "pseudonym:reversible:<base64url-waarde>",
+    "recipientOrganization": "oin:00000099000000001000",
+    "recipientScope": "zorgportaal"
+  }' \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/exchange/personal-id"
+```
+
+Gebruik de ontsleutelde `subject`-waarde van het oorspronkelijke pseudoniem; de JWE zelf is geen geldige invoer. Het prefix `pseudonym:reversible:` is optioneel.
+
+De respons is `201 Created` met `Content-Type: application/jwe` en het compacte JWE-token rechtstreeks in de body. Na ontsleuteling bevat `subject` het persoonsnummer als string, bijvoorbeeld `NL:bsn:950000012`.
+
+Een ongeldig pseudoniem of een pseudoniem van een andere organisatie leidt tot `400`; heeft de aanvrager niet de vereiste bevoegdheid, dan volgt `403`; een onbekende of onbevoegde ontvanger of ontbrekende ontvangstsleutel leidt tot `404`; en een niet meer beschikbare sleutelversie tot `410`. Zie ook de algemene [foutafhandeling](#foutafhandeling).
 
 {{% /card %}}
 
@@ -434,13 +473,13 @@ Het ontsleutelde JSON-object bevat de volgende claims:
 
 | Claim | Betekenis |
 | --- | --- |
-| `subject` | `pseudonym:reversible:<waarde>`, `pseudonym:irreversible:<waarde>` of `pseudonym:eval:<waarde>`. |
+| `subject` | `pseudonym:reversible:<waarde>`, `pseudonym:irreversible:<waarde>`, `pseudonym:eval:<waarde>` of bij het terugleveren van een persoonsnummer `NL:bsn:<waarde>`. |
 | `aud` | Ontvanger als `oin:<oin>`. |
 | `scope` | Het aangevraagde domein (`recipientScope`). |
 | `version` | Payloadformaat `"1.1"`; dit is geen berekeningssleutelversie. |
 | `iat` | Uitgiftetijd als Unix-timestamp in seconden. |
 | `exp` | Vervaltijd, 300 seconden na `iat`. |
-| `keyVersion` | Gebruikte sleutelversie bij directe exchanges. |
+| `keyVersion` | Gebruikte sleutelversie bij het aanvragen van directe pseudoniemen; ontbreekt bij het terugleveren van een persoonsnummer. |
 | `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF. |
 
 Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
@@ -530,7 +569,7 @@ Genereer bij iedere aanvraag een nieuwe blind factor. Stuur alleen de geblindeer
 
 {{< endpoint method="POST" path="/oprf/eval" >}}
 
-Vereiste OAuth-scope: `prs:oprf-pseudonym`. De aanvragende organisatie moet `oprf` mogen aanvragen en de ontvanger moet `oprf` mogen ontvangen.
+Vereiste OAuth-scope: `prs:oprf-pseudonym`. De aanvragende organisatie moet geblindeerde pseudoniemen mogen aanvragen en de ontvanger moet geblindeerde pseudoniemen mogen ontvangen.
 
 | Veld | Type | Betekenis |
 | --- | --- | --- |
@@ -567,7 +606,24 @@ De respons is `200 OK` met `Content-Type: application/json`:
 {"jwe":"<compact-jwe-token>"}
 ```
 
-Na ontsleuteling bevat `subject` de hoogste actieve evaluatie als `pseudonym:eval:<base64url-evaluatie>`. `extraVersions` bevat oudere actieve evaluaties met hun versienummer als sleutel, bijvoorbeeld `{"1":"<base64url-evaluatie>"}`. Deze map is leeg als er geen oudere actieve versie is. Iedere evaluatie moet met dezelfde blind factor afzonderlijk worden geünblind. De OPRF-payload bevat geen `keyVersion`-claim voor de waarde in `subject`.
+Na ontsleuteling bevat het veld `subject` de hoogste actieve evaluatie als `pseudonym:eval:<base64url-evaluatie>`. Het veld `extraVersions` bevat oudere actieve evaluaties met hun versienummer als sleutel, bijvoorbeeld `{"1":"<base64url-evaluatie>"}`. Als er geen oudere actieve versie is, bevat `extraVersions` een leeg object. Iedere evaluatie moet met dezelfde blind factor afzonderlijk worden geünblind.
+
+Voorbeeld van de ontsleutelde inhoud:
+
+```json
+{
+  "subject": "pseudonym:eval:<evaluatie-met-nieuwste-sleutel>",
+  "aud": "oin:00000099000000001000",
+  "scope": "nationale-verwijsindex",
+  "version": "1.1",
+  "iat": 1791977856,
+  "exp": 1791978156,
+  "extraVersions": {
+    "1": "<evaluatie-met-sleutelversie-1>",
+    "2": "<evaluatie-met-sleutelversie-2>"
+  }
+}
+```
 
 {{% /card %}}
 
@@ -645,7 +701,7 @@ Sla het resultaat op volgens het gegevensmodel van de ontvanger. De pseudoniemwa
 
 ### Ontvanger instellen en publieke sleutels beheren {#receiver-instellen}
 
-Laat de ontvangende organisatie eerst door een PRS-beheerder registreren en de benodigde ontvangstbevoegdheden toekennen. De organisatie kan daarna met `prs:administration` haar eigen publieke decryptiesleutels beheren. Deze sleutels worden apart aangeleverd; de PRS neemt de ontvangstsleutel niet automatisch over uit het mTLS-clientcertificaat.
+Zorg dat de ontvangende organisatie is geregistreerd en de benodigde ontvangstbevoegdheden heeft. De organisatie kan daarna met `prs:administration` haar eigen publieke decryptiesleutels beheren. Deze sleutels worden apart aangeleverd; de PRS neemt de ontvangstsleutel niet automatisch over uit het mTLS-clientcertificaat.
 
 #### Publieke sleutel registreren
 
@@ -685,7 +741,7 @@ proof.add_signature(
     }),
 )
 registration = {
-    "domains": ["nationale-verwijsindex"],
+    "domains": ["zorgportaal"],
     "jws": proof.serialize(compact=True),
 }
 Path("key-registration.json").write_text(json.dumps(registration), encoding="utf-8")
@@ -707,12 +763,12 @@ De respons is `201 Created` met een JSON-object van deze vorm:
 ```json
 {
   "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-  "domains": ["nationale-verwijsindex"],
+  "domains": ["zorgportaal"],
   "jwk": {"kty":"RSA","kid":"<sleutelidentificatie>","n":"<modulus>","e":"AQAB"}
 }
 ```
 
-Gebruik bij pseudoniemaanvragen exact een van de geregistreerde domeinen als `recipientScope`. De PRS zoekt eerst een sleutel voor dat specifieke domein en daarna een sleutel met `*`. Een domein dat al aan een andere sleutel van dezelfde organisatie is gekoppeld geeft `409 Conflict`.
+Geef bij een aanvraag het afgesproken domein op als `recipientScope`. De PRS zoekt eerst een sleutel waarvan `domains` dat domein bevat en daarna een sleutel met de wildcard `*`. Een domein dat al aan een andere sleutel van dezelfde organisatie is gekoppeld geeft `409 Conflict`.
 
 #### Opvragen, vervangen en verwijderen
 
@@ -734,7 +790,7 @@ Bewaar een oude private key zolang eerder voor die sleutel uitgegeven JWE's nog 
 
 Berekeningssleutelversies bepalen de pseudoniemuitkomst en worden per organisatie beheerd. De publieke ontvangstsleutel en haar `kid` hebben een afzonderlijke levenscyclus. Alle onderstaande beheeraanroepen vereisen `prs:administration` en werken alleen op de eigen organisatie.
 
-Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `until_dt` leeg is of in de toekomst ligt. Directe exchanges en OPRF in een HSM-omgeving gebruiken deze actieve versies. Een lokale OPRF-ontwikkelconfiguratie gebruikt de lokale serversleutel als versie 1.
+Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `until_dt` leeg is of in de toekomst ligt. Directe exchanges en OPRF gebruiken deze actieve versies.
 
 | Methode en pad | Request | Respons |
 | --- | --- | --- |
@@ -744,7 +800,7 @@ Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `unti
 
 Een versieobject bevat `id` (UUID), `organization_id` (interne organisatie-UUID), `version` (integer), `from_dt`, `until_dt` en `removed_at`. Tijdstippen bevatten een tijdzone, bijvoorbeeld `2026-11-01T00:00:00Z`. `until_dt` en `removed_at` kunnen `null` zijn.
 
-Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven starttijd mag in het verleden liggen. Een opgegeven `until_dt` moet in de toekomst en na `from_dt` liggen. Er moet al een versie voor de organisatie bestaan; anders volgt `409` en moet de initiële inrichting worden geregeld. `PUT` wijzigt alleen `until_dt`; een opgegeven eindtijd moet in de toekomst liggen. `null` of een lege JSON-body wist de bestaande eindtijd. Onbekende requestvelden worden afgewezen.
+Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven starttijd mag in het verleden liggen. Een opgegeven `until_dt` moet in de toekomst en na `from_dt` liggen. Er moet al een versie voor de organisatie bestaan; anders volgt `409` en moet de initiële inrichting worden geregeld. `PUT` wijzigt alleen `until_dt`; een opgegeven eindtijd moet in de toekomst liggen. `null` of een lege JSON-body wist de bestaande eindtijd.
 
 #### Rotatie uitvoeren
 
@@ -792,7 +848,7 @@ Bij ongeldige requestvelden is de status `422` en bevat `detail` een lijst van v
 | Status | Betekenis en vervolgactie |
 | --- | --- |
 | `400` | Ongeldig persoonsnummer, ongeldig omkeerbaar pseudoniem of ongeldige OPRF-groepsinvoer. Corrigeer de invoer. |
-| `403` | Ontbrekende of ongeldige autorisatiecontext, verkeerde audience, ontbrekende scope, onbekende aanvragende organisatie of ontbrekende aanvraagbevoegdheid. Controleer registratie en token. |
+| `403` | Ontbrekende of ongeldige autorisatiecontext, verkeerde audience, ontbrekende scope, onbekende aanvragende organisatie of de aanvrager heeft niet de vereiste bevoegdheid. Controleer registratie en token. |
 | `404` | Ontvanger onbekend of niet bevoegd, ontvangstsleutel voor het domein ontbreekt, geen actieve berekeningssleutelversie, of gevraagd beheerobject bestaat niet voor de eigen organisatie. Controleer de ontvangerinrichting. |
 | `409` | Domein al gekoppeld aan een andere sleutel, geen initiële sleutelversie om te roteren, of wijziging van een al verwijderde versie. Controleer de bestaande inrichting. |
 | `410` | Sleutelversie van een aangeleverd omkeerbaar pseudoniem is niet meer beschikbaar. Opnieuw aanbieden van hetzelfde pseudoniem herstelt die versie niet. |
