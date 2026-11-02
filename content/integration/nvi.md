@@ -44,13 +44,13 @@ heading: "📑 NVI — Nationale Verwijs Index"
 service: nvi
 ---
 
-Volg eerst de [aansluitinstructies](/integration/aansluiten/) voor het clientcertificaat, de registratie en de mTLS-verbinding. Gebruik een [OAuth-token van de NVI](#oauth-token) voor de FHIR API en de Core JSON API. Beide gebruiken het basispad `{{% service "base_path" %}}` en dezelfde registraties.
+Op deze pagina lees je hoe je met de Nationale Verwijs Index registreert en opzoekt waar gegevens over een persoon beschikbaar zijn.
 
 {{% card %}}
 
 ### Wat de NVI doet {#wat-de-nvi-doet}
 
-De NVI registreert welke zorgaanbieder gegevens over een persoon beschikbaar heeft en in welk bronsysteem die gegevens staan. Een registratie koppelt een beschermde persoonsidentificatie aan de URA van de zorgaanbieder en de identificatie van het bronsysteem (`source_id`). De NVI bevat geen diagnoses, documenten of andere zorginhoud.
+De NVI registreert welke zorgaanbieder gegevens over een persoon beschikbaar heeft en in welk bronsysteem die gegevens staan. Een registratie koppelt een beschermde persoonsidentificatie aan de URA van de zorgaanbieder en de identificatie van het bronsysteem. De NVI bevat geen diagnoses, documenten of andere zorginhoud.
 
 {{% columns %}}
 
@@ -72,7 +72,7 @@ Een raadpleger zoekt welke zorgaanbieders en bronsystemen gegevens over een pers
 
 {{% /columns %}}
 
-Er is geen afzonderlijke zorgcontext of organisatietype in het registratie- en zoekcontract. Een resultaat zegt dat er gegevens beschikbaar zijn, zonder aan te geven welke gegevenscategorieën dat zijn.
+Bij registratie en zoeken wordt geen afzonderlijke zorgcontext of organisatietype gebruikt. Een resultaat zegt dat er gegevens beschikbaar zijn, zonder aan te geven welke gegevenscategorieën dat zijn.
 
 {{% /card %}}
 
@@ -94,7 +94,7 @@ De client blindeert het BSN lokaal met een willekeurige blind factor. De PRS ver
 
 #### JWE en blind factor aanbieden
 
-De client stuurt de JWE en de blind factor naar de NVI. Bij FHIR worden ze samen verpakt in een identifier; bij de Core API staan ze in twee afzonderlijke velden.
+De client stuurt de JWE en de blind factor naar de NVI.
 
 {{% /step %}}
 
@@ -102,7 +102,7 @@ De client stuurt de JWE en de blind factor naar de NVI. Bij FHIR worden ze samen
 
 #### Cryptografisch verwerken
 
-De NVI laat de Crypto Service de JWE ontsleutelen en het geblindeerde resultaat deblinderen. Een HMAC-SHA256 over het PRS-pseudoniem levert een deterministische initialisatievector voor AES-versleuteling van dat pseudoniem. De cryptografische sleuteloperaties lopen via de HSM API; het uitpakken van de JWE-payload en het deblinderen gebeuren in de Crypto Service.
+De NVI ontsleutelt de JWE en deblindeert het geblindeerde resultaat. Een HMAC-SHA256 over het PRS-pseudoniem levert een deterministische initialisatievector voor AES-versleuteling van dat pseudoniem.
 
 {{% /step %}}
 
@@ -110,15 +110,15 @@ De NVI laat de Crypto Service de JWE ontsleutelen en het geblindeerde resultaat 
 
 #### Matchen en minimale gegevens teruggeven
 
-De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pseudoniem voor opslag en matching. De antwoorden bevatten de zorgaanbieder en het bronsysteem. Het FHIR-antwoord bevat daarnaast de registratie-ID; het Core-antwoord bevat de aanmaaktijd.
+De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pseudoniem voor opslag en matching. De antwoorden bevatten de zorgaanbieder en het bronsysteem.
 
 {{% /step %}}
 
 {{% /steps %}}
 
-{{% notice title="Geen BSN in het NVI-contract" %}}
+{{% notice title="De NVI kent het BSN niet" %}}
 
-Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. De registratie- en lokalisatiecontracten bevatten geen BSN-veld. Succesvolle antwoorden geven de JWE, blind factor, het PRS-pseudoniem en de interne matchwaarde niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
+De NVI ontvangt en verwerkt het BSN niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
 
 {{% /notice %}}
 
@@ -128,14 +128,14 @@ Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. De registrat
 
 ### Architectuur en gegevensbescherming {#concept-ontwerpprincipes}
 
-De koppelvlakken vertalen FHIR- en JSON-berichten naar dezelfde registratie- en zoekoperaties. Hierdoor heeft een registratie die via de Core API wordt aangemaakt dezelfde betekenis als een registratie via de FHIR API.
+De NVI biedt twee koppelvlakken om beschikbaarheid te registreren en te zoeken: de FHIR API en de Core JSON API. Beide bieden dezelfde registratie- en zoekfunctionaliteit.
 
 | Onderdeel | Verantwoordelijkheid |
 | --- | --- |
 | Client en PRS | De client blindeert de invoer; de PRS evalueert die invoer en versleutelt het resultaat voor de NVI. |
 | OAuth-service en API-toegang | Authenticatie van de handelende organisatie, tokenuitgifte en overdracht van gevalideerde organisatie-, scope- en brongegevens. |
 | NVI-applicatie | Validatie van requests, controle van scopes, URA en bron, registratie, lokalisatie en logging. |
-| Crypto Service en HSM API | Ontsleutelen, deblinderen en beschermen van de interne persoonsreferentie, gescheiden van de registratieopslag. |
+| Crypto Service | Ontsleutelen, deblinderen en beschermen van de interne persoonsreferentie, gescheiden van de registratieopslag. |
 | PostgreSQL | Opslag van registraties en verwijzingen naar de gebruikte sleutel. |
 
 #### Registratiemodel
@@ -152,7 +152,7 @@ Bij lezen is het onderscheid tussen lokaliseren en eigen registraties raadplegen
 
 #### Logging en beheer
 
-De NVI registreert onder meer aanmaak, herhaalde registratie, zoekacties, lokalisaties, verwijderingen en geweigerde toegang. Loguitvoer heeft afzonderlijke kanalen voor applicatiebeheer, securitymonitoring en inzage. Sleutelmetadata wordt intern beheerd; clients hoeven geen NVI-sleutellabel of opslagmechanisme mee te sturen.
+De NVI registreert onder meer aanmaak, herhaalde registratie, zoekacties, lokalisaties, verwijderingen en geweigerde toegang. Clients hoeven geen NVI-sleutellabel of opslagmechanisme mee te sturen.
 
 {{% notice title="Verantwoordelijkheid van de zorgaanbieder" type="warn" %}}
 

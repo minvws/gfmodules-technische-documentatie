@@ -25,7 +25,7 @@ aliases:
 heading: "Aansluiten"
 ---
 
-Om aan te sluiten op de PRS of NVI heb je een PKIoverheid-clientcertificaat en een geregistreerde client nodig.
+Op deze pagina lees je hoe je je organisatie aansluit op de PRS en de NVI.
 
 {{% card %}}
 

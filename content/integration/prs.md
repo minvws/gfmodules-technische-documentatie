@@ -60,15 +60,15 @@ heading: "👤 PRS — Pseudoniemendienst"
 service: prs
 ---
 
-De Pseudoniemendienst (PRS) maakt pseudoniemen voor een ontvangende organisatie en een afgesproken gebruikstoepassing. Volg de [aansluitinstructies](/integration/aansluiten/), regel de organisatiebevoegdheden en [registreer de ontvangstsleutel](#receiver-instellen) voordat je pseudoniemen aanvraagt.
+Op deze pagina lees je hoe je de Pseudoniemendienst gebruikt om persoonsnummers om te zetten naar pseudoniemen.
 
 {{% card %}}
 
 ### Wat de PRS doet {#wat-de-prs-doet}
 
-Met de PRS kunnen organisaties over een persoon communiceren zonder onderling het BSN uit te wisselen. Een pseudoniem is afgeleid van een persoonsnummer en hoort bij een specifieke ontvanger, toepassing en sleutelversie. Het is daarmee geschikt voor herkenning binnen die context.
+Met de PRS kunnen organisaties over een persoon communiceren zonder onderling het BSN uit te wisselen. Een pseudoniem is afgeleid van een persoonsnummer en hoort bij een specifieke ontvanger, toepassing en sleutelversie. Voor dezelfde ontvangende organisatie, toepassing en sleutelversie levert hetzelfde persoonsnummer steeds hetzelfde pseudoniem op. Zo kan de ontvanger gegevens over dezelfde persoon met elkaar in verband brengen.
 
-De PRS ondersteunt het BSN als persoonsnummertype. Bij directe pseudonimisering verwerkt de PRS het persoonsnummer tijdelijk in leesbare vorm. Bij een geblindeerde OPRF-uitwisseling blijft het persoonsnummer ook voor de PRS afgeschermd.
+Bij directe pseudonimisering verwerkt de PRS het BSN tijdelijk in leesbare vorm. Bij een geblindeerde OPRF-uitwisseling blijft het BSN ook voor de PRS afgeschermd.
 
 {{% /card %}}
 
@@ -120,8 +120,6 @@ Een afzonderlijk inschakelbare testkoppeling stuurt JSON door naar een interne S
 
 {{% /columns %}}
 
-De beschikbaarheid van de directe exchanges en de testkoppeling verschilt per omgeving. De [versie-informatie](#service-informatie) vermeldt welke functies zijn ingeschakeld.
-
 {{% /card %}}
 
 {{% card %}}
@@ -132,7 +130,7 @@ De beschikbaarheid van de directe exchanges en de testkoppeling verschilt per om
 
 Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de migratie van opgeslagen verwijzingen.
 
-Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij gekozen identificatie van de gebruikstoepassing. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
+Een domein is een zelfgekozen naam voor de toepassing waarvoor je het pseudoniem gebruikt. Het domein wordt in aanvragen meegegeven als `recipientScope`. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
 
 #### Versleuteling voor de ontvanger
 
