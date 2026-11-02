@@ -44,13 +44,13 @@ heading: "📑 NVI — Nationale Verwijs Index"
 service: nvi
 ---
 
-Volg eerst de [aansluitinstructies](/integration/aansluiten/) voor het clientcertificaat, de registratie en de mTLS-verbinding. Gebruik een [OAuth-token van de NVI](#oauth-token) voor de FHIR API en de Core JSON API. Beide gebruiken het basispad `{{% service "base_path" %}}` en dezelfde registraties.
+Op deze pagina lees je hoe je met de Nationale Verwijs Index registreert en opzoekt waar gegevens over een persoon beschikbaar zijn.
 
 {{% card %}}
 
 ### Wat de NVI doet {#wat-de-nvi-doet}
 
-De NVI registreert welke zorgaanbieder gegevens over een persoon beschikbaar heeft en in welk bronsysteem die gegevens staan. Een registratie koppelt een beschermde persoonsidentificatie aan de URA van de zorgaanbieder en de identificatie van het bronsysteem (`source_id`). De NVI bevat geen diagnoses, documenten of andere zorginhoud.
+De NVI registreert welke zorgaanbieder gegevens over een persoon beschikbaar heeft en in welk bronsysteem die gegevens staan. Een registratie koppelt een beschermde persoonsidentificatie aan de URA van de zorgaanbieder en de identificatie van het bronsysteem. De NVI bevat geen diagnoses, documenten of andere zorginhoud.
 
 {{% columns %}}
 
@@ -72,7 +72,7 @@ Een raadpleger zoekt welke zorgaanbieders en bronsystemen gegevens over een pers
 
 {{% /columns %}}
 
-Er is geen afzonderlijke zorgcontext of organisatietype in het registratie- en zoekcontract. Een resultaat zegt dat er gegevens beschikbaar zijn, zonder aan te geven welke gegevenscategorieën dat zijn.
+Bij registratie en zoeken wordt geen afzonderlijke zorgcontext of organisatietype gebruikt. Een resultaat zegt dat er gegevens beschikbaar zijn, zonder aan te geven welke gegevenscategorieën dat zijn.
 
 {{% /card %}}
 
@@ -94,7 +94,7 @@ De client blindeert het BSN lokaal met een willekeurige blind factor. De PRS ver
 
 #### JWE en blind factor aanbieden
 
-De client stuurt de JWE en de blind factor naar de NVI. Bij FHIR worden ze samen verpakt in een identifier; bij de Core API staan ze in twee afzonderlijke velden.
+De client stuurt de JWE en de blind factor naar de NVI.
 
 {{% /step %}}
 
@@ -102,7 +102,7 @@ De client stuurt de JWE en de blind factor naar de NVI. Bij FHIR worden ze samen
 
 #### Cryptografisch verwerken
 
-De NVI laat de Crypto Service de JWE ontsleutelen en het geblindeerde resultaat deblinderen. Een HMAC-SHA256 over het PRS-pseudoniem levert een deterministische initialisatievector voor AES-versleuteling van dat pseudoniem. De cryptografische sleuteloperaties lopen via de HSM API; het uitpakken van de JWE-payload en het deblinderen gebeuren in de Crypto Service.
+De NVI ontsleutelt de JWE en deblindeert het geblindeerde resultaat. Een HMAC-SHA256 over het PRS-pseudoniem levert een deterministische initialisatievector voor AES-versleuteling van dat pseudoniem.
 
 {{% /step %}}
 
@@ -110,15 +110,15 @@ De NVI laat de Crypto Service de JWE ontsleutelen en het geblindeerde resultaat 
 
 #### Matchen en minimale gegevens teruggeven
 
-De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pseudoniem voor opslag en matching. De antwoorden bevatten de zorgaanbieder en het bronsysteem. Het FHIR-antwoord bevat daarnaast de registratie-ID; het Core-antwoord bevat de aanmaaktijd.
+De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pseudoniem voor opslag en matching. De antwoorden bevatten de zorgaanbieder en het bronsysteem.
 
 {{% /step %}}
 
 {{% /steps %}}
 
-{{% notice title="Geen BSN in het NVI-contract" %}}
+{{% notice title="De NVI kent het BSN niet" %}}
 
-Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. De registratie- en lokalisatiecontracten bevatten geen BSN-veld. Succesvolle antwoorden geven de JWE, blind factor, het PRS-pseudoniem en de interne matchwaarde niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
+De NVI ontvangt en verwerkt het BSN niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
 
 {{% /notice %}}
 
@@ -128,14 +128,14 @@ Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. De registrat
 
 ### Architectuur en gegevensbescherming {#concept-ontwerpprincipes}
 
-De koppelvlakken vertalen FHIR- en JSON-berichten naar dezelfde registratie- en zoekoperaties. Hierdoor heeft een registratie die via de Core API wordt aangemaakt dezelfde betekenis als een registratie via de FHIR API.
+De NVI biedt twee koppelvlakken om beschikbaarheid te registreren en te zoeken: de FHIR API en de Core JSON API. Beide bieden dezelfde registratie- en zoekfunctionaliteit.
 
 | Onderdeel | Verantwoordelijkheid |
 | --- | --- |
 | Client en PRS | De client blindeert de invoer; de PRS evalueert die invoer en versleutelt het resultaat voor de NVI. |
 | OAuth-service en API-toegang | Authenticatie van de handelende organisatie, tokenuitgifte en overdracht van gevalideerde organisatie-, scope- en brongegevens. |
 | NVI-applicatie | Validatie van requests, controle van scopes, URA en bron, registratie, lokalisatie en logging. |
-| Crypto Service en HSM API | Ontsleutelen, deblinderen en beschermen van de interne persoonsreferentie, gescheiden van de registratieopslag. |
+| Crypto Service | Ontsleutelen, deblinderen en beschermen van de interne persoonsreferentie, gescheiden van de registratieopslag. |
 | PostgreSQL | Opslag van registraties en verwijzingen naar de gebruikte sleutel. |
 
 #### Registratiemodel
@@ -152,7 +152,7 @@ Bij lezen is het onderscheid tussen lokaliseren en eigen registraties raadplegen
 
 #### Logging en beheer
 
-De NVI registreert onder meer aanmaak, herhaalde registratie, zoekacties, lokalisaties, verwijderingen en geweigerde toegang. Loguitvoer heeft afzonderlijke kanalen voor applicatiebeheer, securitymonitoring en inzage. Sleutelmetadata wordt intern beheerd; clients hoeven geen NVI-sleutellabel of opslagmechanisme mee te sturen.
+De NVI registreert onder meer aanmaak, herhaalde registratie, zoekacties, lokalisaties, verwijderingen en geweigerde toegang. Clients hoeven geen NVI-sleutellabel of opslagmechanisme mee te sturen.
 
 {{% notice title="Verantwoordelijkheid van de zorgaanbieder" type="warn" %}}
 
@@ -602,27 +602,37 @@ Een nieuwe registratie geeft HTTP `201`; een bestaande combinatie van persoon, U
 
 ### Lokalisaties opvragen (`GET /fhir/List`) {#lokalisaties-opvragen}
 
-Een zoekvraag geeft HTTP `200` met een FHIR `Bundle` van type `searchset`. Elke `entry.resource` is een `List` met dezelfde vorm als het [registratieantwoord](#lokalisatie-registreren). `total` is het aantal gevonden registraties. Geen resultaat geeft `total: 0` en `entry: []`.
+Een zoekvraag geeft HTTP `200` met een FHIR `Bundle` van type `searchset`. Elke `entry.resource` is een `List` met dezelfde vorm als het [registratieantwoord](#lokalisatie-registreren). `total` is het totale aantal gevonden registraties over alle pagina's; `entry` bevat alleen de aangevraagde pagina. Geen overeenkomsten geeft `total: 0` en `entry: []`.
 
 #### Zoekgedrag {#zoekgedrag}
 
-De combinatie van parameters bepaalt zowel de scope als de begrenzing van het resultaat. Een bronfilter toevoegen verandert een algemene lokalisatie in het raadplegen van eigen registraties.
+De combinatie van persoons- en bronfilters bepaalt zowel de scope als de begrenzing van het resultaat. Een bronfilter toevoegen verandert een algemene lokalisatie in het raadplegen van eigen registraties.
 
-| Parameters | Vereiste scope | Resultaat |
+| Persoons- en bronfilters | Vereiste scope | Resultaat |
 | --- | --- | --- |
 | Alleen `subject:identifier` | `nvi:localize` | Alle registraties voor deze persoon, over alle zorgaanbieders en bronsystemen. |
 | `subject:identifier` en `source:identifier` | `nvi:read` | Registraties voor deze persoon binnen de eigen URA en de opgegeven, geautoriseerde bron. |
 | Alleen `source:identifier` | `nvi:read` | Alle registraties binnen de eigen URA en de opgegeven, geautoriseerde bron. |
-| Geen parameters | `nvi:read` | Alle registraties binnen de eigen URA, over de bronsystemen van die URA. |
+| Geen persoons- of bronfilter | `nvi:read` | Alle registraties binnen de eigen URA, over de bronsystemen van die URA. |
 
 | Parameter | Vorm | Betekenis |
 | --- | --- | --- |
 | `subject:identifier` | `<system>\|<identifier-value>` | Het [verpakte OPRF-token](#identifier-opbouwen) met het NVI-identifiersysteem. |
 | `source:identifier` | `urn:ietf:rfc:3986\|EHR-SYS-001` | Bronfilter; de waarde moet overeenkomen met de geauthenticeerde `source_id`. |
+| `_count` | Geheel getal, minimaal `1` | Gewenst aantal registraties per pagina; bij weglaten geldt de ingestelde standaardpaginagrootte. |
+| `_offset` | Geheel getal, minimaal `0` | Aantal registraties dat wordt overgeslagen; standaard `0`. |
 
-Een losse waarde zonder systeem wordt ook geaccepteerd met het bijbehorende vaste systeem. Gebruik in integraties de expliciete vorm `system|waarde`. Een leeg systeem of een lege waarde wordt behandeld als een ontbrekend filter. Controleer daarom vóór verzending dat iedere bedoelde filterwaarde gevuld is.
+Voor `subject:identifier` en `source:identifier` wordt een losse waarde zonder systeem ook geaccepteerd met het bijbehorende vaste systeem. Gebruik in integraties de expliciete vorm `system|waarde`. Een leeg systeem of een lege waarde wordt behandeld als een ontbrekend filter. Controleer daarom vóór verzending dat iedere bedoelde filterwaarde gevuld is.
 
-Andere zoekparameters worden afgewezen met HTTP `422`. Er zijn geen filters voor zorgcontext of organisatietype en geen pagineringsparameters; ook `code`, `_count` en `_offset` horen niet bij dit contract.
+Andere zoekparameters, zoals `code`, worden afgewezen met HTTP `422`. Er zijn geen filters voor zorgcontext of organisatietype.
+
+#### Paginering {#paginering}
+
+Zonder `_count` gebruikt de NVI de ingestelde standaardpaginagrootte, standaard `50`. De maximale paginagrootte is standaard `100`. Een hogere `_count` wordt begrensd tot de ingestelde maximale paginagrootte. Ongeldige waarden, zoals `_count=0` of `_offset=-1`, geven HTTP `422`.
+
+Gebruik `_offset=0` voor de eerste pagina en verhoog de offset met de gebruikte paginagrootte voor volgende pagina's. De Bundle bevat in `link` een `self`-link en, waar van toepassing, `next`- en `previous`-links. Volg deze links om verder te bladeren met behoud van de zoekfilters.
+
+Een offset voorbij de laatste pagina geeft een lege `entry`-lijst; `total` blijft het totale aantal gevonden registraties. De voorbeelden hieronder vragen de eerste pagina van maximaal `25` registraties op.
 
 {{% tabs %}}
 
@@ -637,6 +647,8 @@ curl -sS --get \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/fhir+json" \
   --data-urlencode "subject:identifier=http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier|$IDENTIFIER_VALUE" \
+  --data-urlencode "_count=25" \
+  --data-urlencode "_offset=0" \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/fhir/List"
 ```
 
@@ -649,6 +661,8 @@ curl -sS --get \
 $system = 'http://minvws.github.io/generiekefuncties-docs/NamingSystem/nvi-identifier';
 $query = http_build_query([
     'subject:identifier' => $system . '|' . $identifierValue,
+    '_count' => 25,
+    '_offset' => 0,
 ], '', '&', PHP_QUERY_RFC3986);
 
 [$status, $body] = curlRequest($certFile, $keyFile,
@@ -684,7 +698,11 @@ session = requests.Session()
 session.cert = ("client-cert.pem", "client-key.pem")
 resp = session.get(
     "{{% service "url_placeholder" %}}{{% service "base_path" %}}/fhir/List",
-    params={"subject:identifier": f"{system}|{identifier_value}"},
+    params={
+        "subject:identifier": f"{system}|{identifier_value}",
+        "_count": 25,
+        "_offset": 0,
+    },
     headers={
         "Authorization": f"Bearer {token}",
         "Accept": "application/fhir+json",
@@ -701,7 +719,7 @@ for entry in bundle["entry"]:
 
 {{% /tabs %}}
 
-Voor eigen registraties van één bronsysteem gebruik je `nvi:read` en voeg je `source:identifier=urn:ietf:rfc:3986|<bron-id>` toe. Laat `subject:identifier` weg om alle registraties van dat eigen bronsysteem op te vragen.
+Voor eigen registraties van één bronsysteem gebruik je `nvi:read` en voeg je `source:identifier=urn:ietf:rfc:3986|<bron-id>` toe. Laat `subject:identifier` weg om de registraties van dat eigen bronsysteem te doorzoeken. Gebruik paginering om alle resultaten op te halen.
 
 {{% /card %}}
 
@@ -747,7 +765,7 @@ Verwijderen geeft HTTP `200` met een FHIR `OperationOutcome`. Een ontbrekende re
 
 {{< endpoint method="DELETE" path="/fhir/List" >}}
 
-Dezelfde zoekparameters als bij GET zijn toegestaan. De verwijdering blijft altijd beperkt tot de geautoriseerde URA en `source_id`. Met `subject:identifier` verwijder je de registratie voor die persoon binnen de eigen bron. Een expliciet `source:identifier` moet dezelfde bron bevatten als de tokencontext.
+De persoons- en bronfilters `subject:identifier` en `source:identifier` zijn toegestaan. De verwijdering blijft altijd beperkt tot de geautoriseerde URA en `source_id`. Met `subject:identifier` verwijder je de registratie voor die persoon binnen de eigen bron. Een expliciet `source:identifier` moet dezelfde bron bevatten als de tokencontext.
 
 ```bash
 curl -sS -X DELETE --get \
