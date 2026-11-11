@@ -487,7 +487,7 @@ De claims zijn:
 | `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF.                                                                                             |
 | `iss`           | Alleen bij een ondertekend JWT: de uitgever, het basisadres van de PRS (`{{% service "url_placeholder" %}}`).                                                   |
 
-Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE, controleer bij de handtekening en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
+Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE, controleer de handtekening en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
 
 De ontvangstsleutel heeft een eigen `kid`. Het vervangen van die sleutel verandert de versleutelde verpakking, terwijl de berekeningssleutelversie bepaalt welk pseudoniem wordt afgeleid.
 
