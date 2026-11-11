@@ -471,7 +471,7 @@ De PRS gebruikt een compact JWE-token met vijf door punten gescheiden delen. De 
 | `cty`  | `JWT`                                                  |
 | `kid`  | `kid` van de geregistreerde publieke ontvangstsleutel. |
 
-Bij `cty: JWT` is de ontsleutelde inhoud een compact, door de PRS ondertekend JWT (een genest JWT volgens RFC 7519 §5.2). Controleer eerst de handtekening zoals beschreven in [Handtekening van de PRS controleren](#jwt-handtekening); de claims staan in de payload van dat JWT. Bij `cty: application/json` is de ontsleutelde inhoud direct het JSON-object met de claims.
+De ontsleutelde inhoud is een compact, door de PRS ondertekend JWT (een genest JWT volgens RFC 7519 §5.2). Controleer eerst de handtekening zoals beschreven in [Handtekening van de PRS controleren](#jwt-handtekening); de claims staan in de payload van dat JWT.
 
 De claims zijn:
 
