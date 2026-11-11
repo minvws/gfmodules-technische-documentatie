@@ -464,12 +464,12 @@ Een ongeldig pseudoniem of een pseudoniem van een andere organisatie leidt tot `
 
 De PRS gebruikt een compact JWE-token met vijf door punten gescheiden delen. De beschermde header bevat:
 
-| Header | Waarde                                                                                                  |
-| ------ | ------------------------------------------------------------------------------------------------------- |
-| `alg`  | `RSA-OAEP`                                                                                              |
-| `enc`  | `A256GCM`                                                                                               |
-| `cty`  | `JWT` wanneer ondertekening is ingeschakeld; `application/json` wanneer ondertekening is uitgeschakeld. |
-| `kid`  | `kid` van de geregistreerde publieke ontvangstsleutel.                                                  |
+| Header | Waarde                                                 |
+| ------ | ------------------------------------------------------ |
+| `alg`  | `RSA-OAEP`                                             |
+| `enc`  | `A256GCM`                                              |
+| `cty`  | `JWT`                                                  |
+| `kid`  | `kid` van de geregistreerde publieke ontvangstsleutel. |
 
 Bij `cty: JWT` is de ontsleutelde inhoud een compact, door de PRS ondertekend JWT (een genest JWT volgens RFC 7519 §5.2). Controleer eerst de handtekening zoals beschreven in [Handtekening van de PRS controleren](#jwt-handtekening); de claims staan in de payload van dat JWT. Bij `cty: application/json` is de ontsleutelde inhoud direct het JSON-object met de claims.
 
