@@ -138,6 +138,8 @@ Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij g
 
 De PRS verpakt directe pseudoniemen, teruggeleverde persoonsnummers en OPRF-evaluaties in een JWE. De geregistreerde publieke RSA-sleutel van de ontvanger bepaalt wie de uitvoer kan lezen. De ontvanger beheert de bijbehorende private key en bewaart die in de eigen omgeving. Deze decryptiesleutel staat los van de PRS-sleutels waarmee pseudoniemen worden berekend.
 
+Versleuteling bewijst niet dat de PRS de uitvoer heeft gemaakt: iedereen met de publieke sleutel van de ontvanger kan een JWE voor die ontvanger maken. Wanneer ondertekening is ingeschakeld, ondertekent de PRS daarom eerst de claims en versleutelt daarna het ondertekende JWT. De ontvanger controleert de handtekening met de publieke sleutels die de PRS zonder mTLS publiceert. Zie [Handtekening van de PRS controleren](#jwt-handtekening).
+
 #### Gescheiden berekeningen en opslag
 
 Omkeerbare pseudoniemen gebruiken AES-256-CBC met een deterministische IV uit twee HMAC-SHA256-bewerkingen en een integriteitscontrole bij omkering. AES en HMAC gebruiken afzonderlijke sleutels. Niet-omkeerbare pseudoniemen gebruiken HMAC-SHA256 met eigen sleutelmateriaal. De OPRF-berekening gebruikt een afzonderlijk OPRF-secret.
@@ -160,7 +162,7 @@ Een aanvraag doorloopt de volgende onderdelen:
 | HSM | Voert cryptografische operaties uit met het betreffende sleutelmateriaal. |
 | PRS-database | Bewaart organisatieregistraties, verzoek- en ontvangstbevoegdheden, publieke sleutels met domeinen en sleutelversies met geldigheidsperioden. |
 | Auditlogging | Registreert onder meer operatie, handelende organisatie, organisatie namens wie wordt gehandeld, ontvanger en gebruikte sleutelversie. |
-| Ontvanger | Ontsleutelt de JWE, controleert de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit. |
+| Ontvanger | Ontsleutelt de JWE, controleert de handtekening van de PRS en de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit. |
 
 Autorisatie kent twee lagen. De OAuth-scope geeft toegang tot de operatie. Daarnaast moet de organisatie namens wie je handelt het betreffende pseudoniemtype mogen aanvragen, en moet de ontvanger dat pseudoniemtype mogen ontvangen. Voor het terugleveren van een persoonsnummer zijn afzonderlijke bevoegdheden voor het aanvragen en ontvangen van persoonsnummers nodig. De PRS controleert eerst de aanvrager en daarna de ontvanger. Sleutelbeheer is altijd beperkt tot de organisatie namens wie de aanvraag wordt gedaan.
 
@@ -466,10 +468,12 @@ De PRS gebruikt een compact JWE-token met vijf door punten gescheiden delen. De 
 | --- | --- |
 | `alg` | `RSA-OAEP` |
 | `enc` | `A256GCM` |
-| `cty` | `application/json` |
+| `cty` | `JWT` wanneer ondertekening is ingeschakeld; `application/json` wanneer ondertekening is uitgeschakeld. |
 | `kid` | `kid` van de geregistreerde publieke ontvangstsleutel. |
 
-Het ontsleutelde JSON-object bevat de volgende claims:
+Bij `cty: JWT` is de ontsleutelde inhoud een compact, door de PRS ondertekend JWT (een genest JWT volgens RFC 7519 §5.2). Controleer eerst de handtekening zoals beschreven in [Handtekening van de PRS controleren](#jwt-handtekening); de claims staan in de payload van dat JWT. Bij `cty: application/json` is de ontsleutelde inhoud direct het JSON-object met de claims.
+
+De claims zijn:
 
 | Claim | Betekenis |
 | --- | --- |
@@ -481,10 +485,71 @@ Het ontsleutelde JSON-object bevat de volgende claims:
 | `exp` | Vervaltijd, 300 seconden na `iat`. |
 | `keyVersion` | Gebruikte sleutelversie bij het aanvragen van directe pseudoniemen; ontbreekt bij het terugleveren van een persoonsnummer. |
 | `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF. |
+| `iss` | Alleen bij een ondertekend JWT: de uitgever, het basisadres van de PRS (`{{% service "url_placeholder" %}}`). |
 
-Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
+Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE, controleer bij `cty: JWT` de handtekening en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
 
 De ontvangstsleutel heeft een eigen `kid`. Het vervangen van die sleutel verandert de versleutelde verpakking, terwijl de berekeningssleutelversie bepaalt welk pseudoniem wordt afgeleid.
+
+### Handtekening van de PRS controleren {#jwt-handtekening}
+
+Met de handtekening stelt de ontvanger vast dat de uitvoer door de PRS is gemaakt en onderweg niet is gewijzigd. De PRS ondertekent met PS256 (RSA-PSS met SHA-256) en een RSA-sleutel van minimaal 3072 bits. De header van het ondertekende JWT bevat:
+
+| Header | Waarde |
+| --- | --- |
+| `alg` | Altijd `PS256`. |
+| `kid` | RFC 7638-thumbprint van de ondertekeningssleutel; selecteert de sleutel in de JWKS. |
+| `typ` | `JWT` |
+
+Stel eenmalig, buiten het token om, twee waarden in:
+
+- de uitgever: het basisadres van de PRS, `{{% service "url_placeholder" %}}`;
+- de JWKS-URL: `{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json`.
+
+Haal de JWKS-URL nooit uit het token. De `iss`-claim vergelijk je alleen met de ingestelde uitgever.
+
+Accepteer een pseudoniem alleen na de volgende stappen:
+
+1. Ontsleutel de JWE met je eigen private key.
+2. Controleer dat `cty` gelijk is aan `JWT`. Weiger een token met `cty: application/json` in elke omgeving waar ondertekening is ingeschakeld; dat token is niet ondertekend.
+3. Lees de ontsleutelde inhoud als compact JWS en controleer dat `alg` gelijk is aan `PS256`. Weiger elk ander algoritme, in het bijzonder `none`.
+4. Zoek de `kid` op in de JWKS en controleer de handtekening met die sleutel. Staat de `kid` niet in je gecachete JWKS, haal de JWKS dan opnieuw op (hooguit ongeveer eens per minuut) en probeer het één keer opnieuw; er kan een nieuwe sleutel actief zijn geworden.
+5. Controleer dat `iss` gelijk is aan de ingestelde uitgever, dat `aud` je eigen OIN is als `oin:<oin>` en dat `exp` in de toekomst ligt. Houd rekening met een kleine klokafwijking, bijvoorbeeld een minuut.
+6. Gebruik pas daarna `subject`.
+
+#### JWKS ophalen {#jwks}
+
+`GET {{% service "well_known_url_placeholder" %}}/.well-known/jwks.json` is openbaar. Er is geen OAuth-token en geen clientcertificaat nodig; standaard TLS (minimaal TLS 1.2) is voldoende. Daardoor kunnen ontvangers die geen eigen PKIoverheid-clientcertificaat hebben de handtekening ook controleren. Het domein bedient alleen dit pad.
+
+```bash
+curl "{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json"
+```
+
+De respons is een JSON Web Key Set (RFC 7517) met elke sleutel waarmee de PRS een nog geldig token kan hebben ondertekend, ook sleutels die niet meer actief ondertekenen:
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "8XnMgBBynigdp-ThfbpM_hIyitWL61KhaiZD_W5ib5w",
+      "n": "s0cnsXqt3jVewh9J...",
+      "e": "AQAB",
+      "alg": "PS256",
+      "use": "sig"
+    }
+  ]
+}
+```
+
+| Eigenschap | Waarde |
+| --- | --- |
+| `Content-Type` | `application/json` |
+| `Cache-Control` | `public, max-age=3600`. Cache de JWKS maximaal een uur; bij sleutelrotatie gaat de PRS ervan uit dat ontvangers een nieuwe sleutel binnen dat uur oppikken. |
+| Rate limiting | Per IP-adres. Overschrijding geeft `429 Too Many Requests`; de headers `RateLimit-Remaining` en `RateLimit-Reset` tonen de resterende ruimte. Met cachen volgens `Cache-Control` blijf je ruim binnen de limiet. |
+| `404 Not Found` | Ondertekening is in deze omgeving niet ingeschakeld. |
+
+De JWKS blijft ook beschikbaar op het API-domein, als `{{% service "url_placeholder" %}}{{% service "base_path" %}}/.well-known/jwks.json`, maar daar is mTLS vereist. Gebruik je dat adres al, stap dan over op het well-known-domein: vervang alleen de ingestelde JWKS-URL. De inhoud van de JWKS en de controle van de handtekening veranderen niet.
 
 {{% /card %}}
 
@@ -874,6 +939,9 @@ De volgende endpoints zijn zonder OAuth-token bereikbaar. Gebruik wel mTLS met j
 | `GET /oauth/health` | Health check van de OAuth-service. |
 | `GET /api/health` | Health check van de API: `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt. |
 | `GET /api/version.json` | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
+| `GET /api/.well-known/jwks.json` | Publieke sleutels om de handtekening van de PRS te controleren. `404` als ondertekening niet is ingeschakeld. |
+
+De JWKS is ook zonder mTLS bereikbaar op `{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json`; zie [JWKS ophalen](#jwks).
 
 De API-healthcheck controleert de database en is geen volledige test van alle cryptografische afhankelijkheden. `GET /api/` toont een tekstbanner met versie- en commitinformatie wanneer beschikbaar. De gateway kan voor dit pad authenticatie vereisen.
 
