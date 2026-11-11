@@ -503,7 +503,7 @@ Met de handtekening stelt de ontvanger vast dat de uitvoer door de PRS is gemaak
 
 Stel eenmalig, buiten het token om, twee waarden in:
 
-- de uitgever: het basisadres van de PRS, `{{% service "url_placeholder" %}}`;
+- de uitgever: het basisadres van de PRS, `{{% service "url_placeholder" %}}{{% service "base_path" %}}`;
 - de JWKS-URL: `{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json`.
 
 Haal de JWKS-URL nooit uit het token. De `iss`-claim vergelijk je alleen met de ingestelde uitgever.
