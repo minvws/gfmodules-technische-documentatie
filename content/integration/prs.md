@@ -138,7 +138,7 @@ Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij g
 
 De PRS verpakt directe pseudoniemen, teruggeleverde persoonsnummers en OPRF-evaluaties in een JWE. De geregistreerde publieke RSA-sleutel van de ontvanger bepaalt wie de uitvoer kan lezen. De ontvanger beheert de bijbehorende private key en bewaart die in de eigen omgeving. Deze decryptiesleutel staat los van de PRS-sleutels waarmee pseudoniemen worden berekend.
 
-Versleuteling bewijst niet dat de PRS de uitvoer heeft gemaakt: iedereen met de publieke sleutel van de ontvanger kan een JWE voor die ontvanger maken. Wanneer ondertekening is ingeschakeld, ondertekent de PRS daarom eerst de claims en versleutelt daarna het ondertekende JWT. De ontvanger controleert de handtekening met de publieke sleutels die de PRS zonder mTLS publiceert. Zie [Handtekening van de PRS controleren](#jwt-handtekening).
+Versleuteling bewijst niet dat de PRS de uitvoer heeft gemaakt: iedereen met de publieke sleutel van de ontvanger kan een JWE voor die ontvanger maken. De PRS ondertekend eerst de claims en versleutelt daarna het ondertekende JWT. De ontvanger controleert de handtekening met de publieke sleutels die de PRS zonder mTLS publiceert. Zie [Handtekening van de PRS controleren](#jwt-handtekening).
 
 #### Gescheiden berekeningen en opslag
 
@@ -154,15 +154,15 @@ De PRS slaat geen persoonsnummer-pseudoniemkoppelingen op. De database bevat org
 
 Een aanvraag doorloopt de volgende onderdelen:
 
-| Onderdeel | Verantwoordelijkheid |
-| --- | --- |
-| OAuth-service | Authenticeert de geregistreerde client via mTLS en geeft een access token uit voor de gevraagde organisatie, doelservice en bevoegdheden. |
-| Toegangsgateway | Controleert het clientcertificaat en het Bearer-token. |
+| Onderdeel                     | Verantwoordelijkheid                                                                                                                                      |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OAuth-service                 | Authenticeert de geregistreerde client via mTLS en geeft een access token uit voor de gevraagde organisatie, doelservice en bevoegdheden.                 |
+| Toegangsgateway               | Controleert het clientcertificaat en het Bearer-token.                                                                                                    |
 | PRS API en pseudoniemservices | Controleren de audience, scope, organisatiebevoegdheden en ontvangstsleutel; valideren directe persoonsnummers en voeren de gekozen pseudonimisering uit. |
-| HSM | Voert cryptografische operaties uit met het betreffende sleutelmateriaal. |
-| PRS-database | Bewaart organisatieregistraties, verzoek- en ontvangstbevoegdheden, publieke sleutels met domeinen en sleutelversies met geldigheidsperioden. |
-| Auditlogging | Registreert onder meer operatie, handelende organisatie, organisatie namens wie wordt gehandeld, ontvanger en gebruikte sleutelversie. |
-| Ontvanger | Ontsleutelt de JWE, controleert de handtekening van de PRS en de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit. |
+| HSM                           | Voert cryptografische operaties uit met het betreffende sleutelmateriaal.                                                                                 |
+| PRS-database                  | Bewaart organisatieregistraties, verzoek- en ontvangstbevoegdheden, publieke sleutels met domeinen en sleutelversies met geldigheidsperioden.             |
+| Auditlogging                  | Registreert onder meer operatie, handelende organisatie, organisatie namens wie wordt gehandeld, ontvanger en gebruikte sleutelversie.                    |
+| Ontvanger                     | Ontsleutelt de JWE, controleert de handtekening van de PRS en de claims en gebruikt het pseudoniem. Bij OPRF voert de ontvanger ook het unblinden uit.    |
 
 Autorisatie kent twee lagen. De OAuth-scope geeft toegang tot de operatie. Daarnaast moet de organisatie namens wie je handelt het betreffende pseudoniemtype mogen aanvragen, en moet de ontvanger dat pseudoniemtype mogen ontvangen. Voor het terugleveren van een persoonsnummer zijn afzonderlijke bevoegdheden voor het aanvragen en ontvangen van persoonsnummers nodig. De PRS controleert eerst de aanvrager en daarna de ontvanger. Sleutelbeheer is altijd beperkt tot de organisatie namens wie de aanvraag wordt gedaan.
 
@@ -186,12 +186,12 @@ Vraag bij de PRS OAuth-service een access token aan met onderstaande parameters.
 
 <div class="oauth-scopes-wrap" tabindex="0" role="region" aria-label="Scopes voor PRS">
 
-| Scope | Omschrijving |
-| --- | --- |
-| `prs:pseudonym` | Omkeerbare en niet-omkeerbare directe exchanges. |
-| `prs:oprf-pseudonym` | Geblindeerde OPRF-evaluatie. |
+| Scope                | Omschrijving                                                |
+| -------------------- | ----------------------------------------------------------- |
+| `prs:pseudonym`      | Omkeerbare en niet-omkeerbare directe exchanges.            |
+| `prs:oprf-pseudonym` | Geblindeerde OPRF-evaluatie.                                |
 | `prs:administration` | Eigen publieke ontvangstsleutels en sleutelversies beheren. |
-| `prs:saml-pseudonym` | SAML-testkoppeling, indien ingeschakeld. |
+| `prs:saml-pseudonym` | SAML-testkoppeling, indien ingeschakeld.                    |
 
 </div>
 
@@ -301,19 +301,19 @@ Gebruik `Authorization: Bearer <jwt-access-token>` bij beschermde API-aanroepen.
 
 Alle onderstaande paden zijn relatief aan `{{% service "base_path" %}}`. Vul het serveradres inclusief een eventuele versieprefix in als `{{% service "url_placeholder" %}}`. De API-basis-URL in de voorbeelden is `{{% service "url_placeholder" %}}{{% service "base_path" %}}`. Stuur JSON-aanvragen met `Content-Type: application/json`, een Bearer-token met de vereiste scope en het clientcertificaat voor mTLS.
 
-| Methode | Pad | OAuth-scope | Succesrespons |
-| --- | --- | --- | --- |
-| `POST` | `/exchange/reversible-pseudonym` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token. |
-| `POST` | `/exchange/irreversible-pseudonym` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token. |
-| `POST` | `/exchange/personal-id` | `prs:pseudonym` | `201`, `application/jwe`: compact JWE-token met persoonsnummer. |
-| `POST` | `/oprf/eval` | `prs:oprf-pseudonym` | `200`, JSON-object met `jwe`. |
-| `POST` | `/administration/keys` | `prs:administration` | `201`, geregistreerde publieke sleutel. |
-| `GET` | `/administration/keys` | `prs:administration` | `200`, lijst van eigen publieke sleutels. |
-| `PUT` | `/administration/keys/{id}` | `prs:administration` | `200`, bijgewerkte publieke sleutel. |
-| `DELETE` | `/administration/keys/{id}` | `prs:administration` | `200`, `{"message":"key deleted"}`. |
-| `POST` | `/administration/key-versions` | `prs:administration` | `201`, nieuwe sleutelversie. |
-| `GET` | `/administration/key-versions` | `prs:administration` | `200`, lijst van eigen sleutelversies. |
-| `PUT` | `/administration/key-versions/{id}` | `prs:administration` | `200`, bijgewerkte sleutelversie. |
+| Methode  | Pad                                 | OAuth-scope          | Succesrespons                                                   |
+| -------- | ----------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `POST`   | `/exchange/reversible-pseudonym`    | `prs:pseudonym`      | `201`, `application/jwe`: compact JWE-token.                    |
+| `POST`   | `/exchange/irreversible-pseudonym`  | `prs:pseudonym`      | `201`, `application/jwe`: compact JWE-token.                    |
+| `POST`   | `/exchange/personal-id`             | `prs:pseudonym`      | `201`, `application/jwe`: compact JWE-token met persoonsnummer. |
+| `POST`   | `/oprf/eval`                        | `prs:oprf-pseudonym` | `200`, JSON-object met `jwe`.                                   |
+| `POST`   | `/administration/keys`              | `prs:administration` | `201`, geregistreerde publieke sleutel.                         |
+| `GET`    | `/administration/keys`              | `prs:administration` | `200`, lijst van eigen publieke sleutels.                       |
+| `PUT`    | `/administration/keys/{id}`         | `prs:administration` | `200`, bijgewerkte publieke sleutel.                            |
+| `DELETE` | `/administration/keys/{id}`         | `prs:administration` | `200`, `{"message":"key deleted"}`.                             |
+| `POST`   | `/administration/key-versions`      | `prs:administration` | `201`, nieuwe sleutelversie.                                    |
+| `GET`    | `/administration/key-versions`      | `prs:administration` | `200`, lijst van eigen sleutelversies.                          |
+| `PUT`    | `/administration/key-versions/{id}` | `prs:administration` | `200`, bijgewerkte sleutelversie.                               |
 
 {{% /card %}}
 
@@ -323,11 +323,11 @@ Alle onderstaande paden zijn relatief aan `{{% service "base_path" %}}`. Vul het
 
 Directe exchanges gebruiken de volgende velden:
 
-| Veld | Type | Betekenis |
-| --- | --- | --- |
-| `personalId` | String of object | `NL:bsn:950000012`, of `{"landCode":"NL","type":"bsn","value":"950000012"}`. |
-| `recipientOrganization` | String | OIN van de ontvanger met prefix `oin:`, bijvoorbeeld `oin:00000099000000001000`. |
-| `recipientScope` | String | Afgesproken domein van de ontvanger; 1–100 tekens, zonder `\|`. |
+| Veld                    | Type             | Betekenis                                                                        |
+| ----------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| `personalId`            | String of object | `NL:bsn:950000012`, of `{"landCode":"NL","type":"bsn","value":"950000012"}`.     |
+| `recipientOrganization` | String           | OIN van de ontvanger met prefix `oin:`, bijvoorbeeld `oin:00000099000000001000`. |
+| `recipientScope`        | String           | Afgesproken domein van de ontvanger; 1–100 tekens, zonder `\|`.                  |
 
 Het OIN telt 20 posities: acht cijfers voor de prefix, een hoofdnummer van acht of negen alfanumerieke tekens en respectievelijk vier of drie afsluitende nullen. Geef een OIN altijd als string door, zodat voorloopnullen behouden blijven.
 
@@ -416,7 +416,7 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
   "iat": 1792620000,
   "exp": 1792620300,
   "keyVersion": 2,
-  "extraVersions": {"1": "<waarde-versie-1>"}
+  "extraVersions": { "1": "<waarde-versie-1>" }
 }
 ```
 
@@ -464,28 +464,28 @@ Een ongeldig pseudoniem of een pseudoniem van een andere organisatie leidt tot `
 
 De PRS gebruikt een compact JWE-token met vijf door punten gescheiden delen. De beschermde header bevat:
 
-| Header | Waarde |
-| --- | --- |
-| `alg` | `RSA-OAEP` |
-| `enc` | `A256GCM` |
-| `cty` | `JWT` wanneer ondertekening is ingeschakeld; `application/json` wanneer ondertekening is uitgeschakeld. |
-| `kid` | `kid` van de geregistreerde publieke ontvangstsleutel. |
+| Header | Waarde                                                                                                  |
+| ------ | ------------------------------------------------------------------------------------------------------- |
+| `alg`  | `RSA-OAEP`                                                                                              |
+| `enc`  | `A256GCM`                                                                                               |
+| `cty`  | `JWT` wanneer ondertekening is ingeschakeld; `application/json` wanneer ondertekening is uitgeschakeld. |
+| `kid`  | `kid` van de geregistreerde publieke ontvangstsleutel.                                                  |
 
 Bij `cty: JWT` is de ontsleutelde inhoud een compact, door de PRS ondertekend JWT (een genest JWT volgens RFC 7519 §5.2). Controleer eerst de handtekening zoals beschreven in [Handtekening van de PRS controleren](#jwt-handtekening); de claims staan in de payload van dat JWT. Bij `cty: application/json` is de ontsleutelde inhoud direct het JSON-object met de claims.
 
 De claims zijn:
 
-| Claim | Betekenis |
-| --- | --- |
-| `subject` | `pseudonym:reversible:<waarde>`, `pseudonym:irreversible:<waarde>`, `pseudonym:eval:<waarde>` of bij het terugleveren van een persoonsnummer `NL:bsn:<waarde>`. |
-| `aud` | Ontvanger als `oin:<oin>`. |
-| `scope` | Het aangevraagde domein (`recipientScope`). |
-| `version` | Payloadformaat `"1.1"`; dit is geen berekeningssleutelversie. |
-| `iat` | Uitgiftetijd als Unix-timestamp in seconden. |
-| `exp` | Vervaltijd, 300 seconden na `iat`. |
-| `keyVersion` | Gebruikte sleutelversie bij het aanvragen van directe pseudoniemen; ontbreekt bij het terugleveren van een persoonsnummer. |
-| `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF. |
-| `iss` | Alleen bij een ondertekend JWT: de uitgever, het basisadres van de PRS (`{{% service "url_placeholder" %}}`). |
+| Claim           | Betekenis                                                                                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `subject`       | `pseudonym:reversible:<waarde>`, `pseudonym:irreversible:<waarde>`, `pseudonym:eval:<waarde>` of bij het terugleveren van een persoonsnummer `NL:bsn:<waarde>`. |
+| `aud`           | Ontvanger als `oin:<oin>`.                                                                                                                                      |
+| `scope`         | Het aangevraagde domein (`recipientScope`).                                                                                                                     |
+| `version`       | Payloadformaat `"1.1"`; dit is geen berekeningssleutelversie.                                                                                                   |
+| `iat`           | Uitgiftetijd als Unix-timestamp in seconden.                                                                                                                    |
+| `exp`           | Vervaltijd, 300 seconden na `iat`.                                                                                                                              |
+| `keyVersion`    | Gebruikte sleutelversie bij het aanvragen van directe pseudoniemen; ontbreekt bij het terugleveren van een persoonsnummer.                                      |
+| `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF.                                                                                             |
+| `iss`           | Alleen bij een ondertekend JWT: de uitgever, het basisadres van de PRS (`{{% service "url_placeholder" %}}`).                                                   |
 
 Kies de eigen private key op basis van `kid`, beperk de toegestane algoritmen tot bovenstaande waarden, ontsleutel de JWE, controleer bij `cty: JWT` de handtekening en controleer `aud`, `scope`, `version`, het verwachte `subject`-type en de tijdclaims. Het succesvol ontsleutelen alleen voert die toepassingscontroles niet uit. De versleuteling beschermt de uitvoer tijdens de overdracht; de vervaltijd hoort bij de JWE en bepaalt niet de levensduur van een daarna opgeslagen pseudoniem.
 
@@ -495,11 +495,11 @@ De ontvangstsleutel heeft een eigen `kid`. Het vervangen van die sleutel verande
 
 Met de handtekening stelt de ontvanger vast dat de uitvoer door de PRS is gemaakt en onderweg niet is gewijzigd. De PRS ondertekent met PS256 (RSA-PSS met SHA-256) en een RSA-sleutel van minimaal 3072 bits. De header van het ondertekende JWT bevat:
 
-| Header | Waarde |
-| --- | --- |
-| `alg` | Altijd `PS256`. |
-| `kid` | RFC 7638-thumbprint van de ondertekeningssleutel; selecteert de sleutel in de JWKS. |
-| `typ` | `JWT` |
+| Header | Waarde                                                                              |
+| ------ | ----------------------------------------------------------------------------------- |
+| `alg`  | Altijd `PS256`.                                                                     |
+| `kid`  | RFC 7638-thumbprint van de ondertekeningssleutel; selecteert de sleutel in de JWKS. |
+| `typ`  | `JWT`                                                                               |
 
 Stel eenmalig, buiten het token om, twee waarden in:
 
@@ -542,12 +542,12 @@ De respons is een JSON Web Key Set (RFC 7517) met elke sleutel waarmee de PRS ee
 }
 ```
 
-| Eigenschap | Waarde |
-| --- | --- |
-| `Content-Type` | `application/json` |
-| `Cache-Control` | `public, max-age=3600`. Cache de JWKS maximaal een uur; bij sleutelrotatie gaat de PRS ervan uit dat ontvangers een nieuwe sleutel binnen dat uur oppikken. |
-| Rate limiting | Per IP-adres. Overschrijding geeft `429 Too Many Requests`; de headers `RateLimit-Remaining` en `RateLimit-Reset` tonen de resterende ruimte. Met cachen volgens `Cache-Control` blijf je ruim binnen de limiet. |
-| `404 Not Found` | Ondertekening is in deze omgeving niet ingeschakeld. |
+| Eigenschap      | Waarde                                                                                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Content-Type`  | `application/json`                                                                                                                                                                                               |
+| `Cache-Control` | `public, max-age=3600`. Cache de JWKS maximaal een uur; bij sleutelrotatie gaat de PRS ervan uit dat ontvangers een nieuwe sleutel binnen dat uur oppikken.                                                      |
+| Rate limiting   | Per IP-adres. Overschrijding geeft `429 Too Many Requests`; de headers `RateLimit-Remaining` en `RateLimit-Reset` tonen de resterende ruimte. Met cachen volgens `Cache-Control` blijf je ruim binnen de limiet. |
+| `404 Not Found` | Ondertekening is in deze omgeving niet ingeschakeld.                                                                                                                                                             |
 
 De JWKS blijft ook beschikbaar op het API-domein, als `{{% service "url_placeholder" %}}{{% service "base_path" %}}/.well-known/jwks.json`, maar daar is mTLS vereist. Gebruik je dat adres al, stap dan over op het well-known-domein: vervang alleen de ingestelde JWKS-URL. De inhoud van de JWKS en de controle van de handtekening veranderen niet.
 
@@ -565,11 +565,11 @@ Bij OPRF (Oblivious Pseudo-Random Function) wordt het persoonsnummer lokaal afge
 
 ### OPRF en de drie partijen {#oprf-uitleg}
 
-| Partij | Beschikt over | Ontvangt via dit protocol niet |
-| --- | --- | --- |
-| Client | Persoonsnummer, afgesproken ontvangercontext en willekeurige blind factor. | Serversleutel en ontsleutelde evaluatie. |
-| PRS | Geblindeerde invoer, eigen OPRF-secret en publieke sleutel van de ontvanger. | Persoonsnummer en blind factor. |
-| Ontvanger | Eigen private key, evaluatie en doorgegeven blind factor. | Persoonsnummer en OPRF-secret. |
+| Partij    | Beschikt over                                                                | Ontvangt via dit protocol niet           |
+| --------- | ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Client    | Persoonsnummer, afgesproken ontvangercontext en willekeurige blind factor.   | Serversleutel en ontsleutelde evaluatie. |
+| PRS       | Geblindeerde invoer, eigen OPRF-secret en publieke sleutel van de ontvanger. | Persoonsnummer en blind factor.          |
+| Ontvanger | Eigen private key, evaluatie en doorgegeven blind factor.                    | Persoonsnummer en OPRF-secret.           |
 
 Blinding verbergt de oorspronkelijke invoer voor de PRS. De JWE voorkomt dat de client, die de blind factor kent, het evaluatieresultaat zelf kan unblinden. De rolverdeling veronderstelt dat de client niet over de private key van de ontvanger beschikt.
 
@@ -636,11 +636,11 @@ Genereer bij iedere aanvraag een nieuwe blind factor. Stuur alleen de geblindeer
 
 Vereiste OAuth-scope: `prs:oprf-pseudonym`. De aanvragende organisatie moet geblindeerde pseudoniemen mogen aanvragen en de ontvanger moet geblindeerde pseudoniemen mogen ontvangen.
 
-| Veld | Type | Betekenis |
-| --- | --- | --- |
-| `encryptedPersonalId` | String | Base64url van het geblindeerde, niet-neutrale Ristretto255-element van 32 bytes. Padding `=` mag aanwezig zijn. |
-| `recipientOrganization` | String | OIN met `oin:`-prefix. |
-| `recipientScope` | String | Domein voor de ontvangstsleutel; minimaal twee tekens. |
+| Veld                    | Type   | Betekenis                                                                                                       |
+| ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------- |
+| `encryptedPersonalId`   | String | Base64url van het geblindeerde, niet-neutrale Ristretto255-element van 32 bytes. Padding `=` mag aanwezig zijn. |
+| `recipientOrganization` | String | OIN met `oin:`-prefix.                                                                                          |
+| `recipientScope`        | String | Domein voor de ontvangstsleutel; minimaal twee tekens.                                                          |
 
 Ondanks de veldnaam bevat `encryptedPersonalId` een geblindeerde waarde. Lever hier geen plaintext BSN, direct pseudoniem of JWE aan.
 
@@ -668,7 +668,7 @@ jwe_token = response.json()["jwe"]
 De respons is `200 OK` met `Content-Type: application/json`:
 
 ```json
-{"jwe":"<compact-jwe-token>"}
+{ "jwe": "<compact-jwe-token>" }
 ```
 
 Na ontsleuteling bevat het veld `subject` de hoogste actieve evaluatie als `pseudonym:eval:<base64url-evaluatie>`. Het veld `extraVersions` bevat oudere actieve evaluaties met hun versienummer als sleutel, bijvoorbeeld `{"1":"<base64url-evaluatie>"}`. Als er geen oudere actieve versie is, bevat `extraVersions` een leeg object. Iedere evaluatie moet met dezelfde blind factor afzonderlijk worden geünblind.
@@ -774,14 +774,14 @@ Zorg dat de ontvangende organisatie is geregistreerd en de benodigde ontvangstbe
 
 Maak een RSA-sleutelpaar van minimaal 3072 bits. Bewaar de private key bij de ontvanger. Lever de publieke sleutel als JWK aan in de header van een met dezelfde private key ondertekende JWS. Daarmee bewijs je dat je de bijbehorende private key bezit.
 
-| Veld of onderdeel | Vereiste |
-| --- | --- |
-| Requestveld `domains` | Lijst domeinen waarvoor de sleutel wordt gebruikt. De waarde `*` is een wildcard. |
-| Requestveld `jws` | Geserialiseerde, zelf ondertekende JWS; minimaal 32 tekens. |
-| JWS-header `jwk` | Publieke RSA-JWK, minimaal 3072 bits, inclusief `kid`; geen private sleutelcomponenten. |
-| JWS-payload `oin` | Kaal OIN, zonder `oin:`-prefix, gelijk aan de organisatie namens wie je handelt. |
-| JWS-payload `iat` | Actuele Unix-timestamp; registraties ouder dan één uur worden afgewezen. |
-| JWS-handtekening | Geldige handtekening onder de meegeleverde publieke sleutel. Het voorbeeld gebruikt `RS256`. |
+| Veld of onderdeel     | Vereiste                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| Requestveld `domains` | Lijst domeinen waarvoor de sleutel wordt gebruikt. De waarde `*` is een wildcard.            |
+| Requestveld `jws`     | Geserialiseerde, zelf ondertekende JWS; minimaal 32 tekens.                                  |
+| JWS-header `jwk`      | Publieke RSA-JWK, minimaal 3072 bits, inclusief `kid`; geen private sleutelcomponenten.      |
+| JWS-payload `oin`     | Kaal OIN, zonder `oin:`-prefix, gelijk aan de organisatie namens wie je handelt.             |
+| JWS-payload `iat`     | Actuele Unix-timestamp; registraties ouder dan één uur worden afgewezen.                     |
+| JWS-handtekening      | Geldige handtekening onder de meegeleverde publieke sleutel. Het voorbeeld gebruikt `RS256`. |
 
 Genereer voor een bestaande sleutel met `jwcrypto` de registratieaanvraag. Zorg dat `receiver-private-key.pem` een RSA-private key met de vereiste sleutelgrootte bevat:
 
@@ -829,7 +829,12 @@ De respons is `201 Created` met een JSON-object van deze vorm:
 {
   "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "domains": ["zorgportaal"],
-  "jwk": {"kty":"RSA","kid":"<sleutelidentificatie>","n":"<modulus>","e":"AQAB"}
+  "jwk": {
+    "kty": "RSA",
+    "kid": "<sleutelidentificatie>",
+    "n": "<modulus>",
+    "e": "AQAB"
+  }
 }
 ```
 
@@ -837,11 +842,11 @@ Geef bij een aanvraag het afgesproken domein op als `recipientScope`. De PRS zoe
 
 #### Opvragen, vervangen en verwijderen
 
-| Operatie | Aanvraag | Respons |
-| --- | --- | --- |
-| `GET /administration/keys` | Geen body. | `200`, array van objecten met `id`, `domains` en `jwk`. |
-| `PUT /administration/keys/{id}` | UUID van de eigen sleutel; body met `domains` en een nieuwe `jws` volgens hetzelfde contract als registratie. | `200`, bijgewerkt object met `id`, `domains` en `jwk`. |
-| `DELETE /administration/keys/{id}` | UUID van de eigen sleutel; geen body. | `200`, `{"message":"key deleted"}`. |
+| Operatie                           | Aanvraag                                                                                                      | Respons                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `GET /administration/keys`         | Geen body.                                                                                                    | `200`, array van objecten met `id`, `domains` en `jwk`. |
+| `PUT /administration/keys/{id}`    | UUID van de eigen sleutel; body met `domains` en een nieuwe `jws` volgens hetzelfde contract als registratie. | `200`, bijgewerkt object met `id`, `domains` en `jwk`.  |
+| `DELETE /administration/keys/{id}` | UUID van de eigen sleutel; geen body.                                                                         | `200`, `{"message":"key deleted"}`.                     |
 
 Vervangen wijzigt zowel de domeinenlijst als de sleutel. Maak een nieuw bewijs met een actuele `iat`. Een onbekend ID of een sleutel van een andere organisatie geeft `404`. Een organisatie die niet geregistreerd is geeft `403`. Een ongeldig registratiebewijs geeft `422`.
 
@@ -857,11 +862,11 @@ Berekeningssleutelversies bepalen de pseudoniemuitkomst en worden per organisati
 
 Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `until_dt` leeg is of in de toekomst ligt. Directe exchanges en OPRF gebruiken deze actieve versies.
 
-| Methode en pad | Request | Respons |
-| --- | --- | --- |
-| `GET /administration/key-versions` | Geen body. | `200`, array met alle eigen versies, ook verlopen en verwijderde. |
-| `POST /administration/key-versions` | Optionele body met `from_dt` en `until_dt`. | `201`, nieuwe versie met het hoogste bestaande versienummer plus één. |
-| `PUT /administration/key-versions/{id}` | `{"until_dt":"<RFC3339-tijdstip>"}` of `{"until_dt":null}`. | `200`, bijgewerkte versie. |
+| Methode en pad                          | Request                                                     | Respons                                                               |
+| --------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| `GET /administration/key-versions`      | Geen body.                                                  | `200`, array met alle eigen versies, ook verlopen en verwijderde.     |
+| `POST /administration/key-versions`     | Optionele body met `from_dt` en `until_dt`.                 | `201`, nieuwe versie met het hoogste bestaande versienummer plus één. |
+| `PUT /administration/key-versions/{id}` | `{"until_dt":"<RFC3339-tijdstip>"}` of `{"until_dt":null}`. | `200`, bijgewerkte versie.                                            |
 
 Een versieobject bevat `id` (UUID), `organization_id` (interne organisatie-UUID), `version` (integer), `from_dt`, `until_dt` en `removed_at`. Tijdstippen bevatten een tijdzone, bijvoorbeeld `2026-11-01T00:00:00Z`. `until_dt` en `removed_at` kunnen `null` zijn.
 
@@ -895,33 +900,35 @@ Deze route accepteert een JSON-body en stuurt die door naar de interne SAML-dien
 Fouten uit de PRS API gebruiken `Content-Type: application/json`. Een functionele fout bevat een `detail`-string, bijvoorbeeld:
 
 ```json
-{"detail":"Invalid personal ID"}
+{ "detail": "Invalid personal ID" }
 ```
 
 Bij ongeldige requestvelden is de status `422` en bevat `detail` een lijst van validatiefouten met `type`, `loc` en `msg`:
 
 ```json
 {
-  "detail": [{
-    "type": "missing",
-    "loc": ["body", "recipientScope"],
-    "msg": "Field required"
-  }]
+  "detail": [
+    {
+      "type": "missing",
+      "loc": ["body", "recipientScope"],
+      "msg": "Field required"
+    }
+  ]
 }
 ```
 
-| Status | Betekenis en vervolgactie |
-| --- | --- |
-| `400` | Ongeldig persoonsnummer, ongeldig omkeerbaar pseudoniem of ongeldige OPRF-groepsinvoer. Corrigeer de invoer. |
-| `403` | Ontbrekende of ongeldige autorisatiecontext, verkeerde audience, ontbrekende scope, onbekende aanvragende organisatie of de aanvrager heeft niet de vereiste bevoegdheid. Controleer registratie en token. |
-| `404` | Ontvanger onbekend of niet bevoegd, ontvangstsleutel voor het domein ontbreekt, geen actieve berekeningssleutelversie, of gevraagd beheerobject bestaat niet voor de eigen organisatie. Controleer de ontvangerinrichting. |
-| `409` | Domein al gekoppeld aan een andere sleutel, geen initiële sleutelversie om te roteren, of wijziging van een al verwijderde versie. Controleer de bestaande inrichting. |
-| `410` | Sleutelversie van een aangeleverd omkeerbaar pseudoniem is niet meer beschikbaar. Opnieuw aanbieden van hetzelfde pseudoniem herstelt die versie niet. |
-| `422` | Ongeldig requestmodel, OIN, tijdstip of sleutelregistratiebewijs. Controleer de velden en foutlocaties. |
-| `500` | Interne fout of mislukte directe pseudoniemberekening. |
-| `502` | OPRF-evaluatie geweigerd door de cryptodienst, of fout in de SAML-testkoppeling. |
-| `503` | Cryptodienst onbereikbaar bij een exchange; of databasecontrole ongezond bij `/health`. |
-| `504` | Time-out bij OPRF-evaluatie. |
+| Status | Betekenis en vervolgactie                                                                                                                                                                                                  |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `400`  | Ongeldig persoonsnummer, ongeldig omkeerbaar pseudoniem of ongeldige OPRF-groepsinvoer. Corrigeer de invoer.                                                                                                               |
+| `403`  | Ontbrekende of ongeldige autorisatiecontext, verkeerde audience, ontbrekende scope, onbekende aanvragende organisatie of de aanvrager heeft niet de vereiste bevoegdheid. Controleer registratie en token.                 |
+| `404`  | Ontvanger onbekend of niet bevoegd, ontvangstsleutel voor het domein ontbreekt, geen actieve berekeningssleutelversie, of gevraagd beheerobject bestaat niet voor de eigen organisatie. Controleer de ontvangerinrichting. |
+| `409`  | Domein al gekoppeld aan een andere sleutel, geen initiële sleutelversie om te roteren, of wijziging van een al verwijderde versie. Controleer de bestaande inrichting.                                                     |
+| `410`  | Sleutelversie van een aangeleverd omkeerbaar pseudoniem is niet meer beschikbaar. Opnieuw aanbieden van hetzelfde pseudoniem herstelt die versie niet.                                                                     |
+| `422`  | Ongeldig requestmodel, OIN, tijdstip of sleutelregistratiebewijs. Controleer de velden en foutlocaties.                                                                                                                    |
+| `500`  | Interne fout of mislukte directe pseudoniemberekening.                                                                                                                                                                     |
+| `502`  | OPRF-evaluatie geweigerd door de cryptodienst, of fout in de SAML-testkoppeling.                                                                                                                                           |
+| `503`  | Cryptodienst onbereikbaar bij een exchange; of databasecontrole ongezond bij `/health`.                                                                                                                                    |
+| `504`  | Time-out bij OPRF-evaluatie.                                                                                                                                                                                               |
 
 De toegangsgateway en OAuth-service kunnen een aanvraag al afwijzen voordat die de PRS bereikt. Het foutformaat van die componenten hoort bij hun eigen koppelvlak. Voorkom bij retries dat dezelfde functionele verwerking bij de ontvanger dubbel wordt uitgevoerd. De pseudoniemuitkomst is binnen dezelfde context stabiel; de JWE en haar tijdclaims worden per aanvraag opnieuw gemaakt.
 
@@ -933,13 +940,13 @@ De toegangsgateway en OAuth-service kunnen een aanvraag al afwijzen voordat die 
 
 De volgende endpoints zijn zonder OAuth-token bereikbaar. Gebruik wel mTLS met je PKIoverheid-clientcertificaat en de bijbehorende private key.
 
-| Methode en pad | Informatie |
-| --- | --- |
-| `GET /oauth/.well-known/oauth-authorization-server` | OAuth-servermetadata. |
-| `GET /oauth/health` | Health check van de OAuth-service. |
-| `GET /api/health` | Health check van de API: `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt. |
-| `GET /api/version.json` | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
-| `GET /api/.well-known/jwks.json` | Publieke sleutels om de handtekening van de PRS te controleren. `404` als ondertekening niet is ingeschakeld. |
+| Methode en pad                                      | Informatie                                                                                                                                         |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /oauth/.well-known/oauth-authorization-server` | OAuth-servermetadata.                                                                                                                              |
+| `GET /oauth/health`                                 | Health check van de OAuth-service.                                                                                                                 |
+| `GET /api/health`                                   | Health check van de API: `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt.       |
+| `GET /api/version.json`                             | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
+| `GET /api/.well-known/jwks.json`                    | Publieke sleutels om de handtekening van de PRS te controleren. `404` als ondertekening niet is ingeschakeld.                                      |
 
 De JWKS is ook zonder mTLS bereikbaar op `{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json`; zie [JWKS ophalen](#jwks).
 
@@ -947,11 +954,11 @@ De API-healthcheck controleert de database en is geen volledige test van alle cr
 
 Als testroutes zijn ingeschakeld, zijn daarnaast de volgende helpers beschikbaar. Zij vereisen een geauthenticeerde aanvraag met een voor de PRS bekende OAuth-scope, zonder aanvullende operatiescope:
 
-| Methode en pad | Request | Succesrespons |
-| --- | --- | --- |
-| `POST /test/oprf/client` | `{"personalId":"<testinvoer>"}`; de waarde is een string en wordt rechtstreeks geblind. | `200` met `blinded_input` en `blind_factor`, beide base64url. |
-| `POST /test/oprf/receiver` | `jwe`, `blind_factor` en `priv_key_pem`. | `200` met diagnostiek, ontsleutelde payload en `final_pseudonym`. |
-| `POST /test/jwe/decode` | `jwe` en `priv_key_pem`. | `200` met JWE-diagnostiek en ontsleutelde payload. |
+| Methode en pad             | Request                                                                                 | Succesrespons                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `POST /test/oprf/client`   | `{"personalId":"<testinvoer>"}`; de waarde is een string en wordt rechtstreeks geblind. | `200` met `blinded_input` en `blind_factor`, beide base64url.     |
+| `POST /test/oprf/receiver` | `jwe`, `blind_factor` en `priv_key_pem`.                                                | `200` met diagnostiek, ontsleutelde payload en `final_pseudonym`. |
+| `POST /test/jwe/decode`    | `jwe` en `priv_key_pem`.                                                                | `200` met JWE-diagnostiek en ontsleutelde payload.                |
 
 De helpers zijn bedoeld voor testgegevens en testsleutels. Gebruik bij de eigenlijke uitwisseling de lokale client- en ontvangerstappen: de helpers versturen testinvoer of private key naar de PRS en veranderen daarmee de gegevensverdeling. Bij decryptiefouten kan de helper diagnostiek met status `200` teruggeven; controleer de inhoud van de respons.
 
