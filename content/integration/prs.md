@@ -945,9 +945,6 @@ De volgende endpoints zijn zonder OAuth-token bereikbaar. Gebruik wel mTLS met j
 | `GET /oauth/health`                                 | Health check van de OAuth-service.                                                                                                                 |
 | `GET /api/health`                                   | Health check van de API: `200` met `{"status":"ok","components":{"database":"ok"}}`, of `503` met `error` wanneer de databasecontrole faalt.       |
 | `GET /api/version.json`                             | Buildinformatie met `features`: een array van ingeschakelde functies, elk met `id`, `title` en `description`. `404` als buildinformatie ontbreekt. |
-| `GET /api/.well-known/jwks.json`                    | Publieke sleutels om de handtekening van de PRS te controleren. `404` als ondertekening niet is ingeschakeld.                                      |
-
-De JWKS is ook zonder mTLS bereikbaar op `{{% service "well_known_url_placeholder" %}}/.well-known/jwks.json`; zie [JWKS ophalen](#jwks).
 
 De API-healthcheck controleert de database en is geen volledige test van alle cryptografische afhankelijkheden. `GET /api/` toont een tekstbanner met versie- en commitinformatie wanneer beschikbaar. De gateway kan voor dit pad authenticatie vereisen.
 
