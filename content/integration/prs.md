@@ -511,7 +511,7 @@ Haal de JWKS-URL nooit uit het token. De `iss`-claim vergelijk je alleen met de 
 Accepteer een pseudoniem alleen na de volgende stappen:
 
 1. Ontsleutel de JWE met je eigen private key.
-2. Controleer dat `cty` gelijk is aan `JWT`. Weiger een token met `cty: application/json` in elke omgeving waar ondertekening is ingeschakeld; dat token is niet ondertekend.
+2. Controleer dat `cty` gelijk is aan `JWT`. Weiger een token met andere waardes.
 3. Lees de ontsleutelde inhoud als compact JWS en controleer dat `alg` gelijk is aan `PS256`. Weiger elk ander algoritme, in het bijzonder `none`.
 4. Zoek de `kid` op in de JWKS en controleer de handtekening met die sleutel. Staat de `kid` niet in je gecachete JWKS, haal de JWKS dan opnieuw op (hooguit ongeveer eens per minuut) en probeer het één keer opnieuw; er kan een nieuwe sleutel actief zijn geworden.
 5. Controleer dat `iss` gelijk is aan de ingestelde uitgever, dat `aud` je eigen OIN is als `oin:<oin>` en dat `exp` in de toekomst ligt. Houd rekening met een kleine klokafwijking, bijvoorbeeld een minuut.
