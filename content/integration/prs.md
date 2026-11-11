@@ -513,7 +513,7 @@ Accepteer een pseudoniem alleen na de volgende stappen:
 1. Ontsleutel de JWE met je eigen private key.
 2. Controleer dat `cty` gelijk is aan `JWT`. Weiger een token met andere waardes.
 3. Lees de ontsleutelde inhoud als compact JWS en controleer dat `alg` gelijk is aan `PS256`. Weiger elk ander algoritme, in het bijzonder `none`.
-4. Zoek de `kid` op in de JWKS en controleer de handtekening met die sleutel. Staat de `kid` niet in je gecachete JWKS, haal de JWKS dan opnieuw op (hooguit ongeveer eens per minuut) en probeer het één keer opnieuw; er kan een nieuwe sleutel actief zijn geworden.
+4. Zoek in de JWKS de sleutel met de opgegeven `kid` en controleer daarmee de handtekening. Je kunt de JWKS cachen op basis van de `max-age`-waarde in de `Cache-Control`-header. Ontbreekt de sleutel in de gecachete JWKS? Haal de JWKS dan opnieuw op en probeer de controle één keer opnieuw: mogelijk is er een nieuwe sleutel actief geworden.
 5. Controleer dat `iss` gelijk is aan de ingestelde uitgever, dat `aud` je eigen OIN is als `oin:<oin>` en dat `exp` in de toekomst ligt. Houd rekening met een kleine klokafwijking, bijvoorbeeld een minuut.
 6. Gebruik pas daarna `subject`.
 
