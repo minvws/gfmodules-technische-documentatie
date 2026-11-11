@@ -547,7 +547,6 @@ De respons is een JSON Web Key Set (RFC 7517) met elke sleutel waarmee de PRS ee
 | `Content-Type`  | `application/json`                                                                                                                                                                                               |
 | `Cache-Control` | `public, max-age=3600`. Cache de JWKS maximaal een uur; bij sleutelrotatie gaat de PRS ervan uit dat ontvangers een nieuwe sleutel binnen dat uur oppikken.                                                      |
 | Rate limiting   | Per IP-adres. Overschrijding geeft `429 Too Many Requests`; de headers `RateLimit-Remaining` en `RateLimit-Reset` tonen de resterende ruimte. Met cachen volgens `Cache-Control` blijf je ruim binnen de limiet. |
-| `404 Not Found` | Ondertekening is in deze omgeving niet ingeschakeld.                                                                                                                                                             |
 
 De JWKS blijft ook beschikbaar op het API-domein, als `{{% service "url_placeholder" %}}{{% service "base_path" %}}/.well-known/jwks.json`, maar daar is mTLS vereist. Gebruik je dat adres al, stap dan over op het well-known-domein: vervang alleen de ingestelde JWKS-URL. De inhoud van de JWKS en de controle van de handtekening veranderen niet.
 
