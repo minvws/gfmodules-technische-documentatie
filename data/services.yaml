@@ -6,6 +6,7 @@
   version: v0.0.38
 
   url_placeholder: "<prs-api-url>"
+  well_known_url_placeholder: "<prs-well-known-url>"
   base_path: "/api"
   base_path_note: "Alle API-paden hieronder staan achter dit basispad."
   description: "Pseudoniemendienst voor OPRF en omkeerbare en niet-omkeerbare pseudoniemen."
