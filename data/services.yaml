@@ -3,7 +3,7 @@
   icon_class: icon-prs
   name: PRS
   fullname: Pseudoniemendienst
-  version: v0.0.38
+  version: v0.0.41
 
   url_placeholder: "<prs-api-url>"
   well_known_url_placeholder: "<prs-well-known-url>"
@@ -134,8 +134,8 @@
   icon: "📑"
   icon_class: icon-nvi
   name: NVI
-  fullname: "Nationale Verwijs Index"
-  version: v0.2.5-rc.0
+  fullname: "Nationale Verwijsindex"
+  version: v0.2.6
 
   url_placeholder: "<nvi-api-url>"
   base_path: "/api"

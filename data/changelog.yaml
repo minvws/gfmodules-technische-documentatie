@@ -1,3 +1,27 @@
+- date: "2026-11-16"
+  filters:
+    - prs
+    - nvi
+  services:
+    - name: PRS
+      version: v0.0.41
+    - name: NVI
+      version: v0.2.6
+  summary: "PRS- en NVI-documentatie bijgewerkt."
+  changes:
+    - tag: Nieuw
+      type: new
+      text: "PRS: endpoint om een persoonsnummer terug te leveren op basis van een omkeerbaar pseudoniem."
+    - tag: Nieuw
+      type: new
+      text: "PRS: sectie over het controleren van de JWT-handtekening van de PRS, met een openbaar JWKS-endpoint."
+    - tag: Gewijzigd
+      type: break
+      text: "PRS: JWE bevat voortaan een door de PRS ondertekend JWT."
+    - tag: Nieuw
+      type: new
+      text: "NVI: paginering voor FHIR-zoekresultaten met `_count` en `_offset`."
+
 - date: "2026-10-22"
   filters:
     - prs

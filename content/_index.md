@@ -38,7 +38,7 @@ Pseudoniemen uitwisselen, OPRF gebruiken, OAuth-toegang regelen en ontvangersleu
 {{% service-card type="quickstart" icon="📱" %}}
 ### NVI bevragen
 
-Instructies voor OAuth en het registreren en lokaliseren van gegevensbeschikbaarheid in de Nationale Verwijs Index.
+Instructies voor OAuth en het registreren en lokaliseren van gegevensbeschikbaarheid in de Nationale Verwijsindex.
 
 [NVI-documentatie →](/integration/nvi/)
 {{% /service-card %}}

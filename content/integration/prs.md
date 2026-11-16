@@ -38,7 +38,7 @@ sections:
       - id: oprf-flow
         title: "Uitwisseling in vier stappen"
       - id: bsn-afschermen
-        title: "1. BSN afschermen"
+        title: "1. Persoonsnummer afschermen"
       - id: evaluatie-aanvragen
         title: "2. Evaluatie aanvragen"
       - id: doorsturen-naar-receiver
@@ -60,15 +60,15 @@ heading: "👤 PRS — Pseudoniemendienst"
 service: prs
 ---
 
-De Pseudoniemendienst (PRS) maakt pseudoniemen voor een ontvangende organisatie en een afgesproken gebruikstoepassing. Volg de [aansluitinstructies](/integration/aansluiten/), regel de organisatiebevoegdheden en [registreer de ontvangstsleutel](#receiver-instellen) voordat je pseudoniemen aanvraagt.
+Op deze pagina lees je hoe je de Pseudoniemendienst gebruikt om persoonsnummers om te zetten naar pseudoniemen.
 
 {{% card %}}
 
 ### Wat de PRS doet {#wat-de-prs-doet}
 
-Met de PRS kunnen organisaties over een persoon communiceren zonder onderling het BSN uit te wisselen. Een pseudoniem is afgeleid van een persoonsnummer en hoort bij een specifieke ontvanger, toepassing en sleutelversie. Het is daarmee geschikt voor herkenning binnen die context.
+Met de PRS kunnen organisaties over een persoon communiceren zonder onderling het persoonsnummer uit te wisselen. Een pseudoniem is afgeleid van een persoonsnummer en hoort bij een specifieke ontvanger, toepassing en sleutelversie. Voor dezelfde ontvangende organisatie, toepassing en sleutelversie levert hetzelfde persoonsnummer steeds hetzelfde pseudoniem op. Zo kan de ontvanger gegevens over dezelfde persoon met elkaar in verband brengen.
 
-De PRS ondersteunt het BSN als persoonsnummertype. Bij directe pseudonimisering verwerkt de PRS het persoonsnummer tijdelijk in leesbare vorm. Bij een geblindeerde OPRF-uitwisseling blijft het persoonsnummer ook voor de PRS afgeschermd.
+Bij directe pseudonimisering verwerkt de PRS het persoonsnummer tijdelijk in leesbare vorm. Bij een geblindeerde OPRF-uitwisseling blijft het persoonsnummer ook voor de PRS afgeschermd.
 
 {{% /card %}}
 
@@ -120,8 +120,6 @@ Een afzonderlijk inschakelbare testkoppeling stuurt JSON door naar een interne S
 
 {{% /columns %}}
 
-De beschikbaarheid van de directe exchanges en de testkoppeling verschilt per omgeving. De [versie-informatie](#service-informatie) vermeldt welke functies zijn ingeschakeld.
-
 {{% /card %}}
 
 {{% card %}}
@@ -132,7 +130,7 @@ De beschikbaarheid van de directe exchanges en de testkoppeling verschilt per om
 
 Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de migratie van opgeslagen verwijzingen.
 
-Het domein wordt in aanvragen meegegeven als `recipientScope`. Dit is een vrij gekozen identificatie van de gebruikstoepassing. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
+Een domein is een zelfgekozen naam voor de toepassing waarvoor je het pseudoniem gebruikt. Het domein wordt in aanvragen meegegeven als `recipientScope`. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
 
 #### Versleuteling voor de ontvanger
 
@@ -331,7 +329,7 @@ Directe exchanges gebruiken de volgende velden:
 
 Het OIN telt 20 posities: acht cijfers voor de prefix, een hoofdnummer van acht of negen alfanumerieke tekens en respectievelijk vier of drie afsluitende nullen. Geef een OIN altijd als string door, zodat voorloopnullen behouden blijven.
 
-Het persoonsnummertype is `bsn`. De PRS normaliseert de landcode naar hoofdletters, het type naar kleine letters en verwijdert witruimte rondom het nummer. Het BSN moet negen cijfers bevatten en aan de elfproef voldoen. Gebruik het nummer als string om voorloopnullen te behouden. De voorbeelden gebruiken een testwaarde.
+Het persoonsnummertype is `bsn`. De PRS normaliseert de landcode naar hoofdletters, het type naar kleine letters en verwijdert witruimte rondom het nummer. Voor dit type moet het persoonsnummer negen cijfers bevatten en aan de elfproef voldoen. Gebruik het nummer als string om voorloopnullen te behouden. De voorbeelden gebruiken een testwaarde.
 
 De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype mogen ontvangen en een publieke sleutel hebben voor het domein. Voor directe pseudonimisering is ook een actieve berekeningssleutelversie nodig. De aanvragende organisatie moet het betreffende type mogen aanvragen.
 
@@ -570,7 +568,7 @@ Bij OPRF (Oblivious Pseudo-Random Function) wordt het persoonsnummer lokaal afge
 
 Blinding verbergt de oorspronkelijke invoer voor de PRS. De JWE voorkomt dat de client, die de blind factor kent, het evaluatieresultaat zelf kan unblinden. De rolverdeling veronderstelt dat de client niet over de private key van de ontvanger beschikt.
 
-De OPRF-evaluatie controleert of de geblindeerde invoer een geldig Ristretto255-groepselement is. De PRS kan achter de blinding niet controleren of de client werkelijk een BSN heeft gebruikt of de afgesproken ontvangercontext correct heeft verwerkt. Daarom moeten de aangesloten clients dezelfde invoerafspraken volgen.
+De OPRF-evaluatie controleert of de geblindeerde invoer een geldig Ristretto255-groepselement is. De PRS kan achter de blinding niet controleren of de client werkelijk een persoonsnummer heeft gebruikt of de afgesproken ontvangercontext correct heeft verwerkt. Daarom moeten de aangesloten clients dezelfde invoerafspraken volgen.
 
 {{% /card %}}
 
@@ -584,7 +582,7 @@ De OPRF-evaluatie controleert of de geblindeerde invoer een geldig Ristretto255-
 
 {{% card %}}
 
-### Stap 1 — BSN afschermen {#bsn-afschermen}
+### Stap 1 — Persoonsnummer afschermen {#bsn-afschermen}
 
 Het onderstaande Python-voorbeeld gebruikt `requests`, `cryptography` en `pyoprf`. Voor `pyoprf` moet ook de native bibliotheek `liboprf` op het systeem beschikbaar zijn. Spreek één serialisatie af voor alle clients: een andere hoofdletter, andere veldvolgorde of witruimte in de gehashte invoer kan een ander pseudoniem opleveren. Het voorbeeld gebruikt exact `{"landCode":"NL","type":"bsn","value":"950000012"}` als UTF-8-invoer voor HKDF.
 
@@ -639,7 +637,7 @@ Vereiste OAuth-scope: `prs:oprf-pseudonym`. De aanvragende organisatie moet gebl
 | `recipientOrganization` | String | OIN met `oin:`-prefix.                                                                                          |
 | `recipientScope`        | String | Domein voor de ontvangstsleutel; minimaal twee tekens.                                                          |
 
-Ondanks de veldnaam bevat `encryptedPersonalId` een geblindeerde waarde. Lever hier geen plaintext BSN, direct pseudoniem of JWE aan.
+Ondanks de veldnaam bevat `encryptedPersonalId` een geblindeerde waarde. Lever hier geen onversleuteld persoonsnummer, direct pseudoniem of JWE aan.
 
 Dit voorbeeld sluit aan op stap 1. Vul het PRS-serveradres en token in:
 
