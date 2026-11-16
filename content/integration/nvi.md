@@ -40,11 +40,11 @@ sections:
     title: "Foutafhandeling"
   - id: service-informatie
     title: "Service-informatie"
-heading: "📑 NVI — Nationale Verwijs Index"
+heading: "📑 NVI — Nationale Verwijsindex"
 service: nvi
 ---
 
-Op deze pagina lees je hoe je met de Nationale Verwijs Index registreert en opzoekt waar gegevens over een persoon beschikbaar zijn.
+Op deze pagina lees je hoe je met de Nationale Verwijsindex registreert en opzoekt waar gegevens over een persoon beschikbaar zijn.
 
 {{% card %}}
 

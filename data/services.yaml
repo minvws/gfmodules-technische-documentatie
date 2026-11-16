@@ -133,7 +133,7 @@
   icon: "📑"
   icon_class: icon-nvi
   name: NVI
-  fullname: "Nationale Verwijs Index"
+  fullname: "Nationale Verwijsindex"
   version: v0.2.6
 
   url_placeholder: "<nvi-api-url>"

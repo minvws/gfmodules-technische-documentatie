@@ -57,7 +57,7 @@ De PRS levert omkeerbare en niet-omkeerbare pseudoniemen en geblindeerde OPRF-ui
 {{% service-card icon="📑" icon-class="icon-nvi" %}}
 ### NVI
 
-*Nationale Verwijs Index*
+*Nationale Verwijsindex*
 
 De NVI registreert en lokaliseert gegevensbeschikbaarheid bij zorgaanbieders.
 

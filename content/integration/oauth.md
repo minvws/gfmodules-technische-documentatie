@@ -32,7 +32,7 @@ De PRS-documentatie bevat instructies voor het ophalen van een OAuth-token voor 
 {{% service-card icon="📑" icon-class="icon-nvi" %}}
 ### NVI
 
-*Nationale Verwijs Index*
+*Nationale Verwijsindex*
 
 De NVI-documentatie bevat instructies voor het ophalen van een OAuth-token en het uitvoeren van NVI-operaties.
 
