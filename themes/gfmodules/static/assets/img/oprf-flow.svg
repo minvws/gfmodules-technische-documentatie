@@ -179,7 +179,7 @@
             <rect x="-112.5" y="75" fill="#EDF2AE" stroke="#666" width="375" height="77" class="note"></rect>
             <text x="75" y="80" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">
-                <tspan x="75">1. BSN afschermen</tspan>
+                <tspan x="75">1. Persoonsnummer afschermen</tspan>
             </text>
             <text x="75" y="99" text-anchor="middle" dominant-baseline="middle" alignment-baseline="middle"
                   style="font-size: 16px; font-weight: 400;" class="noteText" dy="1em">

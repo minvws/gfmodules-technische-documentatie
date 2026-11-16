@@ -3,7 +3,7 @@ sequenceDiagram
     participant P as PRS
     participant R as Ontvanger
 
-    Note over C: 1. BSN afschermen<br/>PersonalId JSON · HKDF(org|scope|v1)<br/>pyoprf.blind() → blind_factor + blinded_input
+    Note over C: 1. Persoonsnummer afschermen<br/>PersonalId JSON · HKDF(org|scope|v1)<br/>pyoprf.blind() → blind_factor + blinded_input
 
     C->>P: POST /oprf/eval<br/>{encryptedPersonalId, recipientOrganization…}
 

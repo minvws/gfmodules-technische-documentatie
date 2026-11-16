@@ -86,7 +86,7 @@ Bij registratie en zoeken wordt geen afzonderlijke zorgcontext of organisatietyp
 
 #### Invoer lokaal blinderen
 
-De client blindeert het BSN lokaal met een willekeurige blind factor. De PRS verwerkt de geblindeerde invoer en retourneert een voor de NVI versleutelde JWE. De client bewaart de bijbehorende blind factor.
+De client blindeert het persoonsnummer lokaal met een willekeurige blind factor. De PRS verwerkt de geblindeerde invoer en retourneert een voor de NVI versleutelde JWE. De client bewaart de bijbehorende blind factor.
 
 {{% /step %}}
 
@@ -116,9 +116,9 @@ De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pse
 
 {{% /steps %}}
 
-{{% notice title="De NVI kent het BSN niet" %}}
+{{% notice title="De NVI kent het persoonsnummer niet" %}}
 
-De NVI ontvangt en verwerkt het BSN niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
+De NVI ontvangt en verwerkt het persoonsnummer niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
 
 {{% /notice %}}
 
