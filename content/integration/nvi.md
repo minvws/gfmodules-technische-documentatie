@@ -44,35 +44,37 @@ heading: "📑 NVI — Nationale Verwijsindex"
 service: nvi
 ---
 
-Op deze pagina lees je hoe je met de Nationale Verwijsindex registreert en opzoekt waar gegevens over een persoon beschikbaar zijn.
+Op deze pagina lees je hoe je met de Nationale Verwijsindex registreert en opzoekt waar gegevens over een patiënt beschikbaar zijn.
 
 {{% card %}}
 
 ### Wat de NVI doet {#wat-de-nvi-doet}
 
-De NVI registreert welke zorgaanbieder gegevens over een persoon beschikbaar heeft en in welk bronsysteem die gegevens staan. Een registratie koppelt een beschermde persoonsidentificatie aan de URA van de zorgaanbieder en de identificatie van het bronsysteem. De NVI bevat geen diagnoses, documenten of andere zorginhoud.
+De NVI registreert de beschikbaarheid van patiëntgegevens per zorgaanbieder en bronsysteem. De NVI bevat geen diagnoses, documenten of andere zorginhoud.
 
 {{% columns %}}
 
 {{% column %}}
 
-#### Bron registreert beschikbaarheid
+#### Datahoudende zorgaanbieder (bron) {#bron-registreert-beschikbaarheid}
 
-Een bron registreert beschikbaarheid namens een zorgaanbieder. Dezelfde combinatie van persoon, URA en bronsysteem levert bij herhaling dezelfde registratie op. De bron kan de registratie verwijderen zodra de beschikbaarheid vervalt.
+De datahoudende zorgaanbieder maakt de beschikbaarheid van patiëntgegevens vindbaar en houdt de eigen registraties actueel. Een client registreert namens de zorgaanbieder en het bronsysteem.
 
 {{% /column %}}
 
 {{% column %}}
 
-#### Raadpleger lokaliseert bronnen
+#### Bevragende zorgaanbieder (raadpleger) {#raadpleger-lokaliseert-bronnen}
 
-Een raadpleger zoekt welke zorgaanbieders en bronsystemen gegevens over een persoon hebben. Het resultaat bevat bronidentificaties. Het ophalen van adressen en zorggegevens vindt buiten de NVI plaats.
+De bevragende zorgaanbieder zoekt via een client waar gegevens over een patiënt beschikbaar zijn. Het resultaat bevat de identificaties van de zorgaanbieder en het bronsysteem. Adressen en zorggegevens worden buiten de NVI opgehaald.
 
 {{% /column %}}
 
 {{% /columns %}}
 
-Bij registratie en zoeken wordt geen afzonderlijke zorgcontext of organisatietype gebruikt. Een resultaat zegt dat er gegevens beschikbaar zijn, zonder aan te geven welke gegevenscategorieën dat zijn.
+Een zorgaanbieder kan beide rollen vervullen. Bij registratie en zoeken wordt geen afzonderlijke zorgcontext of organisatietype gebruikt.
+
+Het resultaat toont waar gegevensbeschikbaarheid is geregistreerd, niet welke gegevens er zijn of hoe actueel die zijn. Lokaliseren geeft geen toegang tot zorggegevens; controles op behandelrelatie, toestemming en bevoegdheden blijven nodig.
 
 {{% /card %}}
 
@@ -118,7 +120,7 @@ De NVI gebruikt de combinatie van de initialisatievector en het versleutelde pse
 
 {{% notice title="De NVI kent het persoonsnummer niet" %}}
 
-De NVI ontvangt en verwerkt het persoonsnummer niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een persoon en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
+De NVI ontvangt en verwerkt het persoonsnummer niet. Gebruik uitsluitend de PRS-uitvoer en de bijbehorende blind factor. Succesvolle antwoorden geven de JWE, blind factor en het PRS-pseudoniem niet terug. De registratie legt wel een verband tussen een patiënt en een zorgaanbieder; behandel ook deze beschikbaarheidsinformatie als gevoelig.
 
 {{% /notice %}}
 
@@ -135,20 +137,29 @@ De NVI biedt twee koppelvlakken om beschikbaarheid te registreren en te zoeken: 
 | Client en PRS | De client blindeert de invoer; de PRS evalueert die invoer en versleutelt het resultaat voor de NVI. |
 | OAuth-service en API-toegang | Authenticatie van de handelende organisatie, tokenuitgifte en overdracht van gevalideerde organisatie-, scope- en brongegevens. |
 | NVI-applicatie | Validatie van requests, controle van scopes, URA en bron, registratie, lokalisatie en logging. |
-| Crypto Service | Ontsleutelen, deblinderen en beschermen van de interne persoonsreferentie, gescheiden van de registratieopslag. |
+| Crypto Service | Ontsleutelen, deblinderen en beschermen van de interne patiëntreferentie, gescheiden van de registratieopslag. |
 | PostgreSQL | Opslag van registraties en verwijzingen naar de gebruikte sleutel. |
 
 #### Registratiemodel
 
-Elke registratie heeft een UUID, een URA, een bronsysteem-identificatie, een interne beschermde persoonsreferentie, een sleutelverwijzing en een aanmaaktijd. De combinatie van URA, persoonsreferentie en bronsysteem is uniek. Een herhaalde registratie behoudt de bestaande UUID en aanmaaktijd.
+Elke registratie heeft een UUID, een URA, een bronsysteem-identificatie, een interne beschermde patiëntreferentie, een sleutelverwijzing en een aanmaaktijd. De combinatie van URA, patiëntreferentie en bronsysteem is uniek. Een herhaalde registratie behoudt de bestaande UUID en aanmaaktijd.
 
 De URA identificeert de zorgaanbieder. `source_id` identificeert een bronsysteem bij die zorgaanbieder en is een ondoorzichtige identificatie, bijvoorbeeld `EHR-SYS-001`. Gebruik overal dezelfde waarde: bij de bronautorisatie, in het OAuth-token en in `List.source.identifier.value`. De FHIR-namespace hiervoor is `urn:ietf:rfc:3986`.
+
+#### Registraties actueel houden
+
+De datahoudende zorgaanbieder is verantwoordelijk voor de juistheid en actualiteit van de eigen registraties:
+
+- Registreer zodra gegevens beschikbaar zijn en aan de voorwaarden voor registratie is voldaan, waaronder toestemming van de patiënt.
+- Verwijder de registratie als gegevens niet meer beschikbaar zijn of toestemming voor registratie wordt ingetrokken. Leg die intrekking ook lokaal vast om onbedoelde herregistratie te voorkomen.
+- Corrigeer een onjuiste registratie door deze te verwijderen en opnieuw te registreren.
+- Vergelijk de eigen registraties periodiek met de lokale situatie: registreer wat ontbreekt en verwijder wat niet meer van toepassing is.
 
 #### Toegang per operatie
 
 Een scope bepaalt welke operatie de client mag uitvoeren. Voor aanmaken en verwijderen is ook een geautoriseerde `source_id` nodig. Een FHIR-aanmaakverzoek moet zowel dezelfde URA als dezelfde bron bevatten als de geauthenticeerde context. Verwijderen wordt altijd beperkt tot die URA en bron.
 
-Bij lezen is het onderscheid tussen lokaliseren en eigen registraties raadplegen van belang. Lokalisatie zoekt voor één persoon over alle zorgaanbieders. Eigen registraties lezen is beperkt tot de URA van de aanroeper; een opgegeven bronfilter moet overeenkomen met diens `source_id`. Zonder bronfilter kunnen leesoperaties meerdere bronsystemen van dezelfde URA teruggeven. De [zoekmatrix](#zoekgedrag) beschrijft dit per verzoek.
+Bij lezen is het onderscheid tussen lokaliseren en eigen registraties raadplegen van belang. Lokalisatie zoekt voor één patiënt over alle zorgaanbieders. Eigen registraties lezen is beperkt tot de URA van de aanroeper; een opgegeven bronfilter moet overeenkomen met diens `source_id`. Zonder bronfilter kunnen leesoperaties meerdere bronsystemen van dezelfde URA teruggeven. De [zoekmatrix](#zoekgedrag) beschrijft dit per verzoek.
 
 #### Logging en beheer
 
@@ -168,7 +179,7 @@ De NVI autoriseert op organisatieniveau. De dienst stelt geen behandelrelatie of
 
 Vraag de voor de NVI bestemde JWE aan via de [PRS-evaluatiestap](/integration/prs/#evaluatie-aanvragen). Gebruik `recipientOrganization=oin:<oin-nvi>` en de voor deze aansluiting geregistreerde `recipientScope`, bijvoorbeeld `nationale-verwijsindex`. Het OIN van de NVI heeft 20 posities en identificeert de ontvanger; dit is een andere identificatie dan de URA waarvoor de client handelt.
 
-Gebruik exact dezelfde ontvanger en scope bij de HKDF-afleiding en bij de PRS-aanvraag. Registreren en lokaliseren moeten binnen hetzelfde PRS-domein plaatsvinden om dezelfde persoon te kunnen matchen. Gebruik de JWE ongewijzigd en houd de bijbehorende blind factor bij elkaar.
+Gebruik exact dezelfde ontvanger en scope bij de HKDF-afleiding en bij de PRS-aanvraag. Registreren en lokaliseren moeten binnen hetzelfde PRS-domein plaatsvinden om dezelfde patiënt te kunnen matchen. Gebruik de JWE ongewijzigd en houd de bijbehorende blind factor bij elkaar.
 
 | Koppelvlak | JWE uit de PRS | Blind factor |
 | --- | --- | --- |
@@ -563,7 +574,7 @@ resp.raise_for_status()
 
 #### Antwoord op registratie
 
-Een nieuwe registratie geeft HTTP `201`; een bestaande combinatie van persoon, URA en bron geeft HTTP `200` met de bestaande registratie. Beide antwoorden hebben `Content-Type: application/fhir+json` en bevatten een `List` zonder `subject`. Sla de UUID uit `id` op voor latere lees- of verwijderacties.
+Een nieuwe registratie geeft HTTP `201`; een bestaande combinatie van patiënt, URA en bron geeft HTTP `200` met de bestaande registratie. Beide antwoorden hebben `Content-Type: application/fhir+json` en bevatten een `List` zonder `subject`. Sla de UUID uit `id` op voor latere lees- of verwijderacties.
 
 ```json
 {
@@ -604,16 +615,18 @@ Een nieuwe registratie geeft HTTP `201`; een bestaande combinatie van persoon, U
 
 Een zoekvraag geeft HTTP `200` met een FHIR `Bundle` van type `searchset`. Elke `entry.resource` is een `List` met dezelfde vorm als het [registratieantwoord](#lokalisatie-registreren). `total` is het totale aantal gevonden registraties over alle pagina's; `entry` bevat alleen de aangevraagde pagina. Geen overeenkomsten geeft `total: 0` en `entry: []`.
 
+Geen overeenkomsten betekent niet dat nergens zorggegevens over de patiënt bestaan; de vindbaarheid hangt af van wat zorgaanbieders hebben geregistreerd. Een technische fout is geen lege zoekuitkomst: de zoekvraag kon dan niet worden uitgevoerd.
+
 #### Zoekgedrag {#zoekgedrag}
 
-De combinatie van persoons- en bronfilters bepaalt zowel de scope als de begrenzing van het resultaat. Een bronfilter toevoegen verandert een algemene lokalisatie in het raadplegen van eigen registraties.
+De combinatie van patiënt- en bronfilters bepaalt zowel de scope als de begrenzing van het resultaat. Een bronfilter toevoegen verandert een algemene lokalisatie in het raadplegen van eigen registraties.
 
-| Persoons- en bronfilters | Vereiste scope | Resultaat |
+| Patiënt- en bronfilters | Vereiste scope | Resultaat |
 | --- | --- | --- |
-| Alleen `subject:identifier` | `nvi:localize` | Alle registraties voor deze persoon, over alle zorgaanbieders en bronsystemen. |
-| `subject:identifier` en `source:identifier` | `nvi:read` | Registraties voor deze persoon binnen de eigen URA en de opgegeven, geautoriseerde bron. |
+| Alleen `subject:identifier` | `nvi:localize` | Alle registraties voor deze patiënt, over alle zorgaanbieders en bronsystemen. |
+| `subject:identifier` en `source:identifier` | `nvi:read` | Registraties voor deze patiënt binnen de eigen URA en de opgegeven, geautoriseerde bron. |
 | Alleen `source:identifier` | `nvi:read` | Alle registraties binnen de eigen URA en de opgegeven, geautoriseerde bron. |
-| Geen persoons- of bronfilter | `nvi:read` | Alle registraties binnen de eigen URA, over de bronsystemen van die URA. |
+| Geen patiënt- of bronfilter | `nvi:read` | Alle registraties binnen de eigen URA, over de bronsystemen van die URA. |
 
 | Parameter | Vorm | Betekenis |
 | --- | --- | --- |
@@ -765,7 +778,7 @@ Verwijderen geeft HTTP `200` met een FHIR `OperationOutcome`. Een ontbrekende re
 
 {{< endpoint method="DELETE" path="/fhir/List" >}}
 
-De persoons- en bronfilters `subject:identifier` en `source:identifier` zijn toegestaan. De verwijdering blijft altijd beperkt tot de geautoriseerde URA en `source_id`. Met `subject:identifier` verwijder je de registratie voor die persoon binnen de eigen bron. Een expliciet `source:identifier` moet dezelfde bron bevatten als de tokencontext.
+De patiënt- en bronfilters `subject:identifier` en `source:identifier` zijn toegestaan. De verwijdering blijft altijd beperkt tot de geautoriseerde URA en `source_id`. Met `subject:identifier` verwijder je de registratie voor die patiënt binnen de eigen bron. Een expliciet `source:identifier` moet dezelfde bron bevatten als de tokencontext.
 
 ```bash
 curl -sS -X DELETE --get \
@@ -777,9 +790,9 @@ curl -sS -X DELETE --get \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/fhir/List"
 ```
 
-{{% notice title="Verwijderen zonder persoonsfilter" type="warn" %}}
+{{% notice title="Verwijderen zonder patiëntfilter" type="warn" %}}
 
-Een DELETE zonder `subject:identifier` verwijdert **alle registraties van de geautoriseerde URA en bron**. Dit geldt ook bij een leeg persoonsfilter. Bouw voor het verwijderen van één persoon altijd een volledige, niet-lege identifier op.
+Een DELETE zonder `subject:identifier` verwijdert **alle registraties van de geautoriseerde URA en bron**. Dit geldt ook bij een leeg patiëntfilter. Bouw voor het verwijderen van één patiënt altijd een volledige, niet-lege identifier op.
 
 {{% /notice %}}
 
@@ -867,9 +880,9 @@ De Core API biedt dezelfde registratie- en lokalisatiefuncties met JSON-berichte
 | Methode en pad | Invoer | Scope | Succesantwoord |
 | --- | --- | --- | --- |
 | `POST /registrations` | JSON met `pseudonym` en `oprf_key` | `nvi:create` en `source_id` | `201` nieuw of `200` bestaand; één registratie. |
-| `GET /registrations` | Verplichte queryparameters `pseudonym` en `oprf_key` | `nvi:read` | `200`; registraties voor de persoon binnen de eigen URA, over diens bronsystemen. |
+| `GET /registrations` | Verplichte queryparameters `pseudonym` en `oprf_key` | `nvi:read` | `200`; registraties voor de patiënt binnen de eigen URA, over diens bronsystemen. |
 | `DELETE /registrations` | Verplichte queryparameters `pseudonym` en `oprf_key` | `nvi:delete` en `source_id` | `204`, zonder body; beperkt tot de eigen URA en bron. |
-| `POST /localize` | JSON met `pseudonym` en `oprf_key` | `nvi:localize` | `200`; JSON-array van registraties voor de persoon over alle zorgaanbieders. |
+| `POST /localize` | JSON met `pseudonym` en `oprf_key` | `nvi:localize` | `200`; JSON-array van registraties voor de patiënt over alle zorgaanbieders. |
 
 URA en bron worden voor aanmaken en verwijderen uit de geauthenticeerde context gehaald. Stuur ze niet als extra bodyvelden. Er is geen `care_context`-parameter.
 
@@ -926,9 +939,9 @@ curl -sS --get \
   "{{% service "url_placeholder" %}}{{% service "base_path" %}}/registrations"
 ```
 
-Het antwoord bevat `registrations`, een array van registratieobjecten, en `total`. Zonder overeenkomsten is dit `{"registrations": [], "total": 0}`. Deze Core-operatie filtert op de eigen URA en de opgegeven persoon; zij past geen bronfilter toe.
+Het antwoord bevat `registrations`, een array van registratieobjecten, en `total`. Zonder overeenkomsten is dit `{"registrations": [], "total": 0}`. Deze Core-operatie filtert op de eigen URA en de opgegeven patiënt; zij past geen bronfilter toe.
 
-Voor verwijderen gebruik je dezelfde queryparameters met `-X DELETE --get` en een token met `nvi:delete`. Het antwoord is HTTP `204` met een lege body, ook als er geen registratie van deze persoon binnen de geautoriseerde URA en bron bestond. Verwijderacties voor alle personen van één bron verlopen via de [FHIR-verwijderoperatie](#lokalisatie-verwijderen).
+Voor verwijderen gebruik je dezelfde queryparameters met `-X DELETE --get` en een token met `nvi:delete`. Het antwoord is HTTP `204` met een lege body, ook als er geen registratie van deze patiënt binnen de geautoriseerde URA en bron bestond. Verwijderacties voor alle patiënten van één bron verlopen via de [FHIR-verwijderoperatie](#lokalisatie-verwijderen).
 
 {{% /card %}}
 

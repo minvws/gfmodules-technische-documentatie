@@ -159,7 +159,7 @@
       - value: "nvi:read"
         description: "Eigen registraties lezen en doorzoeken."
       - value: "nvi:localize"
-        description: "Zorgaanbieders lokaliseren voor een persoon."
+        description: "Zorgaanbieders lokaliseren voor een patiënt."
       - value: "nvi:create"
         description: "Registraties aanmaken voor de geautoriseerde bron."
       - value: "nvi:delete"
