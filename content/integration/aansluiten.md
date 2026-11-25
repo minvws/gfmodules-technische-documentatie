@@ -61,6 +61,12 @@ Hier lees je hoe je toegang tot de proeftuinomgeving van de Generieke Functies a
 2. Download het [aanvraagformulier](/downloads/formulier-aansluiten-proeftuinomgeving-generieke-functies.docx) en vul alle gevraagde gegevens in.
 3. Dien het ingevulde formulier in bij de helpdesk via [helpdeskgf@irealisatie.nl](mailto:helpdeskgf@irealisatie.nl). De helpdesk registreert daarna je organisatie, client en certificaat in de proeftuinomgeving.
 
+{{% notice title="Let op" %}}
+
+Het e-mailadres [helpdeskgf@irealisatie.nl](mailto:helpdeskgf@irealisatie.nl) wordt uitsluitend gebruikt voor aanvragen voor de proeftuinomgeving. Voor het melden van incidenten kun je mailen naar [helpdesk@irealisatie.nl](mailto:helpdesk@irealisatie.nl).
+
+{{% /notice %}}
+
 {{% /card %}}
 
 {{% card %}}
