@@ -4,6 +4,8 @@ type: "page"
 sections:
   - id: aansluitstappen
     title: "Aansluiten in vier stappen"
+  - id: aansluitvoorwaarden
+    title: "Aansluiten op de proeftuinomgeving"
   - id: certificaat
     title: "PKIoverheid-certificaat"
     children:
@@ -25,16 +27,39 @@ aliases:
 heading: "Aansluiten"
 ---
 
-Op deze pagina lees je hoe je je organisatie aansluit op de PRS en de NVI.
+Op deze pagina lees je hoe je je organisatie aansluit op de PRS en de NVI, en hoe je toegang aanvraagt voor de proeftuinomgeving.
 
 {{% card %}}
 
 ### Aansluiten in vier stappen {#aansluitstappen}
 
+Bepaal eerst op welke omgeving je aansluit. Voor de proeftuinomgeving gelden aparte [aansluitvoorwaarden](#aansluitvoorwaarden) en vraag je toegang aan met een aanvraagformulier.
+
 1. [Zorg voor een PKIoverheid-clientcertificaat](#certificaat) met de bijbehorende private key.
 2. [Registreer je organisatie en certificaat](#registratie) bij de beheerder van de dienst.
 3. [Test de mTLS-verbinding](#verbinding-testen) met de serveradressen.
 4. Volg de OAuth-instructies voor [PRS](/integration/prs/#oauth-token) of [NVI](/integration/nvi/#oauth-token) om een token op te halen en de dienst aan te roepen.
+
+{{% /card %}}
+
+{{% card %}}
+
+### Aansluitvoorwaarden proeftuinomgeving {#aansluitvoorwaarden}
+
+Hier lees je hoe je toegang tot de proeftuinomgeving van de Generieke Functies aanvraagt en welke documenten daarvoor nodig zijn.
+
+#### Benodigde documenten
+
+- [Aansluitvoorwaarden Proeftuinomgeving Generieke Functies (PDF)](/downloads/aansluitvoorwaarden-proeftuinomgeving-generieke-functies.pdf)\
+  De voorwaarden voor deelname aan en gebruik van de proeftuinomgeving.
+- [Formulier aansluiten op de proeftuinomgeving Generieke Functies (DOCX)](/downloads/formulier-aansluiten-proeftuinomgeving-generieke-functies.docx)\
+  Het formulier waarmee je een aansluiting op de proeftuinomgeving aanvraagt.
+
+#### Aanvraag indienen
+
+1. Lees de [aansluitvoorwaarden](/downloads/aansluitvoorwaarden-proeftuinomgeving-generieke-functies.pdf) en controleer of je organisatie en de beoogde aansluiting aan de eisen voldoen.
+2. Download het [aanvraagformulier](/downloads/formulier-aansluiten-proeftuinomgeving-generieke-functies.docx) en vul alle gevraagde gegevens in.
+3. Dien het ingevulde formulier in bij de helpdesk via [helpdeskgf@irealisatie.nl](mailto:helpdeskgf@irealisatie.nl). De helpdesk registreert daarna je organisatie, client en certificaat in de proeftuinomgeving.
 
 {{% /card %}}
 
@@ -89,6 +114,8 @@ Sla de private key nooit op in versiebeheer. Gebruik een secrets-manager (Vault,
 ### Organisatie en certificaat registreren {#registratie}
 
 Registreer je organisatie en client vooraf bij de beheerder van de betreffende dienst. De registratie koppelt de client aan de organisatie waarvoor deze handelt, de handelende organisatie uit het clientcertificaat, de toegestane domeinnamen uit de SANs van het clientcertificaat en de toegestane scopes. Je ontvangt een `client_id` in UUID-formaat. Rond deze registratie af voordat je een OAuth-token ophaalt of PRS/NVI aanroept.
+
+Voor de proeftuinomgeving registreert de helpdesk je organisatie, client en certificaat op basis van het [aanvraagformulier](#aansluitvoorwaarden).
 
 Voor de PRS gebruik je het OIN van 20 posities. Voor de NVI gebruik je de URA van de zorgaanbieder. Registreer voor het beheren en lezen van NVI-registraties ook de bronidentifier (`source_id`). De client kan namens een andere organisatie handelen als die bevoegdheid in de registratie is vastgelegd.
 
