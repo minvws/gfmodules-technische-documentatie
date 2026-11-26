@@ -331,7 +331,7 @@ Het OIN telt 20 posities: acht cijfers voor de prefix, een hoofdnummer van acht 
 
 Het persoonsnummertype is `bsn`. De PRS normaliseert de landcode naar hoofdletters, het type naar kleine letters en verwijdert witruimte rondom het nummer. Voor dit type moet het persoonsnummer negen cijfers bevatten en aan de elfproef voldoen. Gebruik het nummer als string om voorloopnullen te behouden. De voorbeelden gebruiken een testwaarde.
 
-De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype mogen ontvangen en een publieke sleutel hebben voor het domein. Voor directe pseudonimisering is ook een actieve berekeningssleutelversie nodig. De aanvragende organisatie moet het betreffende type mogen aanvragen.
+De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype mogen ontvangen en een publieke sleutel hebben voor het domein. Voor directe pseudonimisering en OPRF is ook een actieve berekeningssleutelversie nodig. De aanvragende organisatie moet het betreffende type mogen aanvragen.
 
 {{% /card %}}
 
@@ -891,13 +891,13 @@ Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven startti
 #### Rotatie uitvoeren
 
 1. Vraag de bestaande versies op en maak een nieuwe versie aan. Dit beëindigt de oude versie niet automatisch.
-2. Stel voor de oude versie met `PUT` een eindtijd in. Vanaf de start van de nieuwe versie tot dat moment zijn beide versies actief: de overgangsperiode.
+2. Stel voor de oude versie met `PUT` een eindtijd in. Kies die ruim: vanaf de start van de nieuwe versie tot die eindtijd loopt de overgangsperiode, de enige tijd om te migreren.
 3. [Migreer je opgeslagen pseudoniemen](#sleutelversies-migreren) in de overgangsperiode.
 4. Rond de migratie af voordat de oude versie afloopt. Een afzonderlijk opruimproces verwijdert het verlopen berekeningssleutelmateriaal en registreert `removed_at`.
 
 Een omkeerbaar pseudoniem kan **alleen** worden teruggeleverd zolang zijn sleutelversie actief is. Daarna volgt `410 Gone`, ook als het opruimproces de versie nog niet heeft verwijderd. Er is geen beheerroute om een verwijderde versie te herstellen. Het wijzigen van een versie die al is verwijderd geeft `409`.
 
-#### Voorbeeld: sleutel roteren
+#### Voorbeeld: sleutelversie roteren
 
 Vraag eerst de bestaande versies op:
 
@@ -945,25 +945,25 @@ curl --fail-with-body -sS -X PUT \
 
 #### Opgeslagen pseudoniemen migreren {#sleutelversies-migreren}
 
-Na een rotatie krijgt elke persoon een nieuw pseudoniem. Wat je al hebt opgeslagen, valt nog onder de oude versie. Je kunt het alleen migreren in de overgangsperiode: van het moment dat de nieuwe versie actief is tot de `until_dt` van de oude versie. Die eindtijd stel je zelf in met `PUT`. Zolang ze niet is verstreken, kun je haar verlengen.
+Vanaf het moment dat een nieuwe versie actief is, levert elke nieuwe aanvraag voor een persoon een ander pseudoniem op. De PRS slaat geen pseudoniemen op en maakt ze niet opnieuw aan: wat je al hebt opgeslagen, blijft ongewijzigd en valt onder de oude versie. Migreren kan alleen in de overgangsperiode: van de start van de nieuwe versie tot de `until_dt` van de oude versie. Die eindtijd kies je zelf met `PUT`. Je kunt de eindtijd verlengen zolang die nog niet is verstreken.
 
-Bewaar bij elke waarde de `keyVersion` uit de JWE, zodat je ziet welke waarden nog onder de oude versie vallen. Een pseudoniem dat je ontvangt, valt altijd onder de hoogste actieve versie.
+Bewaar bij elke waarde onder welke versie die valt, zodat je weet wat nog moet worden gemigreerd. `subject` bevat altijd de waarde van de hoogste actieve versie. Bij directe pseudoniemen noemt `keyVersion` die versie. Bij OPRF ontbreekt dat veld: het is de hoogste versie die op dat moment actief is (`GET /administration/key-versions`).
 
-| Soort           | Tijdens de overgangsperiode                                                                                                                                                                                             | Na afloop van de oude versie                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Omkeerbaar      | Bied de waarde als `reversiblePseudonym` aan voor een [nieuw omkeerbaar pseudoniem](#api-omkeerbaar), met je eigen organisatie als ontvanger. Je organisatie moet omkeerbare pseudoniemen mogen aanvragen en ontvangen. | Terugleveren en omzetten geven `410 Gone`.                                                                 |
-| Niet-omkeerbaar | Omzetten kan niet. Bij elke uitwisseling voor een persoon bevat `subject` de nieuwe waarde en `extraVersions` de oude. Zoek je gegevens op met de oude waarde en sla de nieuwe op.                                      | De oude waarde wordt niet meer berekend. Een waarde die je niet hebt gemigreerd, is niet meer te koppelen. |
-| OPRF            | Zoals bij niet-omkeerbaar. Unblind elke waarde met dezelfde blind factor.                                                                                                                                               | Zoals bij niet-omkeerbaar.                                                                                 |
+| Soort           | Tijdens de overgangsperiode                                                                                                                                                                                                                                                                                                                                                                                                                                          | Na afloop van de oude versie                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Omkeerbaar      | Zet je opgeslagen waarden direct aan het begin om. Bied elke waarde als `reversiblePseudonym` aan voor een [nieuw omkeerbaar pseudoniem](#api-omkeerbaar), met je eigen organisatie als ontvanger en hetzelfde domein als `recipientScope`. Het resultaat is gelijk aan wat verzenders vanaf nu voor die persoon sturen; tot je een waarde hebt omgezet, herken je hun nieuwe waarde niet. Je organisatie moet omkeerbare pseudoniemen mogen aanvragen en ontvangen. | Terugleveren en omzetten geven `410 Gone`.                                                                                         |
+| Niet-omkeerbaar | Zelf omzetten is niet mogelijk. Elke uitkomst voor een persoon bevat de nieuwe waarde in `subject` en de oude in `extraVersions`, zonder prefix. Zoek met de oude waarde je opgeslagen gegevens op en vervang de oude waarde door de nieuwe.                                                                                                                                                                                                                         | De PRS berekent de oude waarde niet meer. Een waarde die je niet hebt gemigreerd, kun je niet meer aan een nieuwe waarde koppelen. |
+| OPRF            | Zoals bij niet-omkeerbaar. Unblind elke waarde met dezelfde blind factor.                                                                                                                                                                                                                                                                                                                                                                                            | Zoals bij niet-omkeerbaar.                                                                                                         |
 
-Een niet-omkeerbaar pseudoniem of een OPRF-uitkomst migreert dus alleen als er in de overgangsperiode een uitwisseling voor die persoon is. Stem de eindtijd van de oude versie af op hoe vaak dat gebeurt, of spreek met de verzenders af dat ze de betrokken personen in die periode opnieuw uitwisselen.
+Niet-omkeerbare pseudoniemen en OPRF-uitkomsten kun je dus alleen migreren voor personen die in de overgangsperiode worden uitgewisseld. Stem de eindtijd van de oude versie af op hoe vaak je voor dezelfde persoon een uitkomst ontvangt, of spreek met de verzenders af dat ze in die periode alle personen opnieuw uitwisselen die ze eerder voor je uitwisselden.
 
 #### Aandachtspunten
 
 - Houd altijd minstens één versie actief. Zonder actieve versie krijgen verzenders `404`, alsof je organisatie onbekend is. Verhelp dit door een nieuwe versie aan te maken die direct actief is (`POST` zonder body).
 - Een nieuwe versie beëindigt de oude niet. Geef de oude versie een eindtijd. Anders berekent de PRS elke niet-omkeerbare en OPRF-aanvraag voor beide versies.
-- Plan je een wissel vooruit, laat de oude `until_dt` dan niet vóór de nieuwe `from_dt` liggen. De PRS controleert dit niet: ontstaat er een gat, dan krijgen verzenders `404` tot de nieuwe versie start.
+- Geef je de nieuwe versie een latere `from_dt`, laat de oude `until_dt` dan ruim daarna liggen. Zonder overlap is er geen overgangsperiode en kun je niets migreren. Ligt de oude eindtijd vóór de nieuwe start, dan krijgen verzenders bovendien `404` tot de nieuwe versie start. De PRS controleert dit niet.
 - Verleng een eindtijd voordat die verstrijkt. Een verstreken `until_dt` is definitief.
-- Voer één rotatie tegelijk uit. Krijg je een serverfout, vraag dan eerst de versies op en probeer het pas daarna opnieuw.
+- Stuur niet tegelijk twee `POST`-aanroepen voor een nieuwe versie. Krijg je een serverfout, vraag dan eerst de versies op: misschien is er al een nieuwe versie.
 - Wordt je organisatie afgemeld, dan blijven haar versies bestaan. Neem in dat geval contact op met de beheerder.
 
 #### Afhankelijkheden
@@ -979,9 +979,9 @@ Een niet-omkeerbaar pseudoniem of een OPRF-uitkomst migreert dus alleen als er i
 
 - Beheeraanroepen vereisen `prs:administration` en werken alleen op je eigen organisatie.
 - Elke client met die scope kan je versies beëindigen. Geef `prs:administration` daarom alleen aan beheerclients.
-- Verwijderen is onomkeerbaar. Een omkeerbaar pseudoniem onder een verwijderde versie is niet meer terug te leveren.
+- Het opruimproces vernietigt sleutels onomkeerbaar. Een omkeerbaar pseudoniem onder een verwijderde versie is niet meer terug te leveren.
 - Een rotatie verandert de pseudoniemen die elke verzender voor je organisatie maakt.
-- Het sleutelmateriaal blijft in de HSM. De API toont alleen versienummers en tijdstippen.
+- Het sleutelmateriaal verlaat de HSM nooit. De API toont alleen versienummers en tijdstippen.
 
 {{% /card %}}
 
