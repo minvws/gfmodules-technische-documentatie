@@ -128,7 +128,7 @@ Een afzonderlijk inschakelbare testkoppeling stuurt JSON door naar een interne S
 
 #### Stabiele uitkomsten binnen een context
 
-Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de migratie van opgeslagen verwijzingen.
+Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de [migratie van opgeslagen verwijzingen](#sleutelversies-migreren).
 
 Een domein is een zelfgekozen naam voor de toepassing waarvoor je het pseudoniem gebruikt. Het domein wordt in aanvragen meegegeven als `recipientScope`. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
 
@@ -331,7 +331,7 @@ Het OIN telt 20 posities: acht cijfers voor de prefix, een hoofdnummer van acht 
 
 Het persoonsnummertype is `bsn`. De PRS normaliseert de landcode naar hoofdletters, het type naar kleine letters en verwijdert witruimte rondom het nummer. Voor dit type moet het persoonsnummer negen cijfers bevatten en aan de elfproef voldoen. Gebruik het nummer als string om voorloopnullen te behouden. De voorbeelden gebruiken een testwaarde.
 
-De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype mogen ontvangen en een publieke sleutel hebben voor het domein. Voor directe pseudonimisering is ook een actieve berekeningssleutelversie nodig. De aanvragende organisatie moet het betreffende type mogen aanvragen.
+De ontvangende organisatie moet geregistreerd zijn, het gevraagde pseudoniemtype mogen ontvangen en een publieke sleutel hebben voor het domein. Voor directe pseudonimisering en OPRF is ook een actieve berekeningssleutelversie nodig. De aanvragende organisatie moet het betreffende type mogen aanvragen.
 
 {{% /card %}}
 
@@ -418,7 +418,7 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
 }
 ```
 
-`extraVersions` ontbreekt bij deze operatie wanneer er geen oudere actieve versies zijn. De waarden in die map bevatten geen `pseudonym:irreversible:`-prefix. Gebruik de oude en nieuwe waarde tijdens een migratie om bestaande verwijzingen aan de nieuwe sleutelversie te koppelen.
+`extraVersions` ontbreekt bij deze operatie wanneer er geen oudere actieve versies zijn. De waarden in die map bevatten geen `pseudonym:irreversible:`-prefix. Gebruik de oude en nieuwe waarde tijdens een [migratie](#sleutelversies-migreren) om bestaande verwijzingen aan de nieuwe sleutelversie te koppelen.
 
 {{% /card %}}
 
@@ -481,7 +481,7 @@ De claims zijn:
 | `version`       | Payloadformaat `"1.1"`; dit is geen berekeningssleutelversie.                                                                                                   |
 | `iat`           | Uitgiftetijd als Unix-timestamp in seconden.                                                                                                                    |
 | `exp`           | Vervaltijd, 300 seconden na `iat`.                                                                                                                              |
-| `keyVersion`    | Gebruikte sleutelversie bij het aanvragen van directe pseudoniemen; ontbreekt bij het terugleveren van een persoonsnummer.                                      |
+| `keyVersion`    | Gebruikte, hoogste actieve sleutelversie bij directe pseudoniemen en OPRF; ontbreekt bij het terugleveren van een persoonsnummer.                               |
 | `extraVersions` | Oudere actieve uitkomsten bij niet-omkeerbare pseudoniemen en OPRF.                                                                                             |
 | `iss`           | Alleen bij een ondertekend JWT: de uitgever, het basisadres van de PRS (`{{% service "url_placeholder" %}}`).                                                   |
 
@@ -666,7 +666,7 @@ De respons is `200 OK` met `Content-Type: application/json`:
 { "jwe": "<compact-jwe-token>" }
 ```
 
-Na ontsleuteling bevat het veld `subject` de hoogste actieve evaluatie als `pseudonym:eval:<base64url-evaluatie>`. Het veld `extraVersions` bevat oudere actieve evaluaties met hun versienummer als sleutel, bijvoorbeeld `{"1":"<base64url-evaluatie>"}`. Als er geen oudere actieve versie is, bevat `extraVersions` een leeg object. Iedere evaluatie moet met dezelfde blind factor afzonderlijk worden geünblind.
+Na ontsleuteling bevat het veld `subject` de hoogste actieve evaluatie als `pseudonym:eval:<base64url-evaluatie>`. `keyVersion` noemt de versie daarvan. Het veld `extraVersions` bevat oudere actieve evaluaties met hun versienummer als sleutel, bijvoorbeeld `{"1":"<base64url-evaluatie>"}`. Als er geen oudere actieve versie is, bevat `extraVersions` een leeg object. Iedere evaluatie moet met dezelfde blind factor afzonderlijk worden geünblind.
 
 Voorbeeld van de ontsleutelde inhoud:
 
@@ -678,6 +678,7 @@ Voorbeeld van de ontsleutelde inhoud:
   "version": "1.1",
   "iat": 1791977856,
   "exp": 1791978156,
+  "keyVersion": 3,
   "extraVersions": {
     "1": "<evaluatie-met-sleutelversie-1>",
     "2": "<evaluatie-met-sleutelversie-2>"
@@ -753,7 +754,7 @@ older_pseudonyms = {
 }
 ```
 
-Sla het resultaat op volgens het gegevensmodel van de ontvanger. De pseudoniemwaarde uit `subject` en de oudere waarden kunnen tijdens een sleutelrotatie naar dezelfde persoon verwijzen binnen de afgesproken context.
+Sla het resultaat op volgens het gegevensmodel van de ontvanger. De pseudoniemwaarde uit `subject` en de oudere waarden kunnen tijdens een [sleutelrotatie](#sleutelversies-migreren) naar dezelfde persoon verwijzen binnen de afgesproken context.
 
 {{% /card %}}
 
@@ -857,6 +858,27 @@ Berekeningssleutelversies bepalen de pseudoniemuitkomst en worden per organisati
 
 Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `until_dt` leeg is of in de toekomst ligt. Directe exchanges en OPRF gebruiken deze actieve versies.
 
+{{% columns %}}
+
+{{% column %}}
+
+![Levenscyclus van een sleutelversie: gepland, actief, verlopen, verwijderd](/assets/img/sleutelversie-levenscyclus.svg)
+
+{{% /column %}}
+
+{{% column %}}
+
+| Toestand   | Kenmerk                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| Gepland    | `from_dt` ligt in de toekomst en `removed_at` is leeg.                                   |
+| Actief     | `removed_at` is leeg, `from_dt` is bereikt en `until_dt` is leeg of ligt in de toekomst. |
+| Verlopen   | `until_dt` is bereikt en `removed_at` is nog leeg.                                       |
+| Verwijderd | `removed_at` is gevuld. Het sleutelmateriaal is vernietigd.                              |
+
+{{% /column %}}
+
+{{% /columns %}}
+
 | Methode en pad                          | Request                                                     | Respons                                                               |
 | --------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
 | `GET /administration/key-versions`      | Geen body.                                                  | `200`, array met alle eigen versies, ook verlopen en verwijderde.     |
@@ -865,16 +887,101 @@ Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `unti
 
 Een versieobject bevat `id` (UUID), `organization_id` (interne organisatie-UUID), `version` (integer), `from_dt`, `until_dt` en `removed_at`. Tijdstippen bevatten een tijdzone, bijvoorbeeld `2026-11-01T00:00:00Z`. `until_dt` en `removed_at` kunnen `null` zijn.
 
-Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven starttijd mag in het verleden liggen. Een opgegeven `until_dt` moet in de toekomst en na `from_dt` liggen. Er moet al een versie voor de organisatie bestaan; anders volgt `409` en moet de initiële inrichting worden geregeld. `PUT` wijzigt alleen `until_dt`; een opgegeven eindtijd moet in de toekomst liggen. `null` of een lege JSON-body wist de bestaande eindtijd.
+Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven starttijd mag in het verleden liggen. Een opgegeven `until_dt` moet in de toekomst en na `from_dt` liggen. Er moet al een versie voor de organisatie bestaan; anders volgt `409` en moet de initiële inrichting worden geregeld. `PUT` wijzigt alleen `until_dt` van een versie die nog niet is verlopen; een opgegeven eindtijd moet in de toekomst en na `from_dt` van die versie liggen. `null` of een lege JSON-body wist de bestaande eindtijd.
 
 #### Rotatie uitvoeren
 
 1. Vraag de bestaande versies op en maak een nieuwe versie aan. Dit beëindigt de oude versie niet automatisch.
-2. Stel voor de oude versie met `PUT` een eindtijd in. Tot dat moment overlappen de actieve versies.
-3. Verwerk gedurende de overlap de nieuwe uitkomst en de waarden in `extraVersions` voor niet-omkeerbare pseudoniemen en OPRF. Omkeerbare pseudoniemen worden alleen met de hoogste actieve versie gemaakt.
+2. Stel voor de oude versie met `PUT` een eindtijd in. Kies die ruim: vanaf de start van de nieuwe versie tot die eindtijd loopt de overgangsperiode, de enige tijd om te migreren.
+3. [Migreer je opgeslagen pseudoniemen](#sleutelversies-migreren) in de overgangsperiode.
 4. Rond de migratie af voordat de oude versie afloopt. Een afzonderlijk opruimproces verwijdert het verlopen berekeningssleutelmateriaal en registreert `removed_at`.
 
-Een omkeerbaar pseudoniem kan nog intern worden teruggelezen zolang zijn sleutelversie aanwezig is en niet als verwijderd is geregistreerd. Bij omzetting na verwijdering van de versie volgt `410 Gone`. Er is geen beheerroute om een verwijderde versie te herstellen. Het wijzigen van een versie die al is verwijderd geeft `409`.
+Een omkeerbaar pseudoniem kan **alleen** worden teruggeleverd zolang zijn sleutelversie actief is. Daarna volgt `410 Gone`, ook als het opruimproces de versie nog niet heeft verwijderd. Er is geen beheerroute om een verwijderde versie te herstellen. Het wijzigen van een versie die al is verlopen of verwijderd geeft `409`.
+
+#### Voorbeeld: sleutelversie roteren
+
+Vraag eerst de bestaande versies op:
+
+```bash
+curl --fail-with-body -sS \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions"
+```
+
+Maak daarna een nieuwe versie aan. Zonder body is die direct actief:
+
+```bash
+curl --fail-with-body -sS -X POST \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions"
+```
+
+De respons is `201 Created`. Een organisatie die voor het eerst wordt aangemeld, krijgt versie `0`, dus de eerste rotatie geeft versie `1`:
+
+```json
+{
+  "id": "9b2e4c1a-7d3f-4e8b-a6c5-1f0d2e3b4a59",
+  "organization_id": "0d7a3d0e-1c9b-4d1e-9a6b-3e2f1c0d9b8a",
+  "version": 1,
+  "from_dt": "2026-11-26T10:00:00+00:00",
+  "until_dt": null,
+  "removed_at": null
+}
+```
+
+Wil je op een vast moment wisselen, stuur dan een body mee zoals `{"from_dt":"2027-01-01T00:00:00Z"}`, met `Content-Type: application/json`.
+
+Geef tot slot de oude versie een eindtijd. Gebruik het `id` van versie `0` uit de lijst:
+
+```bash
+curl --fail-with-body -sS -X PUT \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"until_dt":"2027-03-01T00:00:00Z"}' \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions/<id-van-versie-0>"
+```
+
+#### Opgeslagen pseudoniemen migreren {#sleutelversies-migreren}
+
+Vanaf het moment dat een nieuwe versie actief is, levert elke nieuwe aanvraag voor een persoon een ander pseudoniem op. De PRS slaat geen pseudoniemen op en maakt ze niet opnieuw aan: wat je al hebt opgeslagen, blijft ongewijzigd en valt onder de oude versie. Migreren kan alleen in de overgangsperiode: van de start van de nieuwe versie tot de `until_dt` van de oude versie. Die eindtijd kies je zelf met `PUT`. Je kunt de eindtijd verlengen zolang die nog niet is verstreken.
+
+Bewaar bij elke waarde onder welke versie die valt, zodat je weet wat nog moet worden gemigreerd. `subject` bevat altijd de waarde van de hoogste actieve versie, en `keyVersion` noemt die versie.
+
+| Soort           | Tijdens de overgangsperiode                                                                                                                                                                                                                                                                                                                                                                                                                                          | Na afloop van de oude versie                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Omkeerbaar      | Zet je opgeslagen waarden direct aan het begin om. Bied elke waarde als `reversiblePseudonym` aan voor een [nieuw omkeerbaar pseudoniem](#api-omkeerbaar), met je eigen organisatie als ontvanger en hetzelfde domein als `recipientScope`. Het resultaat is gelijk aan wat verzenders vanaf nu voor die persoon sturen; tot je een waarde hebt omgezet, herken je hun nieuwe waarde niet. Je organisatie moet omkeerbare pseudoniemen mogen aanvragen en ontvangen. | Terugleveren en omzetten geven `410 Gone`.                                                                                         |
+| Niet-omkeerbaar | Zelf omzetten is niet mogelijk. Elke uitkomst voor een persoon bevat de nieuwe waarde in `subject` en de oude in `extraVersions`, zonder prefix. Zoek met de oude waarde je opgeslagen gegevens op en vervang de oude waarde door de nieuwe.                                                                                                                                                                                                                         | De PRS berekent de oude waarde niet meer. Een waarde die je niet hebt gemigreerd, kun je niet meer aan een nieuwe waarde koppelen. |
+| OPRF            | Zoals bij niet-omkeerbaar. Unblind elke waarde met dezelfde blind factor.                                                                                                                                                                                                                                                                                                                                                                                            | Zoals bij niet-omkeerbaar.                                                                                                         |
+
+Niet-omkeerbare pseudoniemen en OPRF-uitkomsten kun je dus alleen migreren voor personen die in de overgangsperiode worden uitgewisseld. Stem de eindtijd van de oude versie af op hoe vaak je voor dezelfde persoon een uitkomst ontvangt, of spreek met de verzenders af dat ze in die periode alle personen opnieuw uitwisselen die ze eerder voor je uitwisselden.
+
+#### Aandachtspunten
+
+- Houd altijd minstens één versie actief. Zonder actieve versie krijgen verzenders `404`, alsof je organisatie onbekend is. Verhelp dit door een nieuwe versie aan te maken die direct actief is (`POST` zonder body).
+- Een nieuwe versie beëindigt de oude niet. Geef de oude versie een eindtijd. Anders berekent de PRS elke niet-omkeerbare en OPRF-aanvraag voor beide versies.
+- Geef je de nieuwe versie een latere `from_dt`, laat de oude `until_dt` dan ruim daarna liggen. Zonder overlap is er geen overgangsperiode en kun je niets migreren. Ligt de oude eindtijd vóór de nieuwe start, dan krijgen verzenders bovendien `404` tot de nieuwe versie start. De PRS controleert dit niet.
+- Verleng een eindtijd voordat die verstrijkt. Een verlopen versie kun je niet meer wijzigen (`409`); dan helpt alleen een nieuwe versie, met nieuwe pseudoniemen. Controleer daarom elke eindtijd op je huidige versie.
+- Wordt je organisatie afgemeld, dan eindigen al haar versies en worden de sleutels vernietigd. Wordt je organisatie daarna weer actief gemaakt of opnieuw aangemeld, dan begin je met een nieuwe versie. De pseudoniemen die je dan ontvangt, zijn **niet** te koppelen aan die van vóór de afmelding. Afmelden, weer actief maken en opnieuw aanmelden regelt de beheerder.
+
+#### Afhankelijkheden
+
+| Operatie                           | Gebruikte sleutelversies                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| Omkeerbaar pseudoniem maken        | De hoogste actieve versie.                                                     |
+| Omkeerbaar pseudoniem terugleveren | De versie in het pseudoniem. Die moet actief zijn, anders volgt `410 Gone`.    |
+| Niet-omkeerbaar pseudoniem         | Alle actieve versies: de hoogste in `subject`, de oudere in `extraVersions`.   |
+| OPRF-evaluatie                     | Alle actieve versies, op dezelfde manier.                                      |
+
+#### Beveiliging
+
+- Beheeraanroepen vereisen `prs:administration` en werken alleen op je eigen organisatie.
+- Elke client met die scope kan je versies beëindigen. Geef `prs:administration` daarom alleen aan beheerclients.
+- Het opruimproces vernietigt sleutels onomkeerbaar. Een omkeerbaar pseudoniem onder een verwijderde versie is niet meer terug te leveren.
+- Een rotatie verandert de pseudoniemen die elke verzender voor je organisatie maakt.
+- Het sleutelmateriaal verlaat de HSM nooit. De API toont alleen versienummers en tijdstippen.
 
 {{% /card %}}
 
@@ -917,7 +1024,7 @@ Bij ongeldige requestvelden is de status `422` en bevat `detail` een lijst van v
 | `400`  | Ongeldig persoonsnummer, ongeldig omkeerbaar pseudoniem of ongeldige OPRF-groepsinvoer. Corrigeer de invoer.                                                                                                               |
 | `403`  | Ontbrekende of ongeldige autorisatiecontext, verkeerde audience, ontbrekende scope, onbekende aanvragende organisatie of de aanvrager heeft niet de vereiste bevoegdheid. Controleer registratie en token.                 |
 | `404`  | Ontvanger onbekend of niet bevoegd, ontvangstsleutel voor het domein ontbreekt, geen actieve berekeningssleutelversie, of gevraagd beheerobject bestaat niet voor de eigen organisatie. Controleer de ontvangerinrichting. |
-| `409`  | Domein al gekoppeld aan een andere sleutel, geen initiële sleutelversie om te roteren, of wijziging van een al verwijderde versie. Controleer de bestaande inrichting.                                                     |
+| `409`  | Domein al gekoppeld aan een andere sleutel, geen initiële sleutelversie om te roteren, of wijziging van een al verlopen of verwijderde versie. Controleer de bestaande inrichting.                                         |
 | `410`  | Sleutelversie van een aangeleverd omkeerbaar pseudoniem is niet meer beschikbaar. Opnieuw aanbieden van hetzelfde pseudoniem herstelt die versie niet.                                                                     |
 | `422`  | Ongeldig requestmodel, OIN, tijdstip of sleutelregistratiebewijs. Controleer de velden en foutlocaties.                                                                                                                    |
 | `500`  | Interne fout of mislukte directe pseudoniemberekening.                                                                                                                                                                     |

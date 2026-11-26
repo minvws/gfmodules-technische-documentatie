@@ -1,3 +1,39 @@
+- date: "YYYY-MM-DD"
+  filters:
+    - prs
+  services:
+    - name: PRS
+      version: vX.Y.Z
+  summary: "PRS-documentatie bijgewerkt."
+  changes:
+    - tag: Nieuw
+      type: new
+      text: "PRS: een OPRF-evaluatie bevat ook `keyVersion`, de sleutelversie van `subject`."
+    - tag: Gewijzigd
+      type: break
+      text: "PRS: een verlopen sleutelversie kan niet meer worden gewijzigd (`409`) en een eindtijd moet na de start van de versie liggen (`422`)."
+    - tag: Gewijzigd
+      type: break
+      text: "PRS: bij afmelding van een organisatie eindigen al haar sleutelversies; weer actief maken of opnieuw aanmelden geeft nieuwe pseudoniemen."
+
+- date: "2026-11-26"
+  filters:
+    - prs
+  services:
+    - name: PRS
+      version: v0.0.42
+  summary: "PRS-documentatie bijgewerkt."
+  changes:
+    - tag: Nieuw
+      type: new
+      text: "PRS: levenscyclus van sleutelversies met toestandsdiagram, voorbeeld, migratie van opgeslagen pseudoniemen, afhankelijkheden en beveiliging."
+    - tag: Gecorrigeerd
+      type: fix
+      text: "PRS: een omkeerbaar pseudoniem is alleen terug te leveren zolang zijn sleutelversie actief is."
+    - tag: Gecorrigeerd
+      type: fix
+      text: "PRS: ook een OPRF-evaluatie vereist een actieve sleutelversie van de ontvanger."
+
 - date: "2026-11-16"
   filters:
     - prs
