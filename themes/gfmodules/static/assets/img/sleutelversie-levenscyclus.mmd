@@ -1,0 +1,13 @@
+---
+config:
+  state:
+    useMaxWidth: false
+---
+stateDiagram-v2
+    [*] --> Actief: aanmelding (versie 0) of POST
+    [*] --> Gepland: POST met from_dt in de toekomst
+    Gepland --> Actief: from_dt bereikt
+    Actief --> Actief: PUT until_dt
+    Actief --> Verlopen: until_dt bereikt
+    Verlopen --> Verwijderd: opruimproces
+    Verwijderd --> [*]

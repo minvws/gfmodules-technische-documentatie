@@ -128,7 +128,7 @@ Een afzonderlijk inschakelbare testkoppeling stuurt JSON door naar een interne S
 
 #### Stabiele uitkomsten binnen een context
 
-Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de migratie van opgeslagen verwijzingen.
+Dezelfde genormaliseerde invoer levert voor hetzelfde pseudoniemtype, dezelfde ontvanger, hetzelfde domein en dezelfde sleutelversie hetzelfde pseudoniem op. Een andere context levert een andere uitkomst. Zo kunnen systemen of onderzoeken elk hun eigen pseudoniemnamespace gebruiken. Sleutelrotatie verandert de pseudoniemen; plan daarom de [migratie van opgeslagen verwijzingen](#sleutelversies-migreren).
 
 Een domein is een zelfgekozen naam voor de toepassing waarvoor je het pseudoniem gebruikt. Het domein wordt in aanvragen meegegeven als `recipientScope`. De ontvanger registreert de domeinen voor een ontvangstsleutel in het veld `domains` bij het [sleutelbeheer](#receiver-instellen). De OAuth-scope bepaalt welke API-operatie je mag uitvoeren. Spreek de domeinwaarde vooraf af met de ontvanger en gebruik exact dezelfde waarde bij iedere aanvraag.
 
@@ -418,7 +418,7 @@ Gebruik hetzelfde aanroeppatroon als bij de omkeerbare exchange, met het pad `/e
 }
 ```
 
-`extraVersions` ontbreekt bij deze operatie wanneer er geen oudere actieve versies zijn. De waarden in die map bevatten geen `pseudonym:irreversible:`-prefix. Gebruik de oude en nieuwe waarde tijdens een migratie om bestaande verwijzingen aan de nieuwe sleutelversie te koppelen.
+`extraVersions` ontbreekt bij deze operatie wanneer er geen oudere actieve versies zijn. De waarden in die map bevatten geen `pseudonym:irreversible:`-prefix. Gebruik de oude en nieuwe waarde tijdens een [migratie](#sleutelversies-migreren) om bestaande verwijzingen aan de nieuwe sleutelversie te koppelen.
 
 {{% /card %}}
 
@@ -753,7 +753,7 @@ older_pseudonyms = {
 }
 ```
 
-Sla het resultaat op volgens het gegevensmodel van de ontvanger. De pseudoniemwaarde uit `subject` en de oudere waarden kunnen tijdens een sleutelrotatie naar dezelfde persoon verwijzen binnen de afgesproken context.
+Sla het resultaat op volgens het gegevensmodel van de ontvanger. De pseudoniemwaarde uit `subject` en de oudere waarden kunnen tijdens een [sleutelrotatie](#sleutelversies-migreren) naar dezelfde persoon verwijzen binnen de afgesproken context.
 
 {{% /card %}}
 
@@ -857,6 +857,27 @@ Berekeningssleutelversies bepalen de pseudoniemuitkomst en worden per organisati
 
 Een versie is actief wanneer `removed_at` leeg is, `from_dt` is bereikt en `until_dt` leeg is of in de toekomst ligt. Directe exchanges en OPRF gebruiken deze actieve versies.
 
+{{% columns %}}
+
+{{% column %}}
+
+![Levenscyclus van een sleutelversie: gepland, actief, verlopen, verwijderd](/assets/img/sleutelversie-levenscyclus.svg)
+
+{{% /column %}}
+
+{{% column %}}
+
+| Toestand   | Kenmerk                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| Gepland    | `from_dt` ligt in de toekomst en `removed_at` is leeg.                                   |
+| Actief     | `removed_at` is leeg, `from_dt` is bereikt en `until_dt` is leeg of ligt in de toekomst. |
+| Verlopen   | `until_dt` is bereikt en `removed_at` is nog leeg.                                       |
+| Verwijderd | `removed_at` is gevuld. Het sleutelmateriaal is vernietigd.                              |
+
+{{% /column %}}
+
+{{% /columns %}}
+
 | Methode en pad                          | Request                                                     | Respons                                                               |
 | --------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
 | `GET /administration/key-versions`      | Geen body.                                                  | `200`, array met alle eigen versies, ook verlopen en verwijderde.     |
@@ -870,11 +891,97 @@ Bij `POST` geldt: zonder `from_dt` start de versie direct; een opgegeven startti
 #### Rotatie uitvoeren
 
 1. Vraag de bestaande versies op en maak een nieuwe versie aan. Dit beëindigt de oude versie niet automatisch.
-2. Stel voor de oude versie met `PUT` een eindtijd in. Tot dat moment overlappen de actieve versies.
-3. Verwerk gedurende de overlap de nieuwe uitkomst en de waarden in `extraVersions` voor niet-omkeerbare pseudoniemen en OPRF. Omkeerbare pseudoniemen worden alleen met de hoogste actieve versie gemaakt.
+2. Stel voor de oude versie met `PUT` een eindtijd in. Vanaf de start van de nieuwe versie tot dat moment zijn beide versies actief: de overgangsperiode.
+3. [Migreer je opgeslagen pseudoniemen](#sleutelversies-migreren) in de overgangsperiode.
 4. Rond de migratie af voordat de oude versie afloopt. Een afzonderlijk opruimproces verwijdert het verlopen berekeningssleutelmateriaal en registreert `removed_at`.
 
-Een omkeerbaar pseudoniem kan nog intern worden teruggelezen zolang zijn sleutelversie aanwezig is en niet als verwijderd is geregistreerd. Bij omzetting na verwijdering van de versie volgt `410 Gone`. Er is geen beheerroute om een verwijderde versie te herstellen. Het wijzigen van een versie die al is verwijderd geeft `409`.
+Een omkeerbaar pseudoniem kan **alleen** worden teruggeleverd zolang zijn sleutelversie actief is. Daarna volgt `410 Gone`, ook als het opruimproces de versie nog niet heeft verwijderd. Er is geen beheerroute om een verwijderde versie te herstellen. Het wijzigen van een versie die al is verwijderd geeft `409`.
+
+#### Voorbeeld: sleutel roteren
+
+Vraag eerst de bestaande versies op:
+
+```bash
+curl --fail-with-body -sS \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions"
+```
+
+Maak daarna een nieuwe versie aan. Zonder body is die direct actief:
+
+```bash
+curl --fail-with-body -sS -X POST \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions"
+```
+
+De respons is `201 Created`. Bij aanmelding krijgt je organisatie versie `0`, dus de eerste rotatie geeft versie `1`:
+
+```json
+{
+  "id": "9b2e4c1a-7d3f-4e8b-a6c5-1f0d2e3b4a59",
+  "organization_id": "0d7a3d0e-1c9b-4d1e-9a6b-3e2f1c0d9b8a",
+  "version": 1,
+  "from_dt": "2026-11-26T10:00:00+00:00",
+  "until_dt": null,
+  "removed_at": null
+}
+```
+
+Wil je op een vast moment wisselen, stuur dan een body mee zoals `{"from_dt":"2027-01-01T00:00:00Z"}`, met `Content-Type: application/json`.
+
+Geef tot slot de oude versie een eindtijd. Gebruik het `id` van versie `0` uit de lijst:
+
+```bash
+curl --fail-with-body -sS -X PUT \
+  --cert client-cert.pem --key client-key.pem \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"until_dt":"2027-03-01T00:00:00Z"}' \
+  "{{% service "url_placeholder" %}}{{% service "base_path" %}}/administration/key-versions/<id-van-versie-0>"
+```
+
+#### Opgeslagen pseudoniemen migreren {#sleutelversies-migreren}
+
+Na een rotatie krijgt elke persoon een nieuw pseudoniem. Wat je al hebt opgeslagen, valt nog onder de oude versie. Je kunt het alleen migreren in de overgangsperiode: van het moment dat de nieuwe versie actief is tot de `until_dt` van de oude versie. Die eindtijd stel je zelf in met `PUT`. Zolang ze niet is verstreken, kun je haar verlengen.
+
+Bewaar bij elke waarde de `keyVersion` uit de JWE, zodat je ziet welke waarden nog onder de oude versie vallen. Een pseudoniem dat je ontvangt, valt altijd onder de hoogste actieve versie.
+
+| Soort           | Tijdens de overgangsperiode                                                                                                                                                                                             | Na afloop van de oude versie                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Omkeerbaar      | Bied de waarde als `reversiblePseudonym` aan voor een [nieuw omkeerbaar pseudoniem](#api-omkeerbaar), met je eigen organisatie als ontvanger. Je organisatie moet omkeerbare pseudoniemen mogen aanvragen en ontvangen. | Terugleveren en omzetten geven `410 Gone`.                                                                 |
+| Niet-omkeerbaar | Omzetten kan niet. Bij elke uitwisseling voor een persoon bevat `subject` de nieuwe waarde en `extraVersions` de oude. Zoek je gegevens op met de oude waarde en sla de nieuwe op.                                      | De oude waarde wordt niet meer berekend. Een waarde die je niet hebt gemigreerd, is niet meer te koppelen. |
+| OPRF            | Zoals bij niet-omkeerbaar. Unblind elke waarde met dezelfde blind factor.                                                                                                                                               | Zoals bij niet-omkeerbaar.                                                                                 |
+
+Een niet-omkeerbaar pseudoniem of een OPRF-uitkomst migreert dus alleen als er in de overgangsperiode een uitwisseling voor die persoon is. Stem de eindtijd van de oude versie af op hoe vaak dat gebeurt, of spreek met de verzenders af dat ze de betrokken personen in die periode opnieuw uitwisselen.
+
+#### Aandachtspunten
+
+- Houd altijd minstens één versie actief. Zonder actieve versie krijgen verzenders `404`, alsof je organisatie onbekend is. Verhelp dit door een nieuwe versie aan te maken die direct actief is (`POST` zonder body).
+- Een nieuwe versie beëindigt de oude niet. Geef de oude versie een eindtijd. Anders berekent de PRS elke niet-omkeerbare en OPRF-aanvraag voor beide versies.
+- Plan je een wissel vooruit, laat de oude `until_dt` dan niet vóór de nieuwe `from_dt` liggen. De PRS controleert dit niet: ontstaat er een gat, dan krijgen verzenders `404` tot de nieuwe versie start.
+- Verleng een eindtijd voordat die verstrijkt. Een verstreken `until_dt` is definitief.
+- Voer één rotatie tegelijk uit. Krijg je een serverfout, vraag dan eerst de versies op en probeer het pas daarna opnieuw.
+- Wordt je organisatie afgemeld, dan blijven haar versies bestaan. Neem in dat geval contact op met de beheerder.
+
+#### Afhankelijkheden
+
+| Operatie                           | Gebruikte sleutelversies                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------ |
+| Omkeerbaar pseudoniem maken        | De hoogste actieve versie.                                                     |
+| Omkeerbaar pseudoniem terugleveren | De versie in het pseudoniem. Die moet actief zijn, anders volgt `410 Gone`.    |
+| Niet-omkeerbaar pseudoniem         | Alle actieve versies: de hoogste in `subject`, de oudere in `extraVersions`.   |
+| OPRF-evaluatie                     | Alle actieve versies, op dezelfde manier.                                      |
+
+#### Beveiliging
+
+- Beheeraanroepen vereisen `prs:administration` en werken alleen op je eigen organisatie.
+- Elke client met die scope kan je versies beëindigen. Geef `prs:administration` daarom alleen aan beheerclients.
+- Verwijderen is onomkeerbaar. Een omkeerbaar pseudoniem onder een verwijderde versie is niet meer terug te leveren.
+- Een rotatie verandert de pseudoniemen die elke verzender voor je organisatie maakt.
+- Het sleutelmateriaal blijft in de HSM. De API toont alleen versienummers en tijdstippen.
 
 {{% /card %}}
 
